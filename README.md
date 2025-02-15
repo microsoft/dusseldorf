@@ -1,14 +1,18 @@
-# Project
+# Dusseldorf
 
-> This repo has been populated by an initial template to help get you started. Please
-> make sure to update the content to build a great experience for community-building.
+Dusseldorf is a versatile out-of-band application security testing (OAST) tool. It is designed to provide a platform that analyzes incoming network requests and craft automated responses to empower security professionals and engineers to in their security research.  This initiative is part of Microsoft's increasing investment in Open Source and security research, such as [PyRIT](https://github.com/Azure/PyRIT) and OTHER.  
 
-As the maintainer of this project, please make a few updates:
+It is aimed to help automate detection and exploitation of OOB (out of band) vulnerabilities such as Server Side Request Forgery (SSRF), Cross Site Scripting (XSS) and many other classes of security defects.
 
-- Improving this README.MD file to provide a great experience
-- Updating SUPPORT.MD with content about this project's support experience
-- Understanding the security reporting process in SECURITY.MD
-- Remove this section from the README
+> This project is sometimes stylized as *duSSeldoRF*, following a [common practice](https://en.wikipedia.org/wiki/List_of_Microsoft_codenames) to use place names, and indicating its focus on SSRF.
+
+## Getting Started
+Dusseldorf runs in the cloud, we have instructions for how to deploy Dusseldorf into your [Azure](docs/deploy/azure/) environment, or on your own [local server](/docs/deploy/local).
+
+Prebuild images are available [here](), and instructions on how to build the source code can be found in our [build documentation](docs/build).
+
+If you want to build custom listeners for any network protocol, you can follow [this page](docs/develop/listeners) on how to get started.
+
 
 ## Contributing
 
