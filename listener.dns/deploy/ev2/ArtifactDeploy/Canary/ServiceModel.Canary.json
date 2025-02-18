@@ -1,0 +1,66 @@
+{
+    "$schema": "https://ev2schema.azure.net/schemas/2020-01-01/serviceModel.json",
+    "contentVersion": "1.0.0",
+    "serviceMetadata": {
+        "serviceGroup": "Microsoft.DevSec.AzPentest.Dusseldorf",
+        "environment": "Test",
+        "displayName": "Dusseldorf"
+    },
+    "serviceResourceGroupDefinitions": [
+        {
+            "Name": "Dusseldorf-ImagePush",
+            "serviceResourceDefinitions": [
+                {
+                    "name": "ACRImagePush",
+                    "composedOf": {
+                        "arm": {
+                            "templatePath": "Templates/ACRImagePush.template.json",
+                            "parametersPath": "ArtifactDeploy/Parameters/ACRImagePush.parameters.json"
+                        }
+                    }
+                },
+                {
+                    "name": "ShellScriptDeploy",
+                    "composedOf": {
+                        "extension": {
+                            "shell": [
+                                {
+                                    "type":"Run",
+                                    "properties": {
+                                        "imageName": "adm-mariner-20-l",
+                                        "imageVersion": "v8"
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        }
+    ],
+    "serviceResourceGroups": [
+        {
+            "azureResourceGroupName": "common",
+            "location": "Central US",
+            "instanceOf": "Dusseldorf-ImagePush",
+            "azureSubscriptionId": "646041b8-c818-4264-8534-2d83d7e5cece",
+            "scopeTags": [
+                {
+                    "name": "Global"
+                }
+            ],
+            "serviceResources": [
+                {
+                    "name": "CreateInfrastructureResource",
+                    "instanceOf": "ACRImagePush",
+                    "armParametersPath": "drop/Ev2/ACRImagePush.parameters.json"
+                },
+                {
+                    "name": "LinuxContainerUpload",
+                    "instanceOf": "ShellScriptDeploy",
+                    "rolloutParametersPath": "drop/Ev2/UploadImage.parameters.json"
+                }
+            ]
+        }
+    ]
+}

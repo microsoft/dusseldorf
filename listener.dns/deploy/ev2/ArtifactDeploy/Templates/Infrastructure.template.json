@@ -1,0 +1,60 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "location": {
+        "type": "string",
+        "defaultValue": "[resourceGroup().location]",
+        "metadata": {
+          "description": "Location for all resources."
+        }
+      },
+      "IdentityName" : { 
+        "type": "string"
+      },
+      "RegistryName" : { 
+        "type": "string"
+      }
+    },
+    "variables": {
+      "msiResourceId": "[concat('/subscriptions/',subscription().subscriptionId ,'/resourceGroups/', resourceGroup().name, '/providers/Microsoft.ManagedIdentity/userAssignedIdentities/', parameters('IdentityName'))]"
+    },
+    "resources": [
+      {
+        "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
+        "name": "[parameters('IdentityName')]",
+        "apiVersion": "2018-11-30",
+        "location": "[resourceGroup().location]"
+      },
+      {
+        "name": "[parameters('RegistryName')]",
+        "type": "Microsoft.ContainerRegistry/registries",
+        "apiVersion": "2019-12-01-preview",
+        "location": "[resourceGroup().location]",
+        "tags": {},
+        "sku": {
+          "name": "Standard",
+          "tier": "Standard"
+        },
+        "properties": {
+          "adminUserEnabled": "false"
+        }
+      },
+      {
+        "type": "Microsoft.Authorization/roleAssignments",
+        "scope": "[concat('Microsoft.ContainerRegistry/registries/', parameters('RegistryName'))]",
+        "apiVersion": "2020-04-01-preview",
+        "name": "[guid(parameters('RegistryName'), parameters('IdentityName'), 'push')]",
+        "dependsOn": [
+          "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities/', parameters('IdentityName'))]",
+          "[resourceId('Microsoft.ContainerRegistry/registries', parameters('RegistryName'))]"
+        ],
+        "properties": {
+          "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '8311e382-0749-4cb8-b61a-304f252e45ec')]",
+          "principalId": "[reference(variables('msiResourceId'), '2015-08-31-PREVIEW').principalId]"
+        }
+      }
+    ],
+    "outputs": {
+    }
+  }

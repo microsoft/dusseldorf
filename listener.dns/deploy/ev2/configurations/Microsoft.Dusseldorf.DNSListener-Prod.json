@@ -1,0 +1,28 @@
+{
+    "settings": {
+        "environment": {
+            "name": "prod",
+            "tenantId": "$(aad.tenants.AME.id)",
+            "subscriptionKey": "Dusseldorf Prod"
+        },
+        "depoloyment" : {
+            "appid": "",
+            "secretid": ""
+        },
+        "instance": {
+            "fqdn": "ssrf.ms"
+        },
+        "aks": {
+            "vmSize": "Standard_DS2_v3"
+        },
+        "geneva": {
+            "account": "",
+            "namespace": "",
+            "configVersion": "1.2"
+        },
+        "websites": {
+            "dusseldorfControlPlane": "",
+            "icmSupport": ""
+        }
+    }
+}

@@ -1,0 +1,35 @@
+{
+    "$schema": "https://ev2schema.azure.net/schemas/2020-01-01/rolloutSpecification.json",
+    "contentVersion": "1.0.0.0",
+    "RolloutMetadata": {
+      "ServiceModelPath": "drop/ev2/ArtifactDeploy/Test/ServiceModel.json",
+      "ScopeBindingsPath": "drop/Ev2/ArtifactDeploy/Test/ScopeBindings.json",
+      "Name": "Dusseldorf Image Upload",
+      "RolloutType": "Major",
+      "BuildSource": {
+        "Parameters": {
+          "VersionFile": "drop/ev2/buildver.txt"
+        }
+      },
+      "Notification": {
+        "Email": {
+          "To": "dusseldorks@microsoft.com"
+        }
+      }
+    },
+    "OrchestratedSteps": [
+        {
+        "Name": "CreateInfrastructure",
+        "TargetType": "ServiceResource",
+        "TargetName": "CreateInfrastructureResource",
+        "Actions": ["Deploy"]
+      },
+      {
+        "Name": "UploadLinuxContainer",
+        "TargetType": "ServiceResource",
+        "TargetName": "DusseldorfContainerUpload",
+        "Actions": ["Shell/Run"],
+        "DependsOn": [ "CreateInfrastructure"]
+      }
+    ]
+  }
