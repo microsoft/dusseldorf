@@ -1,0 +1,50 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: dusseldorf-dns-listener-service
+  namespace: dnslistener
+spec:
+  ports:
+  - name: dns
+    protocol: UDP
+    port: 53
+    targetPort: 5353
+  selector:
+    app.kubernetes.io/name: dusseldorf-dns-listener
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dusseldorf-loadbalancer
+  annotations:
+    service.beta.kubernetes.io/azure-load-balancer-resource-group: dataplane_infrastructure
+spec:
+  loadBalancerIP: 20.145.169.225
+  externalTrafficPolicy: Local
+  type: LoadBalancer
+  ports:
+  - name: dns 
+    protocol: UDP
+    port: 53
+    targetPort: 5353
+  selector:
+    app.kubernetes.io/name: dusseldorf-dns-listener
+  
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dusseldorf-loadbalancer
+  annotations:
+    service.beta.kubernetes.io/azure-load-balancer-resource-group: dataplane_infrastructure
+spec:
+  loadBalancerIP: 20.237.236.48
+  externalTrafficPolicy: Local
+  type: LoadBalancer
+  ports:
+  - name: dns 
+    protocol: UDP
+    port: 53
+    targetPort: 5353
+  selector:
+    app.kubernetes.io/name: dusseldorf-dns-listener

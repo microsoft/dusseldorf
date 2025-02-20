@@ -1,0 +1,31 @@
+# general global config across all listeners of all network protocols 
+
+domains = [ "dssldrftest.net" ]
+
+public_ips = [ "20.171.224.198", "20.171.50.37" ]
+
+# database connections metadata
+[db]
+min_conn = 2
+max_conn = 20
+
+# logging and telemetry
+[appinsights]
+connstr="InstrumentationKey=fbc14150-6890-45f0-9472-30c415bd09e4;IngestionEndpoint=https://eastus-8.in.applicationinsights.azure.com/;LiveEndpoint=https://eastus.livediagnostics.monitor.azure.com/;ApplicationId=883538dd-7301-4542-994e-807e8f28afc4"
+
+# listeners for each network protocol
+[listeners]
+
+[listeners.dns]
+port = 5300
+udp = true
+prefix_len = 12
+
+[listeners.http]
+port = 8080
+
+[listeners.https]
+port = 8443
+tls = true 
+crt_file = "cert/pub.crt"
+key_file = "cert/priv.key"

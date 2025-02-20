@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dusseldorf-dns-listener
+  namespace: dnslistener
+  labels:
+    module: dusseldorf-dns-listener
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      lbtype: external
+  template:
+    metadata:
+      labels:
+        module: dusseldorf-dns-listener
+        lbtype: external
+    spec:
+      containers:
+      - name: dusseldorf-dns-listener
+        image: dusseldorf.azurecr.io/dusseldorf-listener-dns
+        env:
+        - name: CONNSTR
+          valueFrom:
+            secretKeyRef:
+              name: dataplane-connstr
+              key:  dataplane-connstr
+        volumeMounts:
+        - name: env-set
+          mountPath: "/mnt/secrets"
+          readOnly: true
+        ports:
+        - containerPort: 5353
+          name: "5353-port-dns"
+      imagePullSecrets:
+      - name: acr-pull
+      volumes:
+      - name: env-set
+        csi:
+          driver: secrets-store.csi.k8s.io
+          readOnly: true
+          volumeAttributes:
+            secretProviderClass:  dusseldorfkv-user-msi
