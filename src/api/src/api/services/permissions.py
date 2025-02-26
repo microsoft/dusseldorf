@@ -1,11 +1,17 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+# duSSeldoRF v3
+# aka.ms/dusseldorf
+
 from enum import IntEnum
 from fastapi import Depends
 from typing import List, Optional
 from motor.motor_asyncio import AsyncIOMotorClient
 import logging
 
-from ..models.auth import AuthzPermission, Permission
-from ..dependencies import get_current_user, get_db
+from models.auth import AuthzPermission, Permission
+from dependencies import get_current_user, get_db
 
 logger = logging.getLogger(__name__)
 
@@ -26,11 +32,7 @@ class PermissionService:
             {"fqdn": zone, "authz.alias": user_id},
             {"_id": 0, "authz": {"$elemMatch": {"alias": user_id, "authzlevel": { "$gte": min_permission }}}}
         )
-
-
-
-        return perm_check is not None
-
+        return len(perm_check)
 
     async def get_user_zones(self, user_id: str) -> List[str]:
         """Get all zones where user has any permission"""

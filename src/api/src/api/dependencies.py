@@ -8,9 +8,9 @@ from fastapi import Depends, HTTPException, status, Header, Security
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from typing import Optional
 
-from .services.azure_ad import AzureADService
+from services.azure_ad import AzureADService
 from motor.motor_asyncio import AsyncIOMotorClient
-from .config import get_settings
+from config import get_settings
 
 async def get_current_user(
     authorization: HTTPAuthorizationCredentials = Security(HTTPBearer())

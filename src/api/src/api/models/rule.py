@@ -1,3 +1,9 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+# duSSeldoRF v3
+# aka.ms/dusseldorf
+
 from pydantic import BaseModel, Field
 from typing import List, Optional
 from uuid import UUID, uuid4

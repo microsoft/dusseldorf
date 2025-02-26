@@ -106,25 +106,15 @@ class Utils:
                 return asyncio.get_event_loop()
 
     @classmethod
-    def fqdn_is_valid(cls, domain:str, fqdn:str) -> bool:            
-        if fqdn is None or fqdn=='':
+    def fqdn_is_valid(cls, domain:str, fqdn:str) -> bool:      
+        # if invalid, fail quickly.      
+        if fqdn is None or fqdn=='' or cls.valid_dns_label(fqdn) == False:
             return False 
-        
-        fqdn = fqdn.strip().lower()
-        
-        valid_tlds = [ domain ] #valid 'top level domains' - like ssrf.ms
-        
-        # is this a valid name
-        if cls.valid_dns_label(fqdn) == False:
-            return False
+       
         # if this is a vald top level domain
-        if fqdn in valid_tlds:
-            return True
-
-        # under one of valid domains - return true
-        if any(fqdn.endswith("." + x) for x in valid_tlds):
-            return True
-        return False
+        # or if under one of valid domains
+        return fqdn == domain or fqdn.endswith("." + domain)
+    
     
     @classmethod
     @ttl_cache(maxsize= 100, ttl= 300)
@@ -145,7 +135,7 @@ class Utils:
             bool: whether this is valid
         """
         if len(fqdn) == 0 or len(fqdn) > 255: return False
-        ascii_domain:str = fqdn
+        ascii_domain:str = fqdn.lower()
         if strict:
             try:
                 ascii_domain = idna.encode(fqdn).decode('utf-8')

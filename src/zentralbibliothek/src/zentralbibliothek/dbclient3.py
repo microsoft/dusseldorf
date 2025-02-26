@@ -3,16 +3,17 @@ import random
 import os
 import string
 import time
-
-# change to motor client
-# from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo import MongoClient, errors
-
-
 from cachetools.func import ttl_cache
-from .config import Config
+# from .config import Config
 from .models.networkrequest import NetworkRequest
 from .models.networkresponse import NetworkResponse
+from azure.monitor.opentelemetry import configure_azure_monitor
+
+if os.environ.get("APPLICATIONINSIGHTS_CONNECTION_STRING"):
+    configure_azure_monitor(
+        logger_name="dssldrf.mongodbclient",  # Set the namespace for the logger in which you would like to collect telemetry for if you are collecting logging telemetry. This is imperative so you do not collect logging telemetry from the SDK itself.
+    )
 
 logger = logging.getLogger('dssldrf.mongodbclient')
 
@@ -50,7 +51,6 @@ class DatabaseClient:
         if not connstr:
             raise RuntimeError("Environment variable DSSLDRF_CONNSTR is not set or is empty")
         self._client = MongoClient(connstr)
-        # self._client = AsyncIOMotorClient(connstr)
         self._db = self._client.get_database(dbname)
 
     def test_connectivity(self) -> bool:
@@ -72,7 +72,6 @@ class DatabaseClient:
         If that doesn't work, raise a RuntimeError.
         Returns: None
         """
-        return
         if not self.test_connectivity():
             logger.warning('Database connection down, attempting to reconnect...')
             try:
@@ -81,7 +80,7 @@ class DatabaseClient:
                 logger.critical(f'Unable to connect to database: {ex}')
                 raise RuntimeError('Unable to connect to database')
 
-    @ttl_cache(maxsize=256, ttl=30) 
+    @ttl_cache(maxsize=256, ttl=5) 
     def domain_exists(self, domain_fqdn:str) -> bool:
         """
         Indicator method to tell if a domain exists in the database. 
@@ -136,7 +135,6 @@ class DatabaseClient:
         Returns:
             str: The timestamp that the db assigned to this request.
         """
-        return
         self.guarantee_connectivity()
         try:
             result = self._db.requests.insert_one({

@@ -9,9 +9,9 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from typing import List
 import logging
 
-from ..models.auth import AuthzPermission, Permission, PermissionRequest
-from ..services.permissions import PermissionService
-from ..dependencies import get_current_user, get_db
+from models.auth import AuthzPermission, Permission, PermissionRequest
+from services.permissions import PermissionService
+from dependencies import get_current_user, get_db
 
 logger = logging.getLogger(__name__)
 

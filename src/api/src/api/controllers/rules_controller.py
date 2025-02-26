@@ -11,11 +11,11 @@ from datetime import datetime
 from uuid import UUID, uuid4
 import logging
 
-from ..models.rule import Rule, RuleCreate, RulePriority, RuleComponent, ComponentCreate, ComponentAction
-from ..models.auth import Permission
-from ..dependencies import get_current_user, get_db
-from ..helpers.validation import Validator
-from ..services.permissions import PermissionService
+from models.rule import Rule, RuleCreate, RulePriority, RuleComponent, ComponentCreate, ComponentAction
+from models.auth import Permission
+from dependencies import get_current_user, get_db
+from helpers.validation import Validator
+from services.permissions import PermissionService
 
 logger = logging.getLogger(__name__)
 

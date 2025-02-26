@@ -1,5 +1,11 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+# duSSeldoRF v3
+# aka.ms/dusseldorf
+
 from enum import IntEnum
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from typing import Optional
 from datetime import datetime
 
@@ -12,14 +18,14 @@ class Permission(IntEnum):
 
 
 class AuthzBase(BaseModel):
-    alias: str
+    alias: EmailStr
     authzlevel: int #IntEnum?
 
 class AuthzPermission(AuthzBase):
     pass
 
 class PermissionRequest(BaseModel):
-    alias: str
+    alias: EmailStr
     permission: str
     # permission: Permission
 

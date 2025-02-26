@@ -15,7 +15,7 @@ import httpx
 import json
 from jwt.algorithms import RSAAlgorithm
 
-from ..config import Settings
+from config import Settings
 
 logger = logging.getLogger(__name__)
 

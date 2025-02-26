@@ -3,12 +3,20 @@
 
 # aka.ms/dusseldorf
 
-import logging
+import logging, os
 
 from zentralbibliothek.dbclient3 import DatabaseClient
 from .models.networkrequest import NetworkRequest
 from .models.predicate import Predicate
 from .models.result import Result
+from azure.monitor.opentelemetry import configure_azure_monitor
+
+if os.environ.get("APPLICATIONINSIGHTS_CONNECTION_STRING"):
+    configure_azure_monitor(
+        logger_name="dssldrf.ruleengine",  # Set the namespace for the logger in which you would like to collect telemetry for if you are collecting logging telemetry. This is imperative so you do not collect logging telemetry from the SDK itself.
+    )
+
+logger = logging.getLogger('dssldrf.ruleengine')
 
 class RuleEngine:
     """
@@ -39,8 +47,6 @@ class RuleEngine:
         Take in a list of predicate action names and a list of corresponding action values, and see if the request
         fulfills all of them.
         """
-        logger = logging.getLogger('dssldrf.ruleengine')
-
         for predicate_name, predicate_param in zip(action_names, action_value):
             predicate_class:Predicate = predicate_class_mappings.get(predicate_name, None)
             
@@ -55,7 +61,6 @@ class RuleEngine:
     @classmethod
     def make_result_from_rule(cls, rule_id:str, request:NetworkRequest, result_class_mappings):
         db = DatabaseClient.get_instance()
-        logger = logging.getLogger('dssldrf.ruleengine')
 
         result_set = db.get_aggregated_rule_results(rule_id)
         result_pairs = zip(result_set[1], result_set[2], result_set[3])

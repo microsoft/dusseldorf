@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from motor.motor_asyncio import AsyncIOMotorClient
 from typing import Dict
 
-from ..dependencies import get_current_user, get_db
+from dependencies import get_current_user, get_db
 
 router = APIRouter()
 

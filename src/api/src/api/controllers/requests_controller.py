@@ -9,10 +9,10 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from typing import List, Optional
 import logging
 
-from ..models.auth import Permission
-from ..models.request import Request
-from ..dependencies import get_current_user, get_db
-from ..services.permissions import PermissionService
+from models.auth import Permission
+from models.request import Request
+from dependencies import get_current_user, get_db
+from services.permissions import PermissionService
 
 logger = logging.getLogger(__name__)
 
@@ -46,10 +46,10 @@ async def get_requests(
     query = { "zone": zone }
     
     if protocols:
-        conv_protocols = [protocol.lower() for protocol in protocols.split(",")]
+        conv_protocols = [protocol.upper() for protocol in protocols.split(",")]
         query["protocol"] = {"$in": conv_protocols}
 
-    requests = await db.requests.find(query).skip(skip).limit(limit).to_list(None)
+    requests = await db.requests.find(query).sort({"_id": -1, "time": -1}).skip(skip).limit(limit).to_list(None)
     if not requests:
         logger.debug(f"No requests found for zone {zone}")
         return [] # raise HTTPException(status_code=404, detail="Requests not found")
