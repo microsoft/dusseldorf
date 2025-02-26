@@ -1,13 +1,16 @@
 # Dusseldorf
 
-Dusseldorf is a versatile out-of-band application security testing (OAST) tool. It is designed to provide a platform that analyzes incoming network requests and craft automated responses to empower security professionals and engineers to in their security research.  This initiative is part of Microsoft's increasing investment in Open Source and security research, such as [PyRIT](https://github.com/Azure/PyRIT) and OTHER.  
+Dusseldorf is a versatile out-of-band application security testing (OAST) tool. It is designed to provide security professionals a platform that analyzes incoming network requests and craft automated responses.  This initiative is part of Microsoft's increasing investment in Open Source and security research.  
 
-It is aimed to help automate detection and exploitation of OOB (out of band) vulnerabilities such as Server Side Request Forgery (SSRF), Cross Site Scripting (XSS) and many other classes of security defects.
+It is aimed to help automate the detection and exploitation of OOB (out of band) security vulnerabilities such as *Server Side Request Forgery* (SSRF), *Cross Site Scripting* (XSS), *Server Side Template Injection* (SSTI), *eXternal XML Entities* (XXE) and many other classes of security defects.  
 
-> This project is sometimes stylized as *duSSeldoRF*, following a [common practice](https://en.wikipedia.org/wiki/List_of_Microsoft_codenames) to use place names, and indicating its focus on SSRF.
+> This project is often stylized as *duSSeldoRF*, following a [common practice](https://en.wikipedia.org/wiki/List_of_Microsoft_codenames) to use place names, and indicating the platform's focus on SSRF.
+
+For more information on how to use Dusseldorf, and how it can be used to find security vulnerabilities, please see [this guide](/docs/using).
+
 
 ## Getting Started
-Dusseldorf runs in the cloud, we have instructions for how to deploy Dusseldorf into your [Azure](docs/deploy/azure/) environment, or on your own [local server](/docs/deploy/local).
+Dusseldorf is designed runs in the cloud, and natively runs on Azure.  We have instructions for how to deploy Dusseldorf into your [Azure](docs/deploy/azure/) environment, or on your own [local server](/docs/deploy/local).
 
 Prebuild images are available [here](), and instructions on how to build the source code can be found in our [build documentation](docs/build).
 
