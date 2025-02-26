@@ -68,13 +68,13 @@ export const LeftNav = ({ refreshToken }: ILeftNavProps) => {
                         .filter((zone) => !UiHelper.IsZoneHidden(zone.fqdn))
                         .slice(0, 13)
                         .map((zone) => (
-                            <NavSubItem value={zone.fqdn}>
-                                <Text truncate wrap={false} key={zone.fqdn} style={{ overflow: "hidden", width: 200, display: "block" }}>
+                            <NavSubItem key={zone.fqdn} value={zone.fqdn}>
+                                <Text truncate wrap={false} style={{ overflow: "hidden", width: 200, display: "block" }}>
                                     {zone.fqdn}
                                 </Text>
                             </NavSubItem>
                         ))
-                        .concat(<NavSubItem value=" ">...</NavSubItem>)
+                        .concat(<NavSubItem key={" "} value=" ">...</NavSubItem>)
                 );
             })
             .catch((err) => {

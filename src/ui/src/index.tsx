@@ -5,7 +5,6 @@ import { StrictMode } from "react";
 import { createRoot } from 'react-dom/client';
 import { App } from "./App";
 import { Logger } from "./Helpers/Logger";
-import { initializeIcons } from "@fluentui/react/lib/Icons";
 import { PublicClientApplication, } from "@azure/msal-browser";
 import DusseldorfConfig from "./DusseldorfConfig";
 import { CacheHelper } from "./Helpers/CacheHelper";
@@ -31,8 +30,6 @@ await msal.handleRedirectPromise().then((resp) => {
         window.location.reload();
     }
 });
-
-initializeIcons();
 
 Logger.Info("Dusseldorf.init()");
 
