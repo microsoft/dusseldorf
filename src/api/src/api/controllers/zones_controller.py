@@ -9,11 +9,11 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from typing import List, Optional
 import logging
 
-from ..models.zone import Zone, ZoneCreate
-from ..models.auth import Permission
-from ..dependencies import get_current_user, get_db
-from ..helpers.dns_helper import DnsHelper
-from ..services.permissions import PermissionService
+from models.zone import Zone, ZoneCreate
+from models.auth import Permission
+from dependencies import get_current_user, get_db
+from helpers.dns_helper import DnsHelper
+from services.permissions import PermissionService
 
 logger = logging.getLogger(__name__)
 

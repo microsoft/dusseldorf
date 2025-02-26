@@ -7,7 +7,7 @@
 from pydantic import BaseModel
 from typing import Optional, List
 from datetime import datetime
-from .auth import AuthzBase
+from models.auth import AuthzBase
 
 class ZoneBase(BaseModel):
     fqdn: str

@@ -16,7 +16,7 @@ from models.httprequest import HttpRequest
 from models.httpresponse import HttpResponse
 from zentralbibliothek.utils import Utils
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("listener.http")
 
 def _is_dangerous_host(cls, url:str) -> bool:
     """

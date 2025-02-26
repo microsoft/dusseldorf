@@ -11,24 +11,35 @@ from ssl import SSLContext
 from zentralbibliothek.utils import Utils
 from zentralbibliothek.dbclient3 import DatabaseClient
 from httplistener import HttpRequestHandler
+from azure.monitor.opentelemetry import configure_azure_monitor
 
-logger = logging.getLogger(__name__)
+if os.environ.get("APPLICATIONINSIGHTS_CONNECTION_STRING"):
+    configure_azure_monitor(
+        logger_name="listener.http",  # Set the namespace for the logger in which you would like to collect telemetry for if you are collecting logging telemetry. This is imperative so you do not collect logging telemetry from the SDK itself.
+    )
+
+logger = logging.getLogger("listener.http")
 
 def main():
 
     Utils.banner()
 
     logging.basicConfig(level = logging.DEBUG)
-    logger.info("Starting Dusseldorf")
+    tls:bool = bool(int(os.getenv("LSTNER_HTTP_TLS", 1))) # LSTNER_HTTP_TLS=0 for HTTP
+    LISTENER_NAME = "listener.http"
+    if tls:
+        LISTENER_NAME = "listener.https"
+
+    logger.info(f"Starting Dusseldorf {LISTENER_NAME}")
 
     iface:str = os.getenv("LSTNER_HTTP_INTERFACE", "")
     port:int = int(os.getenv("LSTNER_HTTP_PORT", 443))
-    tls:bool = bool(int(os.getenv("LSTNER_HTTP_TLS", 1))) # LSTNER_HTTP_TLS=0 for HTTP 
+    #tls:bool = bool(int(os.getenv("LSTNER_HTTP_TLS", 1))) # LSTNER_HTTP_TLS=0 for HTTP 
     tls_crt_file:str = os.environ.get("DSSLDRF_TLS_CRT_FILE", None)
     tls_key_file:str = os.environ.get("DSSLDRF_TLS_KEY_FILE", None)
 
     if "DSSLDRF_CONNSTR" not in os.environ:
-        logger.critical("DSSLDRF_CONNSTR not found in environment variables")
+        logger.critical(f"{LISTENER_NAME} DSSLDRF_CONNSTR not found in environment variables")
         return -1
 
     # wake up the DB
@@ -39,18 +50,18 @@ def main():
         if tls is True:
             # if this is an HTTP server, load the cert and keyfile
             if tls_crt_file is None:
-                logger.critical("DSSLDRF_TLS_CRT_FILE not found in environment variables")
+                logger.critical(f"{LISTENER_NAME} DSSLDRF_TLS_CRT_FILE not found in environment variables")
                 return -1
             if tls_key_file is None:
-                logger.critical("DSSLDRF_TLS_KEY_FILE not found in environment variables")
+                logger.critical(f"{LISTENER_NAME} DSSLDRF_TLS_KEY_FILE not found in environment variables")
                 return -1
 
             # but check if they exist on filesystem
             if not os.path.isfile(tls_crt_file):
-                logger.critical("TLS cert file (%s) not found", tls_crt_file)
+                logger.critical(f"{LISTENER_NAME} TLS cert file {tls_crt_file} not found")
                 return -1
             if not os.path.isfile(tls_key_file):
-                logger.critical("TLS key file (%s) not found", tls_key_file)
+                logger.critical(f"{LISTENER_NAME} TLS key file {tls_key_file} not found")
                 return -1
 
             ctx = SSLContext(ssl.PROTOCOL_TLS_SERVER)
@@ -62,7 +73,7 @@ def main():
                 suppress_ragged_eofs = True,                
             )
         
-        logger.info("Listening on %s", port)
+        logger.info(f"{LISTENER_NAME} Listening on {port}")
         server.allow_reuse_address = True
         server.server_version = "Dusseldorf"
         server.serve_forever()

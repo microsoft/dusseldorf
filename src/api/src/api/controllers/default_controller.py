@@ -7,10 +7,12 @@
 import time
 from fastapi import APIRouter, Response, Depends
 from typing import Dict
-from ..dependencies import get_current_user, get_db
+from dependencies import get_current_user, get_db
 
-router = APIRouter()
-
+router = APIRouter(
+    tags=["Default"]
+)
+    
 @router.get("/")
 async def root() -> Dict[str, str]:
     """Default endpoint returning API information - public access"""
@@ -19,18 +21,6 @@ async def root() -> Dict[str, str]:
         "version": "2.0.0",
         "status": "operational"
     }
-
-@router.get("/robots.txt")
-async def robots() -> Response:
-    return Response(
-        content="User-agent: *\nDisallow: /",
-        media_type="text/plain"
-    )
-
-@router.get("/favicon.ico")
-async def favicon() -> Response:
-    """Favicon endpoint - public access"""
-    return Response(status_code=204)
 
 @router.get("/ping")
 async def pong(

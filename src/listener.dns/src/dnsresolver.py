@@ -24,7 +24,7 @@ NOERROR:int = 0
 NXDOMAIN:int = 3
 
 count = 0 # global counter for requests
-logger = logging.getLogger("listener.dns.resolve")
+logger = logging.getLogger(__name__)
 
 class DusseldorfResolver(BaseResolver):
     """
