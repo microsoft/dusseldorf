@@ -18,10 +18,10 @@ import {
 } from "@fluentui/react-components";
 import { DeleteRegular } from "@fluentui/react-icons";
 
-import { User } from "../../Helpers/Types"
+import { PERMISSION } from "./AuthDialog";
 import { DusseldorfAPI } from "../../DusseldorfApi";
 import { Logger } from "../../Helpers/Logger";
-import { PERMISSION } from "./AuthDialog";
+import { User } from "../../Types/User";
 
 const useStyles = makeStyles({
     aliasColumn: {
@@ -31,7 +31,7 @@ const useStyles = makeStyles({
     },
     permissionColumn: {
         minWidth: "80px",
-        maxWidth: "80px",
+        maxWidth: "80px"
     }
 });
 
@@ -48,36 +48,30 @@ export const mapPermission = (authzlevel: number) => {
         default:
             return "unknown";
     }
-}
+};
 
 interface AuthTableProps {
-    users: User[],
-    refreshUsers: () => void
+    users: User[];
+    refreshUsers: () => void;
+    zone: string;
 }
 
-export const AuthTable = ({ users, refreshUsers }: AuthTableProps): JSX.Element => {
-
+export const AuthTable = ({ users, refreshUsers, zone }: AuthTableProps): JSX.Element => {
     const styles = useStyles();
 
     const columns: TableColumnDefinition<User>[] = [
         createTableColumn<User>({
             columnId: "aliasColumn",
-            // compare: (userA, userB) => {
-            //     return userA.alias.localeCompare(userB.alias);
-            // },
+            compare: (userA, userB) => {
+                return userA.alias.localeCompare(userB.alias);
+            },
             renderHeaderCell: () => {
-                return (
-                    <Body1Strong className={styles.aliasColumn}>
-                        Alias
-                    </Body1Strong>
-                );
+                return <Body1Strong className={styles.aliasColumn}>Alias</Body1Strong>;
             },
             renderCell: (user) => {
                 return (
                     <DataGridCell className={styles.aliasColumn}>
-                        <Caption1>
-                            {user.alias}
-                        </Caption1>
+                        <Caption1>{user.alias}</Caption1>
                     </DataGridCell>
                 );
             }
@@ -88,18 +82,12 @@ export const AuthTable = ({ users, refreshUsers }: AuthTableProps): JSX.Element 
                 return userB.authzlevel - userA.authzlevel;
             },
             renderHeaderCell: () => {
-                return (
-                    <Body1Strong>
-                        Permission
-                    </Body1Strong>
-                );
+                return <Body1Strong>Permission</Body1Strong>;
             },
             renderCell: (user) => {
                 return (
                     <DataGridCell>
-                        <Caption1>
-                            {mapPermission(user.authzlevel)}
-                        </Caption1>
+                        <Caption1>{mapPermission(user.authzlevel)}</Caption1>
                     </DataGridCell>
                 );
             }
@@ -112,27 +100,28 @@ export const AuthTable = ({ users, refreshUsers }: AuthTableProps): JSX.Element 
             renderCell: (user) => {
                 return (
                     <DataGridCell>
-                        <Tooltip content={`Delete user: ${user.alias}`} relationship="label">
+                        <Tooltip
+                            content={`Delete user: ${user.alias}`}
+                            relationship="label"
+                        >
                             <Button
                                 appearance="transparent"
                                 icon={<DeleteRegular />}
                                 disabled={
                                     // don't delete the only owner
-                                    user.authzlevel === PERMISSION.OWNER && 
-                                    users.filter(value => value.authzlevel === PERMISSION.OWNER).length === 1
+                                    user.authzlevel === PERMISSION.OWNER &&
+                                    users.filter((value) => value.authzlevel === PERMISSION.OWNER).length === 1
                                 }
                                 onClick={() => {
-                                    DusseldorfAPI.RemoveUserFromZone(user.zone, user.alias)
+                                    DusseldorfAPI.RemoveUserFromZone(zone, user.alias)
                                         .then(() => {
                                             refreshUsers();
                                         })
-                                        .catch(err => {
+                                        .catch((err) => {
                                             Logger.Error(err);
-                                        })
+                                        });
                                 }}
-                            >
-                            {user.zone}
-                            </Button>
+                            />
                         </Tooltip>
                     </DataGridCell>
                 );
@@ -150,20 +139,16 @@ export const AuthTable = ({ users, refreshUsers }: AuthTableProps): JSX.Element 
         >
             <DataGridHeader>
                 <DataGridRow>
-                    {({ renderHeaderCell }) => (
-                        <DataGridHeaderCell>{renderHeaderCell()}</DataGridHeaderCell>
-                    )}
+                    {({ renderHeaderCell }) => <DataGridHeaderCell>{renderHeaderCell()}</DataGridHeaderCell>}
                 </DataGridRow>
             </DataGridHeader>
             <DataGridBody<User>>
                 {({ item }) => (
                     <DataGridRow<User>>
-                        {({ renderCell }) => (
-                            <DataGridCell>{renderCell(item)}</DataGridCell>
-                        )}
+                        {({ renderCell }) => <DataGridCell>{renderCell(item)}</DataGridCell>}
                     </DataGridRow>
                 )}
             </DataGridBody>
         </DataGrid>
     );
-}
+};

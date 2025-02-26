@@ -2,20 +2,21 @@
 // Licensed under the MIT License.
 
 import { MessageBar } from "@fluentui/react-components";
-import { DusseldorfContext } from "../App";
 import { useState, useEffect, useContext } from "react";
+
+import { DomainsContext } from "../App";
 
 /**
  * Displays an error/success banner for Dusseldorf's config and status.
  * @returns
  */
 export const SuccesBanner = () => {
-    const { domain } = useContext(DusseldorfContext);
-    const [success, setSuccess] = useState<boolean>(domain.length > 0);
+    const domains = useContext(DomainsContext);
+    const [success, setSuccess] = useState<boolean>(domains.length > 0);
 
     useEffect(() => {
-        setSuccess(domain.length > 0);
-    }, [domain]);
+        setSuccess(domains.length > 0);
+    }, [domains]);
 
     return (
         <MessageBar intent={success ? "success" : "error"}>

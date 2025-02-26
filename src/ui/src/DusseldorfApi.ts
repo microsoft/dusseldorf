@@ -1,12 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
-import DusseldorfConfig from "./DusseldorfConfig";
-import { Logger } from "./Helpers/Logger";
-import { NewRuleComponent, DssldrfRequest, Rule, RuleComponent, User } from "./Helpers/Types";
 import { PERMISSION } from "./Components/ZoneDetails/AuthDialog";
+import DusseldorfConfig from "./DusseldorfConfig";
 import { CacheHelper } from "./Helpers/CacheHelper";
+import { DssldrfRequest } from "./Types/DssldrfRequest";
+import { Logger } from "./Helpers/Logger";
+import { Rule } from "./Types/Rule";
+import { NewRuleComponent, RuleComponent } from "./Types/RuleComponent";
+import { User } from "./Types/User";
 import { Zone } from "./Types/Zone";
 
 /**
@@ -263,25 +265,18 @@ export class DusseldorfAPI {
      * Add a component (a condition or result) to a rule. Refer to TODO for condition and result values.
      */
     static AddRuleComponent = (rule: Rule, component: NewRuleComponent): Promise<RuleComponent> => {
-        Logger.Info(`API.AddRuleComponent(${rule.zone}, ${rule.name}, ${component.actionName})`);
+        Logger.Info(`API.AddRuleComponent(${rule.zone}, ${rule.name}, ${component.actionname})`);
 
         if (!rule.zone || !rule.ruleid) {
-            throw Error(`API.AddRuleComponent(${rule.zone}, ${rule.name}, ${component.actionName}) bad arguments`);
+            throw Error(`API.AddRuleComponent(${rule.zone}, ${rule.name}, ${component.actionname}) bad arguments`);
         }
 
-        // rule component to be modified into rule component
-        const newRuleComponent = {
-            actionname: component.actionName,
-            actionvalue: component.actionValue,
-            ispredicate: component.isPredicate
-        };
-
-        return this.post(`rules/${rule.zone}/${rule.ruleid}/components`, newRuleComponent)
+        return this.post(`rules/${rule.zone}/${rule.ruleid}/components`, component)
             .then((resp) => {
                 if (resp.ok) {
                     return resp.json();
                 } else {
-                    throw Error(`API.AddRuleComponent(${rule.zone}, ${rule.name}, ${component.actionName}) failed`);
+                    throw Error(`API.AddRuleComponent(${rule.zone}, ${rule.name}, ${component.actionname}) failed`);
                 }
             })
             .then((data) => {
@@ -295,7 +290,7 @@ export class DusseldorfAPI {
     static EditRuleComponent = async (rule: Rule, component: RuleComponent, newValue: string): Promise<void> => {
         Logger.Info(`API.EditRuleComponent(${rule.zone}, ${rule.ruleid}, ${component.componentid})`);
 
-        if (!rule.zone || !rule.ruleid) {
+        if (!rule.zone || !rule.ruleid || !component.componentid) {
             throw Error(`API.EditRuleComponent(${rule.zone}, ${rule.ruleid}, ${component.componentid}) bad arguments`);
         }
 
@@ -398,7 +393,7 @@ export class DusseldorfAPI {
             });
             
         } 
-        catch (e) {
+        catch {
             Logger.Warn(`API.AddUserToZone(${zone}, ${user}, ${permission}) failed [expected], trying the new API`);            
         }
 
@@ -415,7 +410,7 @@ export class DusseldorfAPI {
                 return;
             });        
         } 
-        catch (e) { /* will fail for now (early feb 2025) */ }
+        catch { /* will fail for now (early feb 2025) */ }
     }
 
     /**

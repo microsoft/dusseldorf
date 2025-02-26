@@ -26,7 +26,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { DusseldorfAPI } from "../../DusseldorfApi";
 import { Logger } from "../../Helpers/Logger";
-import { Rule } from "../../Helpers/Types";
+import { Rule } from "../../Types/Rule";
 
 const columns: TableColumnDefinition<Rule>[] = [
     createTableColumn<Rule>({
@@ -120,7 +120,7 @@ export const RuleTable = ({ zone, ruleId, setRuleId, rule, setRule, nudge }: Rul
         if (!rule || newRuleId != rule.ruleid) {
             setSelectedRows(data.selectedItems);
             setRuleId(newRuleId);
-            setRule(rules.find(r => r.ruleid == newRuleId));
+            setRule(rules.find((r) => r.ruleid == newRuleId));
         }
     };
 
@@ -152,7 +152,7 @@ export const RuleTable = ({ zone, ruleId, setRuleId, rule, setRule, nudge }: Rul
      * Most of the time, we are setting rule and ruleId, so we do not want to
      * refresh every single time ruleId changes. Instead, the parent will change
      * nudge when we should care about external changes to the rules or ruleId.
-     * 
+     *
      * Show the old rules while updating requests for the current zone.
      */
     useEffect(() => {
@@ -164,7 +164,7 @@ export const RuleTable = ({ zone, ruleId, setRuleId, rule, setRule, nudge }: Rul
                 if (ruleId) {
                     setSelectedRows(new Set<TableRowId>([ruleId]));
                     if (rule?.ruleid != ruleId) {
-                        setRule(newRules.find(r => r.ruleid == ruleId));
+                        setRule(newRules.find((r) => r.ruleid == ruleId));
                     }
                 } else {
                     setSelectedRows(new Set<TableRowId>([]));
@@ -175,6 +175,7 @@ export const RuleTable = ({ zone, ruleId, setRuleId, rule, setRule, nudge }: Rul
                 Logger.Error(err);
                 setRules([]);
                 setSelectedRows(new Set<TableRowId>([]));
+                setRule(undefined);
             });
     }, [nudge]);
 
@@ -193,7 +194,10 @@ export const RuleTable = ({ zone, ruleId, setRuleId, rule, setRule, nudge }: Rul
                     </Text>
                 </MessageBar>
 
-                <Text wrap style={{ wordWrap: "break-word"}}>
+                <Text
+                    wrap
+                    style={{ wordWrap: "break-word" }}
+                >
                     Create a new rule to capture network requests sent to <strong>{zone}</strong>. Use rules to provide
                     automated responses to particular network request, based on your filters.
                 </Text>
@@ -215,7 +219,7 @@ export const RuleTable = ({ zone, ruleId, setRuleId, rule, setRule, nudge }: Rul
             selectedItems={selectedRows}
             onSelectionChange={onSelectionChange}
             sortable
-            getRowId={(rule) => rule.ruleid}
+            getRowId={(rule: Rule) => rule.ruleid}
             resizableColumns
             columnSizingOptions={columnSizingOptions}
             subtleSelection

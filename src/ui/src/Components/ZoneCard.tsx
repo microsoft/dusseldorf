@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { Body1, Body1Strong, Body2, Card, CardHeader, Subtitle1, Text } from "@fluentui/react-components";
+import { Card, Text } from "@fluentui/react-components";
 import { TargetAddRegular, TargetRegular } from "@fluentui/react-icons";
 
 interface ZoneCardProps {

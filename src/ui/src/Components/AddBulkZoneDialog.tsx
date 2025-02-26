@@ -16,7 +16,9 @@ import {
     Select
 } from "@fluentui/react-components";
 import { AddRegular, DismissRegular } from "@fluentui/react-icons";
-import { useState } from "react";
+import { useContext, useState } from "react";
+
+import { DomainsContext } from "../App";
 import { DusseldorfAPI } from "../DusseldorfApi";
 import { Logger } from "../Helpers/Logger";
 
@@ -27,7 +29,6 @@ interface AddBulkZoneDialogProps {
     onSwitch: () => void;
     domain: string;
     setDomain: (domain: string) => void;
-    domains: JSX.Element[];
 }
 
 export const AddBulkZoneDialog = ({
@@ -36,9 +37,17 @@ export const AddBulkZoneDialog = ({
     open,
     onSwitch,
     domain,
-    setDomain,
-    domains
+    setDomain
 }: AddBulkZoneDialogProps) => {
+    const domains = useContext(DomainsContext).map((domainOption) => (
+            <option
+                key={domainOption}
+                value={domainOption}
+            >
+                {domainOption}
+            </option>
+        ));
+        
     const [numZones, setNumZones] = useState<number>(1);
 
     const [completeMsg, setCompleteMsg] = useState<boolean>(false);

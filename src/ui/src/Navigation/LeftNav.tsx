@@ -68,13 +68,13 @@ export const LeftNav = ({ refreshToken }: ILeftNavProps) => {
                         .filter((zone) => !UiHelper.IsZoneHidden(zone.fqdn))
                         .slice(0, 13)
                         .map((zone) => (
-                            <NavSubItem value={zone.fqdn}>
-                                <Text truncate wrap={false} key={zone.fqdn} style={{ overflow: "hidden", width: 200, display: "block" }}>
+                            <NavSubItem key={zone.fqdn} value={zone.fqdn}>
+                                <Text truncate wrap={false} style={{ overflow: "hidden", width: 200, display: "block" }}>
                                     {zone.fqdn}
                                 </Text>
                             </NavSubItem>
                         ))
-                        .concat(<NavSubItem value=" ">...</NavSubItem>)
+                        .concat(<NavSubItem key={" "} value=" ">...</NavSubItem>)
                 );
             })
             .catch((err) => {
@@ -85,16 +85,18 @@ export const LeftNav = ({ refreshToken }: ILeftNavProps) => {
     };
 
     const handleCategoryToggle = (_: Event | React.SyntheticEvent<Element, Event>, data: OnNavItemSelectData) => {
-        if (openCategories.includes(data.categoryValue as string)) {
-            setOpenCategories([]);
-        } else {
-            setOpenCategories([data.categoryValue as string]);
+        if (data.categoryValue) {
+            if (openCategories.includes(data.categoryValue)) {
+                setOpenCategories([]);
+            } else {
+                setOpenCategories([data.categoryValue]);
+            }
         }
     };
 
     const handleItemSelect = (ev: Event | React.SyntheticEvent<Element, Event>, data: OnNavItemSelectData) => {
-        setSelectedCategoryValue(data.categoryValue as string);
-        setSelectedValue(data.value as string);
+        setSelectedCategoryValue(data.categoryValue);
+        setSelectedValue(data.value);
         if (data.value && data.categoryValue) {
             navigate("/" + data.categoryValue + "/" + data.value);
         } else if (data.value) {

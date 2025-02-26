@@ -6,8 +6,9 @@ import { dump, YAMLException } from "js-yaml";
 import { useEffect, useState } from "react";
 
 import { CreateAsRuleDialog } from "./CreateAsRuleDialog";
-import { NewRule, Template } from "../../Helpers/Types";
 import { YamlHelper } from "../../Helpers/YamlHelper";
+import { NewRule } from "../../Types/Rule";
+import { Template } from "../../Types/Template";
 
 //!TODO: make the monospace font happen
 const useStyles = makeStyles({
@@ -21,7 +22,6 @@ interface ITemplateDetailsProps {
 }
 
 export const TemplateDetails = ({ template }: ITemplateDetailsProps): JSX.Element => {
-
     const styles = useStyles();
 
     const [activeTemplate, setActiveTemplate] = useState<Template | undefined>(template);
@@ -40,8 +40,7 @@ export const TemplateDetails = ({ template }: ITemplateDetailsProps): JSX.Elemen
                 setPayloadRules(rules);
                 setPayloadErrorMsg("");
             }
-        }
-        catch (ex) {
+        } catch (ex) {
             setPayloadRules([]);
             if (ex instanceof YAMLException) {
                 setPayloadErrorMsg(`Parsing Error on (${ex.mark.line}:${ex.mark.column}): ${ex.reason}`);
@@ -62,7 +61,7 @@ export const TemplateDetails = ({ template }: ITemplateDetailsProps): JSX.Elemen
 
     if (activeTemplate) {
         return (
-            <div className='stack vstack-gap'>
+            <div className="stack vstack-gap">
                 <Subtitle1>{activeTemplate.title}</Subtitle1>
 
                 <Text>{activeTemplate.description}</Text>
@@ -77,31 +76,34 @@ export const TemplateDetails = ({ template }: ITemplateDetailsProps): JSX.Elemen
                     value={payload}
                 />
 
-                {
-                    payloadErrorMsg &&
-                    <MessageBar intent="error">
-                        {payloadErrorMsg}
-                    </MessageBar>
-                }
+                {payloadErrorMsg && <MessageBar intent="error">{payloadErrorMsg}</MessageBar>}
 
-                <CreateAsRuleDialog rules={payloadRules}/>
+                <CreateAsRuleDialog rules={payloadRules} />
             </div>
         );
     } else {
         return (
             <div className="stack vstack-gap">
-                <Text>
-                    Templates make up one or more rules that can be applied to a zone.
-                </Text>
+                <Text>Templates make up one or more rules that can be applied to a zone.</Text>
 
                 <Text>
-                    For more information on how to use templates, please see the documentation on{' '}
-                    <Link href="https://aka.ms/dusseldocs/templates" inline>https://aka.ms/dusseldocs/templates</Link>
-                    {' '}for more information, and{' '}
-                    <Link href="https://dev.azure.com/securityassurance/Dusseldorf/_git/payloads" inline>ADO</Link>
-                    {' '}for some examples.
+                    For more information on how to use templates, please see the documentation on{" "}
+                    <Link
+                        href="https://aka.ms/dusseldocs/templates"
+                        inline
+                    >
+                        https://aka.ms/dusseldocs/templates
+                    </Link>{" "}
+                    for more information, and{" "}
+                    <Link
+                        href="https://dev.azure.com/securityassurance/Dusseldorf/_git/payloads"
+                        inline
+                    >
+                        ADO
+                    </Link>{" "}
+                    for some examples.
                 </Text>
             </div>
         );
     }
-}
+};

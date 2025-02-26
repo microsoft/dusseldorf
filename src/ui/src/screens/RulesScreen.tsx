@@ -25,42 +25,42 @@ import { RuleDetails } from "../Components/Rules/RuleDetails";
 import { RuleTable } from "../Components/Rules/RuleTable";
 import { DusseldorfAPI } from "../DusseldorfApi";
 import { Logger } from "../Helpers/Logger";
-import { Rule } from "../Helpers/Types";
+import { Rule } from "../Types/Rule";
 
 /**
  * Create a rule that responds to GET or POST requests with 'hello world'.
  */
 const makeHelloWorldRule = async (zone: string): Promise<Rule> => {
     const newRule = await DusseldorfAPI.AddRule(zone, "http", 100, "GET/POST response with hello world").catch(
-        (err) => {
+        (err: Error) => {
             return Promise.reject(err);
         }
     );
 
     // Respond to HTTP GET and POST responses
     await DusseldorfAPI.AddRuleComponent(newRule, {
-        isPredicate: true,
-        actionName: "http.method",
-        actionValue: "get,post"
-    }).catch((err) => {
+        ispredicate: true,
+        actionname: "http.method",
+        actionvalue: "get,post"
+    }).catch((err: Error) => {
         return Promise.reject(err);
     });
 
     // Send a 200 response
     await DusseldorfAPI.AddRuleComponent(newRule, {
-        isPredicate: false,
-        actionName: "http.code",
-        actionValue: "200"
-    }).catch((err) => {
+        ispredicate: false,
+        actionname: "http.code",
+        actionvalue: "200"
+    }).catch((err: Error) => {
         return Promise.reject(err);
     });
 
     // And say hello
     await DusseldorfAPI.AddRuleComponent(newRule, {
-        isPredicate: false,
-        actionName: "http.body",
-        actionValue: "hello world"
-    }).catch((err) => {
+        ispredicate: false,
+        actionname: "http.body",
+        actionvalue: "hello world"
+    }).catch((err: Error) => {
         return Promise.reject(err);
     });
 
@@ -71,65 +71,76 @@ const makeHelloWorldRule = async (zone: string): Promise<Rule> => {
  * Create a rule that responds to DNS lookups with localhost.
  */
 const makeLocalhostRule = async (zone: string): Promise<Rule> => {
-    
     // IPv4 rule
     DusseldorfAPI.AddRule(zone, "dns", 100, "DNS A response (127.0.0.1)")
-        .then((newRule4) => {
+        .then(async (newRule4) => {
             // Respond to IPv4 DNS requests
-            return DusseldorfAPI.AddRuleComponent(newRule4, {
-                isPredicate: true,
-                actionName: "dns.type",
-                actionValue: "A"
-            }).then(() => newRule4);
+            await DusseldorfAPI.AddRuleComponent(newRule4, {
+                ispredicate: true,
+                actionname: "dns.type",
+                actionvalue: "A"
+            })
+            .catch((err: Error) => { return Promise.reject(err); });
+            return newRule4;
         })
-        .then((newRule4) => {
+        .then(async (newRule4) => {
             // Respond with IPv4
-            return DusseldorfAPI.AddRuleComponent(newRule4, {
-                isPredicate: false,
-                actionName: "dns.type",
-                actionValue: "A"
-            }).then(() => newRule4);
+            await DusseldorfAPI.AddRuleComponent(newRule4, {
+                ispredicate: false,
+                actionname: "dns.type",
+                actionvalue: "A"
+            })
+            .catch((err: Error) => { return Promise.reject(err); });
+            return newRule4;
         })
-        .then((newRule4) => {
+        .then(async (newRule4) => {
             // With localhost
-            return DusseldorfAPI.AddRuleComponent(newRule4, {
-                isPredicate: false,
-                actionName: "dns.data",
-                actionValue: '{"ip":"127.0.0.1"}'
-            }).then(() => newRule4);
+            await DusseldorfAPI.AddRuleComponent(newRule4, {
+                ispredicate: false,
+                actionname: "dns.data",
+                actionvalue: '{"ip":"127.0.0.1"}'
+            })
+            .catch((err: Error) => { return Promise.reject(err); });
+            return newRule4;
         })
-        .catch((err) => {
+        .catch((err: Error) => {
             Logger.Error(err);
             return Promise.reject(err);
         });
 
     // IPv6 rule
     const newRule6 = await DusseldorfAPI.AddRule(zone, "dns", 100, "DNS AAAA response (::1)")
-        .then((newRule6) => {
+        .then(async (newRule6) => {
             // Respond to IPv6 DNS requests
-            return DusseldorfAPI.AddRuleComponent(newRule6, {
-                isPredicate: true,
-                actionName: "dns.type",
-                actionValue: "AAAA"
-            }).then(() => newRule6);
+            await DusseldorfAPI.AddRuleComponent(newRule6, {
+                ispredicate: true,
+                actionname: "dns.type",
+                actionvalue: "AAAA"
+            })
+            .catch((err: Error) => { return Promise.reject(err); });
+            return newRule6;
         })
-        .then((newRule6) => {
+        .then(async (newRule6) => {
             // Respond with IPv6
-            return DusseldorfAPI.AddRuleComponent(newRule6, {
-                isPredicate: false,
-                actionName: "dns.type",
-                actionValue: "AAAA"
-            }).then(() => newRule6);
+            await DusseldorfAPI.AddRuleComponent(newRule6, {
+                ispredicate: false,
+                actionname: "dns.type",
+                actionvalue: "AAAA"
+            })
+            .catch((err: Error) => { return Promise.reject(err); });
+            return newRule6;
         })
-        .then((newRule6) => {
+        .then(async (newRule6) => {
             // With localhost
-            return DusseldorfAPI.AddRuleComponent(newRule6, {
-                isPredicate: false,
-                actionName: "dns.data",
-                actionValue: '{"ip":"::1"}'
-            }).then(() => newRule6);
+            await DusseldorfAPI.AddRuleComponent(newRule6, {
+                ispredicate: false,
+                actionname: "dns.data",
+                actionvalue: '{"ip":"::1"}'
+            })
+            .catch((err: Error) => { return Promise.reject(err); });
+            return newRule6;
         })
-        .catch((err) => {
+        .catch((err: Error) => {
             Logger.Error(err);
             return Promise.reject(err);
         });

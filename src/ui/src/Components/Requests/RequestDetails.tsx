@@ -6,14 +6,16 @@ import { useEffect, useState } from "react";
 
 import { DnsRequestDetails } from "./DnsRequestDetails";
 import { HttpRequestDetails } from "./HttpRequestDetails";
-import { DssldrfRequest } from "../../Helpers/Types";
+import { DssldrfRequest } from "../../Types/DssldrfRequest";
 
 /**
  * A custom timestamp formatter
  */
-const formatTimestamp = (ts: string|number) => {
+const formatTimestamp = (ts: string | number) => {
     // If the timestamp is a string, convert it to a number
-    if (typeof ts === "string") { ts = parseInt(ts); }
+    if (typeof ts === "string") {
+        ts = parseInt(ts);
+    }
     // tmiestamp is in seconds, make into milliseconds
     ts = ts * 1000;
 
@@ -40,26 +42,20 @@ export function RequestDetails({ request }: IRequestDetailsProps) {
 
     // When the request changes, update the details
     useEffect(() => {
-
         if (request !== undefined) {
-            if(!request.protocol)
-            {
-                setComponent(<Text>{"Invalid protocol"}</Text>);                
-            }
-            else
-            {
+            if (!request.protocol) {
+                setComponent(<Text>{"Invalid protocol"}</Text>);
+            } else {
                 const newProtocol = request.protocol.toLowerCase();
                 if (newProtocol == "dns") {
                     setComponent(<DnsRequestDetails details={request} />);
-                } 
-                
+                }
+
                 if (newProtocol == "http" || newProtocol == "https") {
                     setComponent(<HttpRequestDetails details={request} />);
                 }
             }
-
         }
-
     }, [request]);
 
     // If there is no request yet, don't show anything

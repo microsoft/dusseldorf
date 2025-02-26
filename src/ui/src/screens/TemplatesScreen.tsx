@@ -15,7 +15,7 @@ import {
     XssExfilCall,
     XXEOOBCall
 } from "../Components/Templates/TemplateStrings";
-import { Template } from "../Helpers/Types";
+import { Template } from "../Types/Template";
 
 const templateDictionary: Record<string, string> = {
     jsalertdom: JSAlertDomain,

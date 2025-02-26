@@ -15,7 +15,6 @@ import {
     Link,
     Menu,
     MenuItem,
-    MenuItemSwitch,
     MenuList,
     MenuPopover,
     MenuTrigger,

@@ -7,7 +7,7 @@ title: XSS alert() domain
 description: This payload will show an alert with the current domain.
 rules:
   - name: reply with js alert
-    protocol: http
+    networkprotocol: http
     predicates:
     - http.method: get
     results:
@@ -24,7 +24,7 @@ title: CORS (cross origin resource sharing) preflight settings
 description: This sends a very permissive CORS reply to any OPTIONS request.
 rules:
   - name: OPTIONS call CORS
-    protocol: http
+    networkprotocol: http
     predicates:
     - http.method: options
     results:
@@ -40,7 +40,7 @@ title: Exfiltrate DOM using JS
 description: This payload will exfiltrate data from the DOM (document object model) using JavaScript.
 rules:
   - name: JS reply
-    protocol: http
+    networkprotocol: http
     predicates:
       - http.method: GET
     results:
@@ -69,7 +69,7 @@ title: Powershell to get IMDS tokens
 description: PowerShell 5+ payload to retrieve MSI (managed identity) tokens for Azure Keyvault (vault.azure.net).
 rules:
   - name: Reply Powershell code to PS clients
-    protocol: http
+    networkprotocol: http
     predicates:
       - http.method: get
       - http.path: .*.ps+?
@@ -88,7 +88,7 @@ title: XXE Call
 description: XXE Payload to exfil /etc/passwd file.
 rules:
   - name: Reply XML payload
-    protocol: http
+    networkprotocol: http
     predicates:
       - http.method: get
       - http.path: .*.xml
@@ -105,7 +105,7 @@ rules:
           ]>
           <r>&exfil;</r>
   - name: Stage2 DTD payload
-    protocol: http
+    networkprotocol: http
     predicates:
       - http.method: get
       - http.path: stage2.dtd
@@ -122,7 +122,7 @@ title: Reply with localhost
 description: Reply to DNS A record requests with 127.0.0.1 (but will still log requests).
 rules:
   - name: Reply with localhost
-    protocol: dns
+    networkprotocol: dns
     predicates:
       - dns.type: A
     results:

@@ -114,7 +114,7 @@ export const HomePage = () => {
                 <Text>
                     Dusseldorf uses unique <em>zones</em> (in the form of{" "}
                     <abbr title="Fully Qualified Domain Name">FQDN</abbr> subdomains) to determine the routing of
-                    network requests. This way, only you can see what's sent to your zones, or you can setup strong{" "}
+                    network requests. This way, only you can see what is sent to your zones, or you can setup strong{" "}
                     <abbr title="Role Based Access Control">RBAC</abbr> rules to provide granular access to other to
                     collaborate.
                 </Text>

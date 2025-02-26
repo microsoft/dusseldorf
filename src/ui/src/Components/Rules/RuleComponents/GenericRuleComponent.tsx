@@ -1,13 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { Button, Field, Input, Tooltip } from "@fluentui/react-components";
+import { Button, Field, Tooltip } from "@fluentui/react-components";
 import { DismissRegular, SaveRegular } from "@fluentui/react-icons";
 import { useEffect, useState } from "react";
 import { SelectRuleComponent } from "./SelectRuleComponent";
 import { MultiSelectRuleComponent } from "./MultiSelectRuleComponent";
 import { ComboboxRuleComponent } from "./ComboboxRuleComponent";
-import { ResultHeaderRuleComponent } from "./ResultHeaderRuleComponent";
 import { TextareaRuleComponent } from "./TextareaRuleComponent";
 import { InputRuleComponent } from "./InputRuleComponent";
 

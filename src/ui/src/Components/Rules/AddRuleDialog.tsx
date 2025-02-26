@@ -21,7 +21,7 @@ import { useState } from "react";
 
 import { DusseldorfAPI } from "../../DusseldorfApi";
 import { Logger } from "../../Helpers/Logger";
-import { Rule } from "../../Helpers/Types";
+import { Rule } from "../../Types/Rule";
 
 interface AddRuleDialogProps {
     zone: string;
@@ -129,9 +129,8 @@ export const AddRuleDialog = ({ zone, onSave }: AddRuleDialogProps) => {
                         >
                             {showMsg == "info" ? (
                                 <Text>
-                                    After a new zone is created, you can add various components to it.  
-                                    This allows you to filter requests based on certain criteria or 
-                                    craft your own responses.
+                                    After a new zone is created, you can add various components to it. This allows you
+                                    to filter requests based on certain criteria or craft your own responses.
                                 </Text>
                             ) : showMsg == "error" ? (
                                 <Text>Failed to add rule to zone.</Text>

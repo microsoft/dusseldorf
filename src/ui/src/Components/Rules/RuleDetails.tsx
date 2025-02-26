@@ -25,7 +25,7 @@ import { useEffect, useState } from "react";
 import { RuleComponents } from "./RuleComponents";
 import { DusseldorfAPI } from "../../DusseldorfApi";
 import { Logger } from "../../Helpers/Logger";
-import { Rule } from "../../Helpers/Types";
+import { Rule } from "../../Types/Rule";
 
 const useStyles = makeStyles({
     divider: {
