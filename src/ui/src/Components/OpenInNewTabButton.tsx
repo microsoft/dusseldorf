@@ -20,9 +20,7 @@ export const OpenInNewTabButton = ({ url }: OpenInNewTabProps): JSX.Element => {
             <Button
                 appearance="transparent"
                 icon={<OpenRegular />}
-                onClick={(ev: any) => {
-                    ev.preventDefault();
-                    ev.stopPropagation();
+                onClick={() => {
                     window.open(url, '_blank');
                 }}
             />

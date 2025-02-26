@@ -85,16 +85,18 @@ export const LeftNav = ({ refreshToken }: ILeftNavProps) => {
     };
 
     const handleCategoryToggle = (_: Event | React.SyntheticEvent<Element, Event>, data: OnNavItemSelectData) => {
-        if (openCategories.includes(data.categoryValue as string)) {
-            setOpenCategories([]);
-        } else {
-            setOpenCategories([data.categoryValue as string]);
+        if (data.categoryValue) {
+            if (openCategories.includes(data.categoryValue)) {
+                setOpenCategories([]);
+            } else {
+                setOpenCategories([data.categoryValue]);
+            }
         }
     };
 
     const handleItemSelect = (ev: Event | React.SyntheticEvent<Element, Event>, data: OnNavItemSelectData) => {
-        setSelectedCategoryValue(data.categoryValue as string);
-        setSelectedValue(data.value as string);
+        setSelectedCategoryValue(data.categoryValue);
+        setSelectedValue(data.value);
         if (data.value && data.categoryValue) {
             navigate("/" + data.categoryValue + "/" + data.value);
         } else if (data.value) {

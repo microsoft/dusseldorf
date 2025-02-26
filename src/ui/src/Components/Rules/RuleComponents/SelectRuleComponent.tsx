@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { Select, Text } from "@fluentui/react-components";
+import { Select } from "@fluentui/react-components";
 import { useEffect, useState } from "react";
 
 import { Constants } from "../../../Helpers/Constants";

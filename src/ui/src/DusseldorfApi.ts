@@ -398,7 +398,7 @@ export class DusseldorfAPI {
             });
             
         } 
-        catch (e) {
+        catch {
             Logger.Warn(`API.AddUserToZone(${zone}, ${user}, ${permission}) failed [expected], trying the new API`);            
         }
 
@@ -415,7 +415,7 @@ export class DusseldorfAPI {
                 return;
             });        
         } 
-        catch (e) { /* will fail for now (early feb 2025) */ }
+        catch { /* will fail for now (early feb 2025) */ }
     }
 
     /**

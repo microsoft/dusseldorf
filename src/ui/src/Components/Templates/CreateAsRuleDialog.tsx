@@ -119,7 +119,7 @@ export const CreateAsRuleDialog = ({ rules }: CreateAsRuleProps): JSX.Element =>
                             }}
                             value={fqdn}
                         >
-                            {zones.map(zone => <option>{zone.fqdn}</option>)}
+                            {zones.map(zone => <option key={zone.fqdn}>{zone.fqdn}</option>)}
                         </Select>
 
                         {

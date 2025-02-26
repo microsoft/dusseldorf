@@ -89,7 +89,7 @@ export const AllZonesScreen = () => {
                         // no zones added, stay on home page
                         setShowAddZone(false);
                     }}
-                    onSuccess={(_?: string) => {
+                    onSuccess={() => {
                         // don't redirect, we are intentionally editing zones
                         setShowAddZone(false);
                     }}

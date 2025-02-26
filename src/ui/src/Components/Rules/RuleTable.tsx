@@ -215,7 +215,7 @@ export const RuleTable = ({ zone, ruleId, setRuleId, rule, setRule, nudge }: Rul
             selectedItems={selectedRows}
             onSelectionChange={onSelectionChange}
             sortable
-            getRowId={(rule) => rule.ruleid}
+            getRowId={(rule: Rule) => rule.ruleid}
             resizableColumns
             columnSizingOptions={columnSizingOptions}
             subtleSelection

@@ -1,11 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { AddSingleZoneDialog } from "./AddSingleZoneDialog";
 import { AddBulkZoneDialog } from "./AddBulkZoneDialog";
-import { DusseldorfContext } from "../App";
-import { DusseldorfAPI } from "../DusseldorfApi";
+import { DomainsContext } from "../App";
 
 interface IAddZoneDialogProps {
     onDismiss: () => void;
@@ -14,27 +13,13 @@ interface IAddZoneDialogProps {
 }
 
 export const AddZoneDialog = ({ onDismiss, onSuccess, open }: IAddZoneDialogProps) => {
+    // Control domain options
+    const domains = useContext(DomainsContext);
+    const [domain, setDomain] = useState<string>(domains[0] ?? "");
+
+    // Control dialog
     const [singleOpen, setSingleOpen] = useState<boolean>(false);
     const [bulkOpen, setBulkOpen] = useState<boolean>(false);
-
-    const [domain, setDomain] = useState<string>("");
-
-    const domains = [
-        <option
-            key={domain}
-            value={domain}
-        >
-            {domain}
-        </option>
-    ];
-
-    useEffect(() => {
-        DusseldorfAPI.
-            GetDomains().
-            then((domains) => {
-                setDomain(domains[0])
-            });
-    }, []);
 
     const onSwitch = () => {
         if (singleOpen) {
@@ -60,7 +45,6 @@ export const AddZoneDialog = ({ onDismiss, onSuccess, open }: IAddZoneDialogProp
                 onSwitch={onSwitch}
                 domain={domain}
                 setDomain={setDomain}
-                domains={domains}
             />
             <AddBulkZoneDialog
                 onDismiss={onDismiss}
@@ -69,7 +53,6 @@ export const AddZoneDialog = ({ onDismiss, onSuccess, open }: IAddZoneDialogProp
                 onSwitch={onSwitch}
                 domain={domain}
                 setDomain={setDomain}
-                domains={domains}
             />
         </>
     );

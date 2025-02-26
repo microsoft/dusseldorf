@@ -8,8 +8,6 @@ import {
     MsalProvider,
     UnauthenticatedTemplate
 } from "@azure/msal-react";
-import { createContext, useEffect, useState } from "react";
-import { HashRouter } from "react-router-dom";
 import {
     Button,
     Dialog,
@@ -25,6 +23,8 @@ import {
     webLightTheme
 } from "@fluentui/react-components";
 import { ArrowSyncRegular, SignOutRegular } from "@fluentui/react-icons";
+import { createContext, useEffect, useState } from "react";
+import { HashRouter } from "react-router-dom";
 
 import { DusseldorfAPI } from "./DusseldorfApi";
 import { CacheHelper } from "./Helpers/CacheHelper";
@@ -34,66 +34,43 @@ import { LeftNav } from "./Navigation/LeftNav";
 import { TopNavBar } from "./Navigation/TopNavBar";
 import { ScreenRouter } from "./screens/ScreenRouter";
 import { Splash } from "./screens/Splash";
-import { IDusseldorfContext } from "./Types/IDusseldorfContext";
 
 import "./App.css";
 import "./Styles/Stack.css";
 
-const initialState: IDusseldorfContext = {
-    domain: ""
-};
-
-export const DusseldorfContext = createContext<IDusseldorfContext>(initialState);
+export const DomainsContext = createContext<string[]>([]);
 
 interface IAppProps {
     msal: PublicClientApplication;
 }
 
 export const App = ({ msal }: IAppProps) => {
+    // Control theme
     const [darkTheme, setDarkTheme] = useState<boolean>(ThemeHelper.Get() === "dark");
-    const [apiError, setApiError] = useState<boolean>(false);
 
+    // Control authentication
     const [showRefreshSession, setShowRefreshSession] = useState<boolean>(false);
 
-    const [loaded, setLoaded] = useState<boolean>(false);
-
-    // the global context
-    const [context] = useState<IDusseldorfContext>({
-        domain: "dusseldorf.local"
-    });
+    // Control API
+    const [domains, setDomains] = useState<string[]>();
 
     useEffect(() => {
-        // empty out the token cache
-        if (!loaded) {
-            DusseldorfAPI.HeartBeat()
-                .then(() => {
-                    Logger.Info(`api success: ${DusseldorfAPI.ENDPOINT}`);
-                    setLoaded(true);
-                    setApiError(false);
-
-                    // set the domain
-                    DusseldorfAPI.GetDomains()
-                        .then((domains) => {
-                            if (domains.length === 0) {
-                                Logger.Error("No domains found");
-                                setApiError(true);
-                                return;
-                            } else {
-                                context.domain = domains[0];
-                            }
-                        })
-                        .catch((err) => {
-                            Logger.Error(err);
-                            setApiError(true);
-                            context.domain = "dusseldorf.local";
-                        });
+        if (!domains) {
+            DusseldorfAPI.GetDomains()
+                .then((newDomains) => {
+                    if (newDomains.length === 0) {
+                        Logger.Error("No domains found");
+                        setDomains(undefined);
+                    } else {
+                        setDomains(newDomains);
+                    }
                 })
                 .catch((err) => {
                     Logger.Error(err);
-                    setApiError(true);
+                    setDomains(undefined);
                 });
         }
-    }, [loaded, apiError]);
+    }, []);
 
     return (
         <MsalProvider instance={msal}>
@@ -110,12 +87,12 @@ export const App = ({ msal }: IAppProps) => {
                     </UnauthenticatedTemplate>
 
                     <AuthenticatedTemplate>
-                        <DusseldorfContext.Provider value={context}>
-                            <HashRouter basename="/">
-                                {loaded ? (
+                        {domains ? (
+                            <DomainsContext.Provider value={domains}>
+                                <HashRouter basename="/">
                                     <div style={{ height: "100vh", width: "100vw" }}>
-                                        <TopNavBar // 6% of height
-                                            apiError={apiError}
+                                        <TopNavBar
+                                            apiError={false}
                                             darkTheme={darkTheme}
                                             toggleTheme={() => {
                                                 setDarkTheme(!darkTheme);
@@ -192,25 +169,25 @@ export const App = ({ msal }: IAppProps) => {
                                             </Dialog>
                                         </div>
                                     </div>
-                                ) : (
-                                    <>
-                                        <TopNavBar
-                                            apiError={apiError}
-                                            darkTheme={darkTheme}
-                                            toggleTheme={() => {
-                                                setDarkTheme(!darkTheme);
-                                                ThemeHelper.Set(darkTheme ? "light" : "dark");
-                                            }}
-                                        />
-                                        <Spinner
-                                            size="large"
-                                            label="Loading data from API"
-                                            role="alertdialog"
-                                        />
-                                    </>
-                                )}
-                            </HashRouter>
-                        </DusseldorfContext.Provider>
+                                </HashRouter>
+                            </DomainsContext.Provider>
+                        ) : (
+                            <>
+                                <TopNavBar
+                                    apiError={true}
+                                    darkTheme={darkTheme}
+                                    toggleTheme={() => {
+                                        setDarkTheme(!darkTheme);
+                                        ThemeHelper.Set(darkTheme ? "light" : "dark");
+                                    }}
+                                />
+                                <Spinner
+                                    size="large"
+                                    label="Loading data from API"
+                                    role="alertdialog"
+                                />
+                            </>
+                        )}
                     </AuthenticatedTemplate>
                 </MsalAuthenticationTemplate>
             </FluentProvider>

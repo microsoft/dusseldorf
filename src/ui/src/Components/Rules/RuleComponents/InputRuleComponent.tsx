@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { Input, Textarea } from "@fluentui/react-components";
+import { Input } from "@fluentui/react-components";
 import { useState } from "react";
 
 interface InputRuleComponentProps {

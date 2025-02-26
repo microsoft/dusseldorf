@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+import { useMsal } from "@azure/msal-react";
 import {
     Button,
     Dialog,
@@ -19,11 +20,12 @@ import {
 } from "@fluentui/react-components";
 import { AddRegular, BoxMultipleRegular, CheckmarkRegular, DismissRegular } from "@fluentui/react-icons";
 import BWFilter from "bad-words";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+
+import { DomainsContext } from "../App";
 import { DusseldorfAPI } from "../DusseldorfApi";
 import { Logger } from "../Helpers/Logger";
-import { useMsal } from "@azure/msal-react";
-import { useNavigate } from "react-router-dom";
 
 const DEFAULT_SUBDOMAIN_LENGTH = 12;
 const SUBDOMAIN_REGEX = /^[a-z0-9]+([-.][a-z0-9]+)*$/;
@@ -49,7 +51,6 @@ interface AddSingleZoneDialogProps {
     onSwitch: () => void;
     domain: string;
     setDomain: (domain: string) => void;
-    domains: JSX.Element[];
 }
 
 export const AddSingleZoneDialog = ({
@@ -58,11 +59,19 @@ export const AddSingleZoneDialog = ({
     open,
     onSwitch,
     domain,
-    setDomain,
-    domains
+    setDomain
 }: AddSingleZoneDialogProps) => {
     const { instance } = useMsal();
     const navigate = useNavigate();
+
+    const domains = useContext(DomainsContext).map((domainOption) => (
+        <option
+            key={domainOption}
+            value={domainOption}
+        >
+            {domainOption}
+        </option>
+    ));
 
     const [subdomain, setSubdomain] = useState<string>("");
 
@@ -146,11 +155,14 @@ export const AddSingleZoneDialog = ({
     }, [open]);
 
     return (
-        <Dialog open={open} onOpenChange={(_, data) => {
-            if (data.type == "backdropClick" || data.type == "escapeKeyDown") {
-                onDismiss();
-            }
-        }}>
+        <Dialog
+            open={open}
+            onOpenChange={(_, data) => {
+                if (data.type == "backdropClick" || data.type == "escapeKeyDown") {
+                    onDismiss();
+                }
+            }}
+        >
             <DialogSurface style={{ width: 480 }}>
                 <DialogBody>
                     <DialogTitle>Create a DNS Zone</DialogTitle>
