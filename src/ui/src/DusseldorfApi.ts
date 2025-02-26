@@ -295,7 +295,7 @@ export class DusseldorfAPI {
     static EditRuleComponent = async (rule: Rule, component: RuleComponent, newValue: string): Promise<void> => {
         Logger.Info(`API.EditRuleComponent(${rule.zone}, ${rule.ruleid}, ${component.componentid})`);
 
-        if (!rule.zone || !rule.ruleid) {
+        if (!rule.zone || !rule.ruleid || !component.componentid) {
             throw Error(`API.EditRuleComponent(${rule.zone}, ${rule.ruleid}, ${component.componentid}) bad arguments`);
         }
 

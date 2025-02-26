@@ -96,17 +96,6 @@ export const RuleComponents = ({ rule, updateSelectedRule }: RuleComponentsProps
         setRuleComponents(rule.rulecomponents);
     }, [rule]);
 
-    const getRuleComponents = () => {
-        DusseldorfAPI.GetRuleDetails(rule.zone, rule.ruleid)
-            .then((updatedRule) => {
-                setRuleComponents(updatedRule.rulecomponents);
-            })
-            .catch((err) => {
-                Logger.Error(err);
-                setRuleComponents([]);
-            });
-    };
-
     const columns: TableColumnDefinition<RuleComponent>[] = [
         createTableColumn<RuleComponent>({
             columnId: "name",
@@ -135,7 +124,8 @@ export const RuleComponents = ({ rule, updateSelectedRule }: RuleComponentsProps
                                 onSave={(newValue) => {
                                     DusseldorfAPI.EditRuleComponent(rule, component, newValue)
                                         .then(() => {
-                                            getRuleComponents();
+                                            component.actionvalue = newValue;
+                                            setRuleComponents([...ruleComponents]);
                                             updateSelectedRule(rule);
                                         })
                                         .catch((err) => {
@@ -157,7 +147,8 @@ export const RuleComponents = ({ rule, updateSelectedRule }: RuleComponentsProps
                             onSave={(newValue) => {
                                 DusseldorfAPI.EditRuleComponent(rule, component, newValue)
                                     .then(() => {
-                                        getRuleComponents();
+                                        component.actionvalue = newValue;
+                                        setRuleComponents([...ruleComponents]);
                                         updateSelectedRule(rule);
                                     })
                                     .catch((err) => {
@@ -214,7 +205,7 @@ export const RuleComponents = ({ rule, updateSelectedRule }: RuleComponentsProps
                             icon={<DeleteRegular />}
                             onClick={() => {
                                 const savedId = component.componentid;
-                                // delete the rule and refresh
+                                // delete the component and refresh
                                 DusseldorfAPI.DeleteRuleComponent(rule, component)
                                     .then(() => {
                                         Logger.Info(
@@ -226,7 +217,15 @@ export const RuleComponents = ({ rule, updateSelectedRule }: RuleComponentsProps
                                         Logger.Error(err);
                                     })
                                     .finally(() => {
-                                        getRuleComponents();
+                                        // update rule components
+                                        DusseldorfAPI.GetRuleDetails(rule.zone, rule.ruleid)
+                                            .then((updatedRule) => {
+                                                setRuleComponents(updatedRule.rulecomponents);
+                                            })
+                                            .catch((err) => {
+                                                Logger.Error(err);
+                                                setRuleComponents([]);
+                                            });
                                         if (savedId === editComponentId) {
                                             setEditComponentId(null);
                                         }
@@ -312,8 +311,7 @@ export const RuleComponents = ({ rule, updateSelectedRule }: RuleComponentsProps
                 <DataGrid
                     items={ruleComponents
                         .filter((c) => c.ispredicate)
-                        .sort((a, b) => a.actionname.localeCompare(b.actionname))
-                    }
+                        .sort((a, b) => a.actionname.localeCompare(b.actionname))}
                     columns={columns}
                     resizableColumns
                     columnSizingOptions={columnSizingOptions}
@@ -414,8 +412,8 @@ export const RuleComponents = ({ rule, updateSelectedRule }: RuleComponentsProps
                 )}
 
                 <DataGrid
-                    items={ruleComponents
-                        .filter((c) => !c.ispredicate)
+                    items={
+                        ruleComponents.filter((c) => !c.ispredicate)
                         // .sort((a, b) => a.actionName.localeCompare(b.actionName))
                     }
                     columns={columns}

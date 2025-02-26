@@ -175,6 +175,7 @@ export const RuleTable = ({ zone, ruleId, setRuleId, rule, setRule, nudge }: Rul
                 Logger.Error(err);
                 setRules([]);
                 setSelectedRows(new Set<TableRowId>([]));
+                setRule(undefined);
             });
     }, [nudge]);
 
