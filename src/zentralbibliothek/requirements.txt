@@ -76,7 +76,7 @@ prompt_toolkit==3.0.47
 proto-plus==1.24.0
 protobuf==5.27.3
 psutil==5.9.0
-pymongo==4.5.0
+pymongo==4.6.3
 ptyprocess==0.7.0
 pure_eval==0.2.3
 pyasn1==0.6.0
