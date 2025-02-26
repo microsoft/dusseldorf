@@ -20,27 +20,27 @@ import {
     Textarea
 } from "@fluentui/react-components";
 import { DismissRegular } from "@fluentui/react-icons";
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 
-import { CopyButton } from '../CopyButton';
+import { CopyButton } from "../CopyButton";
 
-interface jwtClaimType {
-    key: string,
-    value: string
+interface JwtClaim {
+    key: string;
+    value: string;
 }
 
 const claimsDictionary: Record<string, string> = {
-    "aud": "Audience (aud)",
-    "iss": "Issuer (iss)",
-    "sub": "Subject (sub)",
-    "exp": "Expiration (exp)",
-    "nbf": "Not Before (nbf)",
-    "iat": "Issued At (iat)",
-    "jti": "JWT ID (jti)"
+    aud: "Audience (aud)",
+    iss: "Issuer (iss)",
+    sub: "Subject (sub)",
+    exp: "Expiration (exp)",
+    nbf: "Not Before (nbf)",
+    iat: "Issued At (iat)",
+    jti: "JWT ID (jti)"
 };
 
-const columns: TableColumnDefinition<jwtClaimType>[] = [
-    createTableColumn<jwtClaimType>({
+const columns: TableColumnDefinition<JwtClaim>[] = [
+    createTableColumn<JwtClaim>({
         columnId: "keyColumn",
         renderHeaderCell: () => {
             return "Claim";
@@ -48,26 +48,20 @@ const columns: TableColumnDefinition<jwtClaimType>[] = [
         renderCell: (claim) => {
             const dictClaim = claimsDictionary[claim.key];
             return (
-                <DataGridCell style={{ maxWidth: 300, wordWrap: "break-word" }}>
-                    {dictClaim ?? claim.key}
-                </DataGridCell>
+                <DataGridCell style={{ maxWidth: 300, wordWrap: "break-word" }}>{dictClaim ?? claim.key}</DataGridCell>
             );
         }
     }),
-    createTableColumn<jwtClaimType>({
+    createTableColumn<JwtClaim>({
         columnId: "valueColumn",
         renderHeaderCell: () => {
             return "Value";
         },
         renderCell: (claim) => {
-            return (
-                <DataGridCell style={{ maxWidth: 300, wordWrap: "break-word" }}>
-                    {claim.value}
-                </DataGridCell>
-            );
+            return <DataGridCell style={{ maxWidth: 300, wordWrap: "break-word" }}>{claim.value}</DataGridCell>;
         }
     }),
-    createTableColumn<jwtClaimType>({
+    createTableColumn<JwtClaim>({
         columnId: "copyColumn",
         renderHeaderCell: () => {
             return null;
@@ -78,19 +72,18 @@ const columns: TableColumnDefinition<jwtClaimType>[] = [
                     <CopyButton text={claim.value} />
                 </DataGridCell>
             );
-        },
+        }
     })
 ];
 
 interface AnalyzerProps {
-    open: boolean,
-    setOpen: (newOpen: boolean) => void,
-    payload: string
+    open: boolean;
+    setOpen: (newOpen: boolean) => void;
+    payload: string;
 }
 
 export const Analyzer = ({ open, setOpen, payload }: AnalyzerProps) => {
-
-    // boolean to close 
+    // boolean to close
     const [payload1, setPayload1] = useState<string>(payload);
     const [payload2, setPayload2] = useState<string>("");
     const [jwtDecoded, setJwtDecoded] = useState<string>("");
@@ -99,7 +92,7 @@ export const Analyzer = ({ open, setOpen, payload }: AnalyzerProps) => {
     const [showJwtBlade, setShowJwtBlade] = useState<boolean>(false);
 
     // the JWT claims
-    const [jwtClaims, setJwtClaims] = useState<jwtClaimType[]>([]);
+    const [jwtClaims, setJwtClaims] = useState<JwtClaim[]>([]);
 
     useEffect(() => {
         setPayload1(payload);
@@ -117,7 +110,7 @@ export const Analyzer = ({ open, setOpen, payload }: AnalyzerProps) => {
             // invalid
             return input;
         }
-    }
+    };
 
     return (
         <Drawer
@@ -142,7 +135,7 @@ export const Analyzer = ({ open, setOpen, payload }: AnalyzerProps) => {
                 </DrawerHeaderTitle>
             </DrawerHeader>
 
-            <DrawerBody style={{ marginTop: 10 }} >
+            <DrawerBody style={{ marginTop: 10 }}>
                 <div className="stack">
                     <Body1Strong>Original Payload</Body1Strong>
                     <Textarea
@@ -159,8 +152,10 @@ export const Analyzer = ({ open, setOpen, payload }: AnalyzerProps) => {
 
                 {/* a normal Base64 decode */}
 
-                <div className='stack hstack-gap'
-                    style={{ paddingBottom: '30px' }}>
+                <div
+                    className="stack hstack-gap"
+                    style={{ paddingBottom: "30px" }}
+                >
                     <Button
                         onClick={() => {
                             setPayload2(base64decode(payload1));
@@ -191,7 +186,7 @@ export const Analyzer = ({ open, setOpen, payload }: AnalyzerProps) => {
 
                                 // set the claims
                                 const claims = JSON.parse(payload) as Record<string, string>;
-                                const _claims: jwtClaimType[] = [];
+                                const _claims: JwtClaim[] = [];
                                 Object.entries(claims).forEach(([key, value]) => {
                                     _claims.push({ key: key, value: value });
                                 });
@@ -210,9 +205,8 @@ export const Analyzer = ({ open, setOpen, payload }: AnalyzerProps) => {
                     </Button>
                 </div>
 
-                {
-                    showBase64Blade &&
-                    <div className="stack" >
+                {showBase64Blade && (
+                    <div className="stack">
                         <Body1Strong>Decoded Payload</Body1Strong>
                         <Textarea
                             //!TODO: fix font
@@ -221,11 +215,10 @@ export const Analyzer = ({ open, setOpen, payload }: AnalyzerProps) => {
                             readOnly={true}
                         />
                     </div>
-                }
+                )}
 
-                {
-                    showJwtBlade &&
-                    <div className='stack'>
+                {showJwtBlade && (
+                    <div className="stack">
                         <Body1Strong>Decoded JWT</Body1Strong>
 
                         <Textarea
@@ -245,23 +238,23 @@ export const Analyzer = ({ open, setOpen, payload }: AnalyzerProps) => {
                             <DataGridHeader>
                                 <DataGridRow>
                                     {({ renderHeaderCell }) => (
-                                        <DataGridHeaderCell><b>{renderHeaderCell()}</b></DataGridHeaderCell>
+                                        <DataGridHeaderCell>
+                                            <b>{renderHeaderCell()}</b>
+                                        </DataGridHeaderCell>
                                     )}
                                 </DataGridRow>
                             </DataGridHeader>
-                            <DataGridBody<jwtClaimType>>
+                            <DataGridBody<JwtClaim>>
                                 {({ item }) => (
-                                    <DataGridRow<jwtClaimType> style={{ borderWidth: 0 }}>
-                                        {({ renderCell }) => (
-                                            renderCell(item)
-                                        )}
+                                    <DataGridRow<JwtClaim> style={{ borderWidth: 0 }}>
+                                        {({ renderCell }) => renderCell(item)}
                                     </DataGridRow>
                                 )}
                             </DataGridBody>
                         </DataGrid>
                     </div>
-                }
+                )}
             </DrawerBody>
         </Drawer>
     );
-}
+};

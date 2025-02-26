@@ -5,10 +5,10 @@ import { Menu, MenuButton, MenuItem, MenuList, MenuPopover, MenuTrigger } from "
 import { AddRegular } from "@fluentui/react-icons";
 import { useEffect, useState } from "react";
 
-import { RuleComponent } from "../../Helpers/Types";
+import { RuleComponent } from "../../Types/RuleComponent";
 
-const createDictionary = (isPredicate: boolean): Record<string, { label: string, onlyOne: boolean }> => {
-    return ({
+const createDictionary = (isPredicate: boolean): Record<string, { label: string; onlyOne: boolean }> => {
+    return {
         "dns.data": {
             label: "DNS Data",
             onlyOne: true
@@ -41,8 +41,8 @@ const createDictionary = (isPredicate: boolean): Record<string, { label: string,
             label: isPredicate ? "HTTP Path Regex" : "HTTP Path",
             onlyOne: true
         }
-    });
-}
+    };
+};
 
 const getItemList = (isHttp: boolean, isPredicate: boolean) => {
     if (isHttp && isPredicate) {
@@ -54,19 +54,24 @@ const getItemList = (isHttp: boolean, isPredicate: boolean) => {
     } else {
         return ["dns.type", "dns.data"];
     }
-}
+};
 
 interface RuleComponentMenuProps {
-    isDisabled: boolean,
-    isHttp: boolean,
-    isPredicate: boolean,
-    onCreate: (componentName: string) => void,
-    ruleComponents: RuleComponent[]
+    isDisabled: boolean;
+    isHttp: boolean;
+    isPredicate: boolean;
+    onCreate: (componentName: string) => void;
+    ruleComponents: RuleComponent[];
 }
 
-export const RuleComponentMenu = ({ isDisabled, isPredicate, isHttp, ruleComponents, onCreate }: RuleComponentMenuProps) => {
-
-    const [dictionary] = useState<Record<string, { label: string, onlyOne: boolean }>>(createDictionary(isPredicate));
+export const RuleComponentMenu = ({
+    isDisabled,
+    isPredicate,
+    isHttp,
+    ruleComponents,
+    onCreate
+}: RuleComponentMenuProps) => {
+    const [dictionary] = useState<Record<string, { label: string; onlyOne: boolean }>>(createDictionary(isPredicate));
     const [itemList, setItemList] = useState<string[]>(getItemList(isHttp, isPredicate));
 
     useEffect(() => {
@@ -87,16 +92,18 @@ export const RuleComponentMenu = ({ isDisabled, isPredicate, isHttp, ruleCompone
 
             <MenuPopover>
                 <MenuList>
-                    {itemList.map(item => {
+                    {itemList.map((item) => {
                         return (
                             <MenuItem
                                 key={item}
                                 icon={<AddRegular />}
-                                disabled={dictionary[item]?.onlyOne
-                                    ? ruleComponents.find(value =>
-                                        value.actionname === item
-                                        && value.ispredicate === isPredicate) !== undefined
-                                    : false}
+                                disabled={
+                                    dictionary[item]?.onlyOne
+                                        ? ruleComponents.find(
+                                              (value) => value.actionname === item && value.ispredicate === isPredicate
+                                          ) !== undefined
+                                        : false
+                                }
                                 onClick={() => {
                                     onCreate(item);
                                 }}
@@ -109,4 +116,4 @@ export const RuleComponentMenu = ({ isDisabled, isPredicate, isHttp, ruleCompone
             </MenuPopover>
         </Menu>
     );
-}
+};

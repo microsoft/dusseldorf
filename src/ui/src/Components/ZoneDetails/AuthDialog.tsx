@@ -23,7 +23,7 @@ import { useEffect, useState } from "react";
 import { AuthTable } from "./AuthTable";
 import { DusseldorfAPI } from "../../DusseldorfApi";
 import { Logger } from "../../Helpers/Logger";
-import { User } from "../../Helpers/Types";
+import { User } from "../../Types/User";
 
 export class PERMISSION {
     static READONLY = 0;
@@ -36,14 +36,13 @@ const useStyles = makeStyles({
     dialog: {
         width: "500px"
     }
-})
+});
 
 interface AuthDialogProps {
     zone: string;
 }
 
 export const AuthDialog = ({ zone }: AuthDialogProps) => {
-
     const styles = useStyles();
 
     const [users, setUsers] = useState<User[]>([]);
@@ -54,13 +53,13 @@ export const AuthDialog = ({ zone }: AuthDialogProps) => {
 
     const refreshUsers = () => {
         DusseldorfAPI.GetUsers(zone)
-            .then(newUsers => {
+            .then((newUsers) => {
                 setUsers(newUsers);
             })
-            .catch(err => {
+            .catch((err) => {
                 setUsers([]);
                 Logger.Error(err);
-            })
+            });
     };
 
     useEffect(() => {
@@ -70,17 +69,25 @@ export const AuthDialog = ({ zone }: AuthDialogProps) => {
     return (
         <Dialog>
             <DialogTrigger disableButtonEnhancement>
-                <ToolbarButton icon={<PeopleRegular />}>
-                    Auth
-                </ToolbarButton>
+                <ToolbarButton icon={<PeopleRegular />}>Auth</ToolbarButton>
             </DialogTrigger>
             <DialogSurface className={styles.dialog}>
                 <DialogBody>
                     <DialogTitle>Manage Users</DialogTitle>
                     <DialogContent className="stack vstack-gap">
-                        <Text>Add or remove users from this zone ({zone}).  Please type their alias and select a permission level.  Note that currently security groups are not supported.</Text>
-                        <AuthTable users={users} refreshUsers={refreshUsers} />
-                        <div className='stack hstack-gap' style={{ paddingTop: '20px' }}>
+                        <Text>
+                            Add or remove users from this zone ({zone}). Please type their alias and select a permission
+                            level. Note that currently security groups are not supported.
+                        </Text>
+                        <AuthTable
+                            users={users}
+                            refreshUsers={refreshUsers}
+                            zone={zone}
+                        />
+                        <div
+                            className="stack hstack-gap"
+                            style={{ paddingTop: "20px" }}
+                        >
                             <Input
                                 aria-label="User alias"
                                 placeholder="User alias"
@@ -106,7 +113,6 @@ export const AuthDialog = ({ zone }: AuthDialogProps) => {
                             <Button
                                 appearance="primary"
                                 onClick={() => {
-
                                     // if the user is empty, show an error
                                     if (username.length == 0) {
                                         setError("Please enter a user alias");
@@ -120,21 +126,18 @@ export const AuthDialog = ({ zone }: AuthDialogProps) => {
                                             setUsername("");
                                             refreshUsers();
                                         })
-                                        .catch(err => {
-                                            setError("An error occurred. This alias may have access already or not be allowed.");
+                                        .catch((err) => {
+                                            setError(
+                                                "An error occurred. This alias may have access already or not be allowed."
+                                            );
                                             Logger.Error(err);
-                                        })
+                                        });
                                 }}
                             >
                                 Add User
                             </Button>
                         </div>
-                        {
-                            error &&
-                            <MessageBar intent="error">
-                                {error}
-                            </MessageBar>
-                        }
+                        {error && <MessageBar intent="error">{error}</MessageBar>}
                     </DialogContent>
                     <DialogActions>
                         <DialogTrigger disableButtonEnhancement>
@@ -145,4 +148,4 @@ export const AuthDialog = ({ zone }: AuthDialogProps) => {
             </DialogSurface>
         </Dialog>
     );
-}
+};

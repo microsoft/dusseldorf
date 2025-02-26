@@ -25,30 +25,10 @@ import {
 import { ChevronDownUpRegular, ChevronUpDownRegular, FireRegular, StethoscopeRegular } from "@fluentui/react-icons";
 import { useEffect, useState } from "react";
 
+import { Analyzer } from "./Analyzer";
 import { CopyButton } from "../CopyButton";
 import { UiHelper } from "../../Helpers/UIHelper";
-import { Analyzer } from "./Analyzer";
-import { DssldrfRequest } from "../../Helpers/Types";
-
-interface Header {
-    header: string;
-    value: string;
-}
-
-interface HttpRequest {
-    tls: boolean;
-    body?: string;
-    path: string;
-    method: string;
-    headers: Record<string, string>;
-    version: string;
-}
-
-interface HttpResponse {
-    body: string;
-    code: number;
-    headers: Record<string, string>;
-}
+import { DssldrfRequest, HttpHeader, HttpRequest, HttpResponse } from "../../Types/DssldrfRequest";
 
 /**
  * Helper functions
@@ -58,7 +38,7 @@ const isSuspicious = (value: string) => {
     return value.includes("Bearer ") || value.includes("eyJ");
 };
 
-const mapHeaders = (headers: Record<string, string>): Header[] => {
+const mapHeaders = (headers: Record<string, string>): HttpHeader[] => {
     return Object.keys(headers).map((item) => ({
         header: item,
         value: headers[item]
@@ -104,17 +84,8 @@ interface IHttpRequestDetailsProps {
 }
 
 export const HttpRequestDetails = ({ details }: IHttpRequestDetailsProps) => {
-
-    const jsonParse = (str_or_obj: string | object) => {
-        return (typeof str_or_obj === "string") ?
-            JSON.parse(str_or_obj) :
-            str_or_obj; // already an object
-    };
-    
-
-    // const [req, setReq] = useState<HttpRequest>(JSON.parse(details.request) as HttpRequest);
-    const [req, setReq] = useState<HttpRequest>(jsonParse(details.request) as HttpRequest);
-    const [resp, setResp] = useState<HttpResponse>(jsonParse(details.response) as HttpResponse);
+    const [req, setReq] = useState<HttpRequest>(details.request as HttpRequest);
+    const [resp, setResp] = useState<HttpResponse>(details.response as HttpResponse);
     const [rawReq, setRawReq] = useState<string>(buildRawReq(req));
     const [rawResp, setRawResp] = useState<string>(buildRawResp(resp));
 
@@ -131,8 +102,8 @@ export const HttpRequestDetails = ({ details }: IHttpRequestDetailsProps) => {
 
     // Update variables when details changes
     useEffect(() => {
-        const newReq = jsonParse(details.request) as HttpRequest;
-        const newResp = jsonParse(details.response) as HttpResponse;
+        const newReq = details.request as HttpRequest;
+        const newResp = details.response as HttpResponse;
         const newRawReq = buildRawReq(newReq);
 
         setReq(newReq);
@@ -142,20 +113,20 @@ export const HttpRequestDetails = ({ details }: IHttpRequestDetailsProps) => {
         setIsSensitiveContent(isSuspicious(newRawReq));
     }, [details]);
 
-    const columns: TableColumnDefinition<Header>[] = [
-        createTableColumn<Header>({
+    const columns: TableColumnDefinition<HttpHeader>[] = [
+        createTableColumn<HttpHeader>({
             columnId: "headerColumn",
             renderCell: (header) => {
                 return <DataGridCell style={{ maxWidth: 300, wordWrap: "break-word" }}>{header.header}</DataGridCell>;
             }
         }),
-        createTableColumn<Header>({
+        createTableColumn<HttpHeader>({
             columnId: "valueColumn",
             renderCell: (header) => {
                 return <DataGridCell style={{ maxWidth: 300, wordWrap: "break-word" }}>{header.value}</DataGridCell>;
             }
         }),
-        createTableColumn<Header>({
+        createTableColumn<HttpHeader>({
             columnId: "copyColumn",
             renderCell: (header) => {
                 return (
@@ -165,7 +136,7 @@ export const HttpRequestDetails = ({ details }: IHttpRequestDetailsProps) => {
                 );
             }
         }),
-        createTableColumn<Header>({
+        createTableColumn<HttpHeader>({
             columnId: "analyzeColumn",
             renderCell: (header) => {
                 if (isSuspicious(header.value)) {
@@ -270,9 +241,9 @@ export const HttpRequestDetails = ({ details }: IHttpRequestDetailsProps) => {
                     noNativeElements={false}
                     style={{ tableLayout: "auto" }}
                 >
-                    <DataGridBody<Header>>
+                    <DataGridBody<HttpHeader>>
                         {({ item }) => (
-                            <DataGridRow<Header> style={{ borderWidth: 0 }}>
+                            <DataGridRow<HttpHeader> style={{ borderWidth: 0 }}>
                                 {({ renderCell }) => renderCell(item)}
                             </DataGridRow>
                         )}
@@ -333,9 +304,9 @@ export const HttpRequestDetails = ({ details }: IHttpRequestDetailsProps) => {
                     noNativeElements={false}
                     style={{ tableLayout: "auto" }}
                 >
-                    <DataGridBody<Header>>
+                    <DataGridBody<HttpHeader>>
                         {({ item }) => (
-                            <DataGridRow<Header> style={{ borderWidth: 0 }}>
+                            <DataGridRow<HttpHeader> style={{ borderWidth: 0 }}>
                                 {({ renderCell }) => renderCell(item)}
                             </DataGridRow>
                         )}

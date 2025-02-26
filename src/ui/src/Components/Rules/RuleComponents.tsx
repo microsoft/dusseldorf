@@ -26,7 +26,9 @@ import { ResultHeaderRuleComponent } from "./RuleComponents/ResultHeaderRuleComp
 import { DusseldorfAPI } from "../../DusseldorfApi";
 import { Constants } from "../../Helpers/Constants";
 import { Logger } from "../../Helpers/Logger";
-import { Rule, RuleComponent, DnsRespData } from "../../Helpers/Types";
+import { DnsData } from "../../Types/DssldrfRequest";
+import { RuleComponent } from "../../Types/RuleComponent";
+import { Rule } from "../../Types/Rule";
 
 export const predicateDictionary: Record<string, string> = {
     "dns.type": "Request type is",
@@ -45,34 +47,34 @@ export const resultDictionary: Record<string, string> = {
     "http.passthru": "Forward request to"
 };
 
-const actionValueToNiceString = (actionName: string, actionValue: string) => {
-    switch (actionName) {
+const actionValueToNiceString = (actionname: string, actionvalue: string) => {
+    switch (actionname) {
         case "http.method":
-            return actionValue.toUpperCase().replaceAll(",", ", ");
+            return actionvalue.toUpperCase().replaceAll(",", ", ");
         case "http.code": {
-            const code: number = parseInt(actionValue);
+            const code: number = parseInt(actionvalue);
             const exp = Constants.HttpResultCodes.find((value) => value.key == code);
-            return exp?.text ?? actionValue;
+            return exp?.text ?? actionvalue;
         }
         case "http.body":
-            return actionValue.replaceAll("\n", "\\n");
+            return actionvalue.replaceAll("\n", "\\n");
         case "http.header": {
-            const hdrs: string[] = actionValue.split(":");
+            const hdrs: string[] = actionvalue.split(":");
             const hdrName: string = hdrs.shift() ?? "";
             const rest: string = hdrs.join(":");
             return `${hdrName}: ${rest}`;
         }
         case "dns.data": {
             try {
-                const dnsData = JSON.parse(actionValue) as DnsRespData;
+                const dnsData = JSON.parse(actionvalue) as DnsData;
                 return dnsData.ip ?? dnsData.cname ?? dnsData.mx ?? dnsData.ns ?? dnsData.txt ?? dnsData.data ?? "";
             } catch (error) {
                 Logger.Warn(error as string);
-                return actionValue;
+                return actionvalue;
             }
         }
         default:
-            return actionValue;
+            return actionvalue;
     }
 };
 
@@ -82,7 +84,6 @@ interface RuleComponentsProps {
 }
 
 export const RuleComponents = ({ rule, updateSelectedRule }: RuleComponentsProps) => {
-    // const [ruleComponents, setRuleComponents] = useState<RuleComponent[]>(rule.components);
     const [ruleComponents, setRuleComponents] = useState<RuleComponent[]>(rule.rulecomponents);
     const [editComponentId, setEditComponentId] = useState<string | null>(null);
     const [predicateToCreate, setPredicateToCreate] = useState<string | null>(null);
@@ -290,9 +291,9 @@ export const RuleComponents = ({ rule, updateSelectedRule }: RuleComponentsProps
                         }}
                         onSave={(newValue) => {
                             DusseldorfAPI.AddRuleComponent(rule, {
-                                actionName: predicateToCreate,
-                                actionValue: newValue,
-                                isPredicate: true
+                                actionname: predicateToCreate,
+                                actionvalue: newValue,
+                                ispredicate: true
                             })
                                 .then((newComponent) => {
                                     setRuleComponents(ruleComponents.concat(newComponent));
@@ -364,9 +365,9 @@ export const RuleComponents = ({ rule, updateSelectedRule }: RuleComponentsProps
                         }}
                         onSave={(newValue) => {
                             DusseldorfAPI.AddRuleComponent(rule, {
-                                actionName: resultToCreate,
-                                actionValue: newValue,
-                                isPredicate: false
+                                actionname: resultToCreate,
+                                actionvalue: newValue,
+                                ispredicate: false
                             })
                                 .then((newComponent) => {
                                     setRuleComponents([...ruleComponents, newComponent]);
@@ -392,9 +393,9 @@ export const RuleComponents = ({ rule, updateSelectedRule }: RuleComponentsProps
                         }}
                         onSave={(newValue) => {
                             DusseldorfAPI.AddRuleComponent(rule, {
-                                actionName: resultToCreate,
-                                actionValue: newValue,
-                                isPredicate: false
+                                actionname: resultToCreate,
+                                actionvalue: newValue,
+                                ispredicate: false
                             })
                                 .then((newComponent) => {
                                     setRuleComponents([...ruleComponents, newComponent]);
@@ -414,7 +415,7 @@ export const RuleComponents = ({ rule, updateSelectedRule }: RuleComponentsProps
                 <DataGrid
                     items={
                         ruleComponents.filter((c) => !c.ispredicate)
-                        // .sort((a, b) => a.actionName.localeCompare(b.actionName))
+                        // .sort((a, b) => a.actionname.localeCompare(b.actionname))
                     }
                     columns={columns}
                     resizableColumns

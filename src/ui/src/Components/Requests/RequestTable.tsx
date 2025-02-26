@@ -29,9 +29,9 @@ import {
 import { ChevronLeftRegular, ChevronRightRegular } from "@fluentui/react-icons";
 import { useEffect, useRef, useState } from "react";
 
-import { DssldrfRequest } from "../../Helpers/Types";
 import { DusseldorfAPI } from "../../DusseldorfApi";
 import { Logger } from "../../Helpers/Logger";
+import { DssldrfRequest } from "../../Types/DssldrfRequest";
 
 /**
  * A custom timestamp formatter
@@ -157,7 +157,7 @@ export const RequestTable = ({ zone, request, setRequest, nudge }: RequestTableP
             setSelectedRows(data.selectedItems);
 
             // could be undefined, check for that.
-            const next_req: TableRowId | undefined = data.selectedItems.values().next().value;
+            const next_req = data.selectedItems.values().next().value;
 
             if (next_req) {
                 try {

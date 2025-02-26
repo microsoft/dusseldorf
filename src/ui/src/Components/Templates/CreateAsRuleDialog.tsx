@@ -23,7 +23,7 @@ import { useNavigate } from "react-router-dom";
 import { DusseldorfAPI } from "../../DusseldorfApi";
 import { CacheHelper } from "../../Helpers/CacheHelper";
 import { Logger } from "../../Helpers/Logger";
-import { NewRule } from "../../Helpers/Types";
+import { NewRule } from "../../Types/Rule";
 import { Zone } from "../../Types/Zone";
 
 const useStyles = makeStyles({
@@ -41,7 +41,6 @@ interface CreateAsRuleProps {
 
 //!TODO: implement error handling
 export const CreateAsRuleDialog = ({ rules }: CreateAsRuleProps): JSX.Element => {
-
     const styles = useStyles();
     const navigate = useNavigate();
 
@@ -63,10 +62,10 @@ export const CreateAsRuleDialog = ({ rules }: CreateAsRuleProps): JSX.Element =>
 
     useEffect(() => {
         DusseldorfAPI.GetRules(fqdn)
-            .then(rules => {
+            .then((rules) => {
                 setShowWarning(rules.length > 0);
             })
-            .catch(err => {
+            .catch((err) => {
                 Logger.Error(err);
                 setShowWarning(false);
             });
@@ -75,18 +74,17 @@ export const CreateAsRuleDialog = ({ rules }: CreateAsRuleProps): JSX.Element =>
     const addNewRules = (): void => {
         for (const newRule of newRules) {
             DusseldorfAPI.AddRule(fqdn, newRule.networkprotocol, newRule.priority, newRule.name)
-                .then(rule => {
-                    newRule.rulecomponents?.forEach(newComponent => {
-                        DusseldorfAPI.AddRuleComponent(rule, newComponent)
-                            .catch(err => {
-                                throw err;
-                            });
+                .then((rule) => {
+                    newRule.rulecomponents?.forEach((newComponent) => {
+                        DusseldorfAPI.AddRuleComponent(rule, newComponent).catch((err) => {
+                            throw err;
+                        });
                     });
                 })
-                .catch(err => {
+                .catch((err) => {
                     Logger.Error(err);
                 });
-        };
+        }
     };
 
     return (
@@ -108,9 +106,7 @@ export const CreateAsRuleDialog = ({ rules }: CreateAsRuleProps): JSX.Element =>
                 <DialogBody>
                     <DialogTitle>Create as Rule</DialogTitle>
                     <DialogContent className="stack vstack-gap">
-                        <Text>
-                            Create a rule based on this template as a rule for the zone below:
-                        </Text>
+                        <Text>Create a rule based on this template as a rule for the zone below:</Text>
 
                         <Select
                             disabled={showAdded}
@@ -119,26 +115,26 @@ export const CreateAsRuleDialog = ({ rules }: CreateAsRuleProps): JSX.Element =>
                             }}
                             value={fqdn}
                         >
-                            {zones.map(zone => <option key={zone.fqdn}>{zone.fqdn}</option>)}
+                            {zones.map((zone) => (
+                                <option key={zone.fqdn}>{zone.fqdn}</option>
+                            ))}
                         </Select>
 
-                        {
-                            showWarning &&
+                        {showWarning && (
                             <MessageBar>
                                 <MessageBarBody>
                                     This will merge with existing rules on <b>{fqdn}</b>.
                                 </MessageBarBody>
                             </MessageBar>
-                        }
+                        )}
 
-                        {
-                            showAdded &&
+                        {showAdded && (
                             <MessageBar intent="success">
                                 <MessageBarBody>
                                     Rule added to <b>{fqdn}</b>.
                                 </MessageBarBody>
                             </MessageBar>
-                        }
+                        )}
                     </DialogContent>
                     <DialogActions>
                         <Button
@@ -172,4 +168,4 @@ export const CreateAsRuleDialog = ({ rules }: CreateAsRuleProps): JSX.Element =>
             </DialogSurface>
         </Dialog>
     );
-}
+};

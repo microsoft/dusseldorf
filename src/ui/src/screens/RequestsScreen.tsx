@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 
 import { RequestDetails } from "../Components/Requests/RequestDetails";
 import { RequestTable } from "../Components/Requests/RequestTable";
-import { DssldrfRequest } from "../Helpers/Types";
+import { DssldrfRequest } from "../Types/DssldrfRequest";
 
 const useStyles = makeStyles({
     root: {
