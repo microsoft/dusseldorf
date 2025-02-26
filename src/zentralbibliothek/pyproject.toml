@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "zentralbibliothek"
+version = "0.0.10" 
+dependencies = [
+    "attrs",
+    "pyyaml",
+    "psycopg",
+    "azure-monitor-opentelemetry",
+    "colorama",
+    "python-dateutil",
+    "cachetools",
+    'importlib-metadata; python_version<"3.10"',
+]
+
+description = "Central library of Dusseldorf (aka.ms/dusseldorf)"
+authors = [{ name="Microsoft Security", email="dusseldorks@microsoft.com" }]

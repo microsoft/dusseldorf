@@ -1,0 +1,84 @@
+/* @fluentui/react migration guide for Stack component */
+.stack {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    height: auto;
+    box-sizing: border-box;
+}
+
+.stack > * {
+    text-overflow: ellipsis;
+}
+
+.stack > :not(:first-child) {
+    margin-top: 0px;
+}
+
+.stack > *:not(.ms-StackItem) {
+    flex-shrink: 1;
+}
+
+/* vertical Stack variants */
+
+.vstack-gap > :not(:last-child) {
+    margin-bottom: 10px;
+}
+
+.vstack-gaplarge > :not(:last-child) {
+    margin-bottom: 20px;
+}
+
+/* horizontal Stack variants */
+
+.hstack {
+    flex-direction: row;
+}
+
+.hstack-gap {
+    flex-direction: row;
+}
+
+.hstack-gap > :not(:last-child) {
+    margin-right: 10px;
+}
+
+.hstack-gaplarge {
+    flex-direction: row;
+}
+
+.hstack-gaplarge > :not(:last-child) {
+    margin-right: 30px;
+}
+
+.hstack-center {
+    flex-direction: row;
+    align-items: center;
+}
+
+.hstack-end {
+    flex-direction: row;
+    align-items: end;
+}
+
+.stack-horizontalgap {
+    flex-direction: row;
+    align-items: center;
+}
+
+.stack-horizontalgap > :not(:last-child) {
+    margin-right: 10px;
+}
+
+.hstack-spread {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* other */
+
+.stack-screen {
+    min-width: 570px;
+    max-width: 900px;
+}

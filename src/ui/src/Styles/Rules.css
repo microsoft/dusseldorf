@@ -1,0 +1,9 @@
+.componentSection {
+    min-width: 180px;
+    max-width: 180px;
+}
+
+.componentField {
+    width: 220px;
+    margin-right: 20px;
+}
