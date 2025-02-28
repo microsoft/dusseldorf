@@ -26,7 +26,6 @@ export const DnsDataComponent = ({ onSave, onDismiss, oldValue }: DnsDataCompone
                 if (["ip", "cname", "mx", "ns", "txt", "data"].includes(Object.keys(parsed)[0])) {
                     return "";
                 } else {
-                    console.log(Object.keys(parsed)[0])
                     return "JSON key must be one of: ip, cname, mx, ns, txt, or data";
                 }
             }
