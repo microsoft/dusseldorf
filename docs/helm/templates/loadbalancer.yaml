@@ -1,0 +1,124 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: dusseldorf-dns-lb
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    service.beta.kubernetes.io/azure-load-balancer-ipv4: "{{ .Values.global.loadBalancerIP }}"  # Assign multiple IPs
+spec:
+  type: LoadBalancer
+  selector:
+    app: {{ .Values.listeners.listenerDNS.name }}
+  ports:
+    - name: dns
+      port: 53
+      targetPort: {{ .Values.listeners.listenerDNS.port }}
+      protocol: UDP
+  externalTrafficPolicy: Local
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dusseldorf-http-lb
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    service.beta.kubernetes.io/azure-load-balancer-ipv4: "{{ .Values.global.loadBalancerIP }}"  # Assign multiple IPs
+spec:
+  type: LoadBalancer
+  selector:
+    app: {{ .Values.listeners.listenerHTTP.name }}
+  ports:
+    - name: http
+      port: 80
+      targetPort: {{ .Values.listeners.listenerHTTP.port }}
+      protocol: TCP
+  externalTrafficPolicy: Local
+---                  
+apiVersion: v1
+kind: Service
+metadata:
+  name: dusseldorf-https-lb
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    service.beta.kubernetes.io/azure-load-balancer-ipv4: "{{ .Values.global.loadBalancerIP }}"  # Assign multiple IPs
+spec:
+  type: LoadBalancer
+  selector:
+    app: {{ .Values.listeners.listenerHTTPS.name }}
+  ports:
+    - name: https
+      port: 443
+      targetPort: {{ .Values.listeners.listenerHTTPS.port }}
+      protocol: TCP
+  externalTrafficPolicy: Local
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dusseldorf-dns-lb2
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    service.beta.kubernetes.io/azure-load-balancer-ipv4: "{{ .Values.global.loadBalancerIP2 }}"  # Assign multiple IPs
+spec:
+  type: LoadBalancer
+  selector:
+    app: {{ .Values.listeners.listenerDNS.name }}
+  ports:
+    - name: dns
+      port: 53
+      targetPort: {{ .Values.listeners.listenerDNS.port }}
+      protocol: UDP
+  externalTrafficPolicy: Local
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dusseldorf-http-lb2
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    service.beta.kubernetes.io/azure-load-balancer-ipv4: "{{ .Values.global.loadBalancerIP2 }}"  # Assign multiple IPs
+spec:
+  type: LoadBalancer
+  selector:
+    app: {{ .Values.listeners.listenerHTTP.name }}
+  ports:
+    - name: http
+      port: 80
+      targetPort: {{ .Values.listeners.listenerHTTP.port }}
+      protocol: TCP
+  externalTrafficPolicy: Local
+---                  
+apiVersion: v1
+kind: Service
+metadata:
+  name: dusseldorf-https-lb2
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    service.beta.kubernetes.io/azure-load-balancer-ipv4: "{{ .Values.global.loadBalancerIP2 }}"  # Assign multiple IPs
+spec:
+  type: LoadBalancer
+  selector:
+    app: {{ .Values.listeners.listenerHTTPS.name }}
+  ports:
+    - name: https
+      port: 443
+      targetPort: {{ .Values.listeners.listenerHTTPS.port }}
+      protocol: TCP
+  externalTrafficPolicy: Local
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dusseldorf-api-lb
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    service.beta.kubernetes.io/azure-load-balancer-ipv4: "{{ .Values.global.loadBalancerIPApi }}"
+spec:
+  type: LoadBalancer
+  selector:
+    app: {{ .Values.api.name }}
+  ports:
+    - name: api
+      port: 443
+      targetPort: {{ .Values.api.targetPort }}
+      protocol: TCP

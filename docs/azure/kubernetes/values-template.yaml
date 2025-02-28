@@ -1,0 +1,52 @@
+# Values for development environment
+
+global:
+  tenantID: "{tenantID}"  
+  identityName: "{identityName}" 
+  dusseldorfDomain: "{dusseldorfDomain}" 
+  dusseldorfIPV4list: "{dusseldorfIPV4list}" 
+  dusseldorfIPV6list: "{dusseldorfIPV6list}" 
+  dusseldorfMaxConnections: 100  
+  dusseldorfLogLevel: "debug"  
+  acrName: "dusseldorf.azurecr.io"  
+  loadBalancerIP: "{loadBalancerIP}"  
+  loadBalancerIP2: "{loadBalancerIP2}"  
+  loadBalancerIPApi: "{loadBalancerIPApi}" 
+  loadBalancerIPApi2: "{loadBalancerIPApi2}" 
+
+listeners:
+  listenerDNS:
+    name: dns-listener  
+    port: 10053
+    image: dusseldorf-listener-dns
+    acrRepo: dusseldorf.azurecr.io/dusseldorf-listener-dns:latest
+
+  listenerHTTP:
+    name: http-listener
+    image: dusseldorf-listener-http
+    acrRepo: dusseldorf.azurecr.io/dusseldorf-listener-http:latest
+    port: 10080
+
+  listenerHTTPS:
+    name: https-listener
+    image: dusseldorf-listener-https
+    acrRepo: dusseldorf.azurecr.io/dusseldorf-listener-http:latest
+    port: 10443
+    certPath: "/mnt/secrets-store"
+    keyVaultCertSecretName: "{keyVaultCertSecretName}"  
+
+api:
+  name: dusseldorf-api
+  image: dusseldorf-api
+  acrRepo: dusseldorf.azurecr.io/api:latest
+  port: 443
+  targetPort: 10443
+  certPath: "/mnt/secrets-store"
+  AZURE_API_TENANT_ID: "{apiTenantId}"
+  AZURE_API_CLIENT_ID: "{apiClientId}"
+
+secrets:
+  keyVaultName: "{keyVaultName}"
+  certSecretName: "{certSecretName}"
+  keyVaultSecretName: "{keyVaultSecretName}"
+  apiCertName: "{apiCertName}"  

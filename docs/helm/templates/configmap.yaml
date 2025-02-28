@@ -1,0 +1,41 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dusseldorf-config
+  namespace: {{ .Release.Namespace }}
+data:
+  # Canary Dusseldorf Settings
+  LOG_LEVEL: "{{ .Values.global.dusseldorfLogLevel }}"
+  MAX_CONNECTIONS: "{{ .Values.global.dusseldorfMaxConnections }}"
+  DSSLDRF_DOMAINS: "{{ .Values.global.dusseldorfDomain }}"
+  DSSLDRF_IPV4: "{{ .Values.global.loadBalancerIPV4List }}"
+  DSSLDRF_IPV6: "{{ .Values.global.loadBalancerIPV6List }}"
+
+  # API Settings
+  AZURE_API_CLIENT_ID: "{{ .Values.global.identityClientIdAPI }}"
+  AZURE_API_TENANT_ID: "{{ .Values.global.identityTenantIdAPI }}"
+
+  # DNS Listener Settings
+  # LSTNER_DNS_MIN: "2"
+  # LSTNER_DNS_MAX: "20"
+  LSTNER_DNS_PORT: "{{ .Values.listeners.listenerDNS.port }}"
+  LSTNER_DNS_UDP: "True"
+  LSTNER_DNS_INTERFACE: ""
+
+  # HTTP Listener Settings
+  # LSTNER_HTTP_MIN: "2"
+  # LSTNER_HTTP_MAX: "20"
+  LSTNER_HTTP_TLS: "0"
+  LSTNER_HTTP_PORT: "{{ .Values.listeners.listenerHTTP.port }}"
+  LSTNER_HTTP_INTERFACE: ""
+
+  # HTTPS Listener Settings
+  # LSTNER_HTTPS_MIN: "2"
+  # LSTNER_HTTPS_MAX: "20"
+  LSTNER_HTTPS_TLS: "1"
+  LSTNER_HTTPS_PORT: "{{ .Values.listeners.listenerHTTPS.port }}"
+  LSTNER_HTTPS_INTERFACE: ""
+  DSSLDRF_TLS_KEY_FILE: "{{ .Values.listeners.listenerHTTPS.certPath }}/{{ .Values.listeners.listenerHTTPS.keyVaultCertSecretName }}.key"
+  DSSLDRF_TLS_CRT_FILE: "{{ .Values.listeners.listenerHTTPS.certPath }}/{{ .Values.listeners.listenerHTTPS.keyVaultCertSecretName }}.crt"
+  API_TLS_CRT_FILE: "{{ .Values.listeners.listenerHTTPS.certPath }}/{{ .Values.secrets.apiCertName }}.crt"
+  API_TLS_KEY_FILE: "{{ .Values.listeners.listenerHTTPS.certPath }}/{{ .Values.secrets.apiCertName }}.key"

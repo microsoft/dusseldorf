@@ -1,0 +1,246 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+
+  "parameters": {
+    "region": {
+      "type": "string",
+      "metadata": {
+        "description": "Azure region for deployment"
+      }
+    },
+    "prefix": {
+      "type": "string",
+      "metadata": {
+        "description": "Prefix for all resource names"
+      }
+    },
+    "tag": {
+      "type": "string",
+      "metadata": {
+        "description": "Tag for resource grouping and cleanup"
+      }
+    },
+    "resourceGroup": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the existing resource group"
+      }
+    },
+    "skipSubnetCreation": {
+      "type": "string",
+      "defaultValue": "false",
+      "metadata": {
+        "description": "Skip subnet creation"
+      }
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Network/virtualNetworks",
+      "apiVersion": "2021-02-01",
+      "name": "[concat(parameters('prefix'), '-dusseldorf-vnet')]",
+      "location": "[parameters('region')]",
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": ["10.0.0.0/16"]
+        },
+        "subnets": [
+          {
+            "name": "aks-subnet",
+            "properties": {
+              "addressPrefix": "10.0.1.0/24"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/virtualNetworks/subnets",
+      "apiVersion": "2021-02-01",
+      "name": "[concat(parameters('prefix'), '-dusseldorf-vnet/aks-subnet')]",
+      "condition": "[equals(parameters('skipSubnetCreation'), 'false')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', concat(parameters('prefix'), '-dusseldorf-vnet'))]"
+      ],
+      "properties": {
+        "addressPrefix": "10.0.1.0/24"
+      }
+    },
+    {
+      "type": "Microsoft.ContainerService/managedClusters",
+      "apiVersion": "2022-09-01",
+      "name": "[concat(parameters('prefix'), '-dusseldorf-aks')]",
+      "location": "[parameters('region')]",
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks/subnets', concat(parameters('prefix'), '-dusseldorf-vnet'), 'aks-subnet')]"
+      ],
+      "properties": {
+        "dnsPrefix": "[concat(parameters('prefix'), 'dns')]",
+        "networkProfile": {
+          "networkPlugin": "azure",
+          "serviceCidr": "10.1.0.0/16",
+          "dnsServiceIp": "10.1.0.10",
+          "dockerBridgeCidr": "172.17.0.1/16"
+        },
+        "agentPoolProfiles": [
+          {
+            "name": "nodepool1",
+            "count": 3,
+            "vmSize": "Standard_D2_v2",
+            "osType": "Linux",
+            "mode": "System",
+            "vnetSubnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', concat(parameters('prefix'), '-dusseldorf-vnet'), 'aks-subnet')]"
+          }
+        ],
+        "enableRBAC": true,
+        "enableAzureRBAC": true,
+        "aadProfile": {
+          "managed": true,
+          "enableAzureRBAC": true
+        },
+        "servicePrincipalProfile": {
+          "clientId": "msi"
+        },
+        "addonProfiles": {
+          "AzureKeyVaultSecretsProvider": {
+            "enabled": true,
+            "config": {
+              "enableSecretRotation": "true",
+              "rotationPollInterval": "2m"
+            }
+          }
+        }
+      },
+      "tags": {
+        "environment": "[concat('dusseldorf-', parameters('tag'))]"
+      }
+    },
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts",
+      "apiVersion": "2023-09-15",
+      "name": "[concat(parameters('prefix'), '-dusseldorf-cosmosdb')]",
+      "location": "[parameters('region')]",
+      "kind": "MongoDB",
+      "properties": {
+        "databaseAccountOfferType": "Standard",
+        "locations": [
+          {
+            "locationName": "[parameters('region')]",
+            "failoverPriority": 0
+          }
+        ],
+        "capabilities": [
+          {
+            "name": "EnableMongo"
+          }
+        ],
+        "enableFreeTier": false,
+        "apiProperties": {
+          "serverVersion": "4.2"
+        }
+      },
+      "tags": {
+        "environment": "[concat('dusseldorf-', parameters('tag'))]"
+      }
+    },
+    {
+      "type": "Microsoft.Network/publicIPAddresses",
+      "apiVersion": "2021-02-01",
+      "name": "[concat(parameters('prefix'), '-dusseldorf-publicip')]",
+      "dependsOn": [],      
+      "location": "[parameters('region')]",
+      "sku": {
+        "name": "Standard"
+      },
+      "properties": {
+        "publicIPAllocationMethod": "Static"
+      },
+      "tags": {
+        "environment": "[concat('dusseldorf-', parameters('tag'))]"
+      }
+    },
+    {
+      "type": "Microsoft.Network/publicIPAddresses",
+      "apiVersion": "2021-02-01",
+      "name": "[concat(parameters('prefix'), '-dusseldorf-api-ip')]",
+      "dependsOn": [],
+      "location": "[parameters('region')]",
+      "sku": {
+        "name": "Standard"
+      },
+      "properties": {
+        "publicIPAllocationMethod": "Static"
+      },
+      "tags": {
+        "environment": "[concat('dusseldorf-', parameters('tag'))]"
+      }
+    },
+    {
+      "type": "Microsoft.Network/publicIPAddresses",
+      "apiVersion": "2021-02-01",
+      "name": "[concat(parameters('prefix'), '-dusseldorf-publicip2')]",
+      "dependsOn": [],
+      "location": "[parameters('region')]",
+      "sku": {
+        "name": "Standard"
+      },
+      "properties": {
+        "publicIPAllocationMethod": "Static"
+      },
+      "tags": {
+        "environment": "[concat('dusseldorf-', parameters('tag'))]"
+      }
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults",
+      "apiVersion": "2021-10-01",
+      "name": "[concat(parameters('prefix'), '-dusseldorf-akv')]",
+      "dependsOn": [],
+      "location": "[parameters('region')]",
+      "properties": {
+        "sku": {
+          "family": "A",
+          "name": "standard"
+        },
+        "tenantId": "[subscription().tenantId]",
+        "enableSoftDelete": true,
+        "enabledForDeployment": true,
+        "enabledForTemplateDeployment": true,
+        "enableRbacAuthorization": true
+      },
+      "tags": {
+        "environment": "[concat('dusseldorf-', parameters('tag'))]"
+      }
+    }
+  ],
+  "outputs": {
+    "aksName": {
+      "type": "string",
+      "value": "[concat(parameters('prefix'), '-dusseldorf-aks')]"
+    },
+    "cosmosDBName": {
+      "type": "string",
+      "value": "[concat(parameters('prefix'), '-dusseldorf-cosmosdb')]"
+    },
+    "publicIP": {
+      "type": "string",
+      "value": "[concat(parameters('prefix'), '-dusseldorf-publicip')]"
+    },
+    "keyVaultName": {
+      "type": "string",
+      "value": "[concat(parameters('prefix'), '-dusseldorf-akv')]"
+    },
+    "apiPublicIP": {
+      "type": "string",
+      "value": "[concat(parameters('prefix'), '-dusseldorf-api-ip')]"
+    },
+    "apiPublicIP2": {
+      "type": "string",
+      "value": "[concat(parameters('prefix'), '-dusseldorf-publicip2')]"
+    }
+  }
+}
