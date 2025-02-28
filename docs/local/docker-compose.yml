@@ -1,0 +1,99 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:6.0
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+    networks:
+      - local_network
+
+  api-server:
+    image: ${ACR_NAME}.azurecr.io/api:latest
+    container_name: api-server
+    ports:
+      - "8080:8080"
+    environment:
+      DSSLDRF_CONNSTR: "mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@mongodb:27017/${MONGODB_DB_NAME}"
+      API_VERSION: ${API_VERSION}
+      ENVIRONMENT: ${ENVIRONMENT}
+      AZURE_CLIENT_ID: ${AZURE_CLIENT_ID}
+      AZURE_TENANT_ID: ${AZURE_TENANT_ID}
+    depends_on:
+      - mongodb
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - local_network
+
+  listener-http:
+    image: ${ACR_NAME}.azurecr.io/dusseldorf-listener-http:10263
+    container_name: listener-http
+    ports:
+      - "${LSTNER_HTTP_PORT}:${LSTNER_HTTP_PORT}"
+    environment:
+      DSSLDRF_CONNSTR: "mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@mongodb:27017/${MONGO_DB_NAME}"
+      DSSLDRF_TLS_CRT_FILE: ${DSSLDRF_TLS_CRT_FILE}
+      DSSLDRF_TLS_KEY_FILE: ${DSSLDRF_TLS_KEY_FILE}
+      LSTNER_HTTP_MIN: ${LSTNER_HTTP_MIN}
+      LSTNER_HTTP_MAX: ${LSTNER_HTTP_MAX}
+      LSTNER_HTTP_PORT: ${LSTNER_HTTP_PORT}
+      LSTNER_HTTP_INTERFACE: ${LSTNER_HTTP_INTERFACE}
+    volumes:
+      - ${DSSLDRF_TLS_CRT_FILE}:${DSSLDRF_TLS_CRT_FILE}
+      - ${DSSLDRF_TLS_KEY_FILE}:${DSSLDRF_TLS_KEY_FILE}
+    depends_on:
+      - mongodb
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - local_network
+
+  listener-dns:
+    image: ${ACR_NAME}.azurecr.io/dusseldorf-listener-dns:latest
+    container_name: listener-dns
+    ports:
+      - "10053:10053"
+    environment:
+      DSSLDRF_CONNSTR: "mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@mongodb:27017/${MONGO_DB_NAME}"
+      LSTNER_DNS_MIN: ${LSTNER_DNS_MIN}
+      LSTNER_DNS_MAX: ${LSTNER_DNS_MAX}
+      LSTNER_DNS_PORT: ${LSTNER_DNS_PORT}
+      LSTNER_DNS_INTERFACE: ${LSTNER_DNS_INTERFACE}
+      LSTNER_DNS_UDP: ${LSTNER_DNS_UDP}
+    depends_on:
+      - mongodb
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - local_network
+
+  # ui:
+  #   image: ${ACR_NAME}.azurecr.io/legacy-ui:latest
+  #   container_name: ui
+  #   ports:
+  #     - "3000:3000"
+  #   depends_on:
+  #     - api-server
+  #   security_opt:
+  #     - no-new-privileges:true
+  #   networks:
+  #     - local_network
+
+volumes:
+  mongodb_data:
+
+networks:
+  local_network:
+    driver: bridge

@@ -1,0 +1,299 @@
+# DNS listener
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ .Values.listeners.listenerDNS.name }}-deployment"
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.listeners.listenerDNS.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.listeners.listenerDNS.name }}
+    spec:
+      containers:
+      - name: {{ .Values.listeners.listenerDNS.name }}
+        image: {{ .Values.listeners.listenerDNS.acrRepo }}
+        imagePullPolicy: Always
+        ports:
+        - containerPort: {{ .Values.listeners.listenerDNS.port }}
+        env:
+        - name: TENANT_ID
+          value: {{ .Values.global.tenantID }}
+        - name: DSSLDRF_CONNSTR
+          valueFrom:
+            secretKeyRef:
+              name: csi-secrets  # ENV secret for all listeners
+              key: app-secret
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: dusseldorf-config
+              key: LOG_LEVEL
+        - name: MAX_CONNECTIONS
+          valueFrom:
+            configMapKeyRef:
+              name: dusseldorf-config
+              key: MAX_CONNECTIONS
+        - name: DSSLDRF_DOMAINS
+          valueFrom:
+            configMapKeyRef:
+              name: dusseldorf-config
+              key: DSSLDRF_DOMAINS
+        - name: DSSLDRF_IPV4
+          valueFrom:
+            configMapKeyRef:
+              name: dusseldorf-config
+              key: DSSLDRF_IPV4 
+        - name: DSSLDRF_IPV6
+          valueFrom:
+            configMapKeyRef:
+              name: dusseldorf-config
+              key: DSSLDRF_IPV6               
+        - name: LSTNER_DNS_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: dusseldorf-config
+              key: LSTNER_DNS_PORT   
+        - name: LSTNER_DNS_UDP
+          valueFrom:
+            configMapKeyRef:
+              name: dusseldorf-config
+              key: LSTNER_DNS_UDP   
+        - name: LSTNER_DNS_INTERFACE
+          valueFrom:
+            configMapKeyRef:
+              name: dusseldorf-config
+              key: LSTNER_DNS_INTERFACE
+        volumeMounts:
+        - name: dns-volume
+          mountPath: "/mnt/secrets-store"
+      volumes:
+      - name: dns-volume
+        csi:
+          driver: secrets-store.csi.k8s.io
+          readOnly: true
+          volumeAttributes:
+            secretProviderClass: "azure-kv-csi"
+# / DNS listener
+---
+# HTTP listener 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ .Values.listeners.listenerHTTP.name }}-deployment"
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.listeners.listenerHTTP.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.listeners.listenerHTTP.name }}
+    spec:
+      containers:
+      - name: {{ .Values.listeners.listenerHTTP.name }}
+        image: {{ .Values.listeners.listenerHTTP.acrRepo }}
+        imagePullPolicy: Always          
+        ports:
+        - containerPort: {{ .Values.listeners.listenerHTTP.port }}
+        env:
+        - name: TENANT_ID
+          value: {{ .Values.global.tenantID }}
+        - name: DSSLDRF_CONNSTR
+          valueFrom:
+            secretKeyRef:
+              name: csi-secrets  # ENV secret for all listeners
+              key: app-secret
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: dusseldorf-config
+              key: LOG_LEVEL
+        - name: MAX_CONNECTIONS
+          valueFrom:
+            configMapKeyRef:
+              name: dusseldorf-config
+              key: MAX_CONNECTIONS
+        - name: DSSLDRF_DOMAINS
+          valueFrom:
+            configMapKeyRef:
+              name: dusseldorf-config
+              key: DSSLDRF_DOMAINS
+        - name: LSTNER_HTTP_TLS
+          valueFrom:
+            configMapKeyRef:
+              name: dusseldorf-config
+              key: LSTNER_HTTP_TLS
+        - name: LSTNER_HTTP_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: dusseldorf-config
+              key: LSTNER_HTTP_PORT
+        - name: LSTNER_HTTP_INTERFACE
+          valueFrom:
+            configMapKeyRef:
+              name: dusseldorf-config
+              key: LSTNER_HTTP_INTERFACE
+        volumeMounts:
+        - name: http-volume
+          mountPath: "/mnt/secrets-store"
+      volumes:
+      - name: http-volume
+        csi:
+          driver: secrets-store.csi.k8s.io
+          readOnly: true
+          volumeAttributes:
+            secretProviderClass: "azure-kv-csi"
+# / HTTP listener
+---
+# HTTPS listener 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ .Values.listeners.listenerHTTPS.name }}-deployment"
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.listeners.listenerHTTPS.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.listeners.listenerHTTPS.name }}
+    spec:
+      containers:
+      - name: {{ .Values.listeners.listenerHTTPS.name }}
+        image: {{ .Values.listeners.listenerHTTP.acrRepo }}
+        imagePullPolicy: Always    
+        ports:
+        - containerPort: {{ .Values.listeners.listenerHTTPS.port }}
+        env:
+        - name: TENANT_ID
+          value: {{ .Values.global.tenantID }}
+        - name: DSSLDRF_CONNSTR
+          valueFrom:
+            secretKeyRef:
+              name: csi-secrets  # ENV secret for all listeners
+              key: app-secret
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: dusseldorf-config
+              key: LOG_LEVEL
+        - name: MAX_CONNECTIONS
+          valueFrom:
+            configMapKeyRef:
+              name: dusseldorf-config
+              key: MAX_CONNECTIONS
+        - name: DSSLDRF_DOMAINS
+          valueFrom:
+            configMapKeyRef:
+              name: dusseldorf-config
+              key: DSSLDRF_DOMAINS
+        - name: LSTNER_HTTP_TLS
+          valueFrom:
+            configMapKeyRef:
+              name: dusseldorf-config
+              key: LSTNER_HTTPS_TLS
+        - name: LSTNER_HTTP_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: dusseldorf-config
+              key: LSTNER_HTTPS_PORT
+        - name: LSTNER_HTTP_INTERFACE
+          valueFrom:
+            configMapKeyRef:
+              name: dusseldorf-config
+              key: LSTNER_HTTPS_INTERFACE
+        - name: DSSLDRF_TLS_KEY_FILE
+          valueFrom:
+            configMapKeyRef:
+              name: dusseldorf-config
+              key: DSSLDRF_TLS_KEY_FILE
+        - name: DSSLDRF_TLS_CRT_FILE
+          valueFrom:
+            configMapKeyRef:
+              name: dusseldorf-config
+              key: DSSLDRF_TLS_CRT_FILE                  
+        volumeMounts:
+        - name: https-volume
+          mountPath: {{ .Values.listeners.listenerHTTPS.certPath }}  # Mount cert for HTTPS
+      volumes:
+      - name: https-volume
+        csi:
+          driver: secrets-store.csi.k8s.io
+          readOnly: true
+          volumeAttributes:
+            secretProviderClass: "azure-kv-csi"
+# / HTTPS listener
+---
+# API
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ .Values.api.name }}-deployment"
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.api.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.api.name }}
+    spec:
+      containers:
+      - name: {{ .Values.api.name }}
+        image: {{ .Values.api.acrRepo }}
+        imagePullPolicy: Always
+        ports:
+        - containerPort: {{ .Values.api.port }}
+        env:
+        - name: AZURE_TENANT_ID
+          valueFrom:
+            configMapKeyRef:
+              name: dusseldorf-config
+              key: AZURE_API_TENANT_ID
+        - name: DSSLDRF_CONNSTR
+          valueFrom:
+            secretKeyRef:
+              name: csi-secrets  # ENV secret for all listeners
+              key: app-secret
+        - name: AZURE_CLIENT_ID
+          valueFrom:
+            configMapKeyRef:
+              name: dusseldorf-config
+              key: AZURE_API_CLIENT_ID
+        - name: API_TLS_KEY_FILE
+          valueFrom:
+            configMapKeyRef:
+              name: dusseldorf-config
+              key: API_TLS_KEY_FILE
+        - name: API_TLS_CRT_FILE
+          valueFrom:
+            configMapKeyRef:
+              name: dusseldorf-config
+              key: API_TLS_CRT_FILE     
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: dusseldorf-config
+              key: LOG_LEVEL
+        volumeMounts:
+        - name: api-volume
+          mountPath: {{ .Values.api.certPath }}
+      volumes:
+      - name: api-volume
+        csi:
+          driver: secrets-store.csi.k8s.io
+          readOnly: true
+          volumeAttributes:
+            secretProviderClass: "azure-kv-csi-api"
