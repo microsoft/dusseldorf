@@ -8,16 +8,14 @@ It is aimed to help automate the detection and exploitation of OOB (out of band)
 
 Dusseldorf provides a platform that deploys DNS, HTTP, and HTTPS network listeners and listens on a domain name, such as `*.yourdomain.net`.  All requests to this domain name, and any subdomain in it (called _zones_, such as `foo.yourdomain.net` and `foo.bar.yourdomain.net`) are captured by these listeners.  A clear user interface (and corresponding REST API) provide the ability to see these captured requests and their reponses, and you can configure your own custom responses.  To enable collaboration with others, you can add other users from the your EntraID tenant to analyze your network requests.
 
-For more information on how to use Dusseldorf, and how it can be used to find security vulnerabilities, please see [this guide](/docs/using).
-
 
 ## Getting Started
-Dusseldorf is designed to run on the Internet, and it is natively build to runs on Azure public cloud.  To setup your own instance, we have instructions for how to deploy Dusseldorf into your [Azure](docs/deploy/azure/) environment, or on your own [local server](/docs/deploy/local).
+Dusseldorf is designed to run on the Internet, and it is natively build to runs on Azure public cloud.  To run Dusseldorf, you'd need the following prerequisites:
 
-Prebuild container images are available [here]().  And instructions on how to build the source code from scratch can be found in our [build documentation](docs/build).
+ - a machine on the Internet with a public IP address
+ - a domain name with its `NS` record (name server) pointed at this IP address. 
 
-If you want to build custom listeners for any network protocol, you can follow [this page](docs/develop/listeners) on how to get started.
-
+Each component is designed to run as a container, so you can use both Kubernetes or a simple docker compose to build the source code from scratch and deployt to the cloud.
 
 ## Contributing
 
