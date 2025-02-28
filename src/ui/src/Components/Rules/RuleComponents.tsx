@@ -29,6 +29,7 @@ import { Logger } from "../../Helpers/Logger";
 import { DnsData } from "../../Types/DssldrfRequest";
 import { RuleComponent } from "../../Types/RuleComponent";
 import { Rule } from "../../Types/Rule";
+import { DnsDataComponent } from "./RuleComponents/DnsDataComponent";
 
 export const predicateDictionary: Record<string, string> = {
     "dns.type": "Request type is",
@@ -63,15 +64,6 @@ const actionValueToNiceString = (actionname: string, actionvalue: string) => {
             const hdrName: string = hdrs.shift() ?? "";
             const rest: string = hdrs.join(":");
             return `${hdrName}: ${rest}`;
-        }
-        case "dns.data": {
-            try {
-                const dnsData = JSON.parse(actionvalue) as DnsData;
-                return dnsData.ip ?? dnsData.cname ?? dnsData.mx ?? dnsData.ns ?? dnsData.txt ?? dnsData.data ?? "";
-            } catch (error) {
-                Logger.Warn(error as string);
-                return actionvalue;
-            }
         }
         default:
             return actionvalue;
@@ -114,10 +106,33 @@ export const RuleComponents = ({ rule, updateSelectedRule }: RuleComponentsProps
             columnId: "value",
             renderCell: (component) => {
                 if (component.componentid === editComponentId) {
-                    // response header is more complicated
                     if (!component.ispredicate && component.actionname == "http.header") {
+                        // response header is more complicated
                         return (
                             <ResultHeaderRuleComponentEdit
+                                oldValue={component.actionvalue}
+                                onDismiss={() => {
+                                    setEditComponentId(null);
+                                }}
+                                onSave={(newValue) => {
+                                    DusseldorfAPI.EditRuleComponent(rule, component, newValue)
+                                        .then(() => {
+                                            component.actionvalue = newValue;
+                                            setRuleComponents([...ruleComponents]);
+                                            updateSelectedRule(rule);
+                                        })
+                                        .catch((err) => {
+                                            // don't nudge here, because that would remove the update that the user is doing
+                                            Logger.Error(err);
+                                        });
+                                    setEditComponentId(null);
+                                }}
+                            />
+                        );
+                    } else if (!component.ispredicate && component.actionname == "dns.data") {
+                        // response dns.data is also more complicated
+                        return (
+                            <DnsDataComponent
                                 oldValue={component.actionvalue}
                                 onDismiss={() => {
                                     setEditComponentId(null);
@@ -384,7 +399,33 @@ export const RuleComponents = ({ rule, updateSelectedRule }: RuleComponentsProps
                     />
                 )}
 
-                {resultToCreate && resultToCreate != "http.header" && (
+                {resultToCreate && resultToCreate == "dns.data" && (
+                    <DnsDataComponent
+                        onDismiss={() => {
+                            setResultToCreate(null);
+                        }}
+                        onSave={(newValue) => {
+                            DusseldorfAPI.AddRuleComponent(rule, {
+                                actionname: resultToCreate,
+                                actionvalue: newValue,
+                                ispredicate: false
+                            })
+                                .then((newComponent) => {
+                                    setRuleComponents([...ruleComponents, newComponent]);
+                                    updateSelectedRule(rule);
+                                })
+                                .catch((err) => {
+                                    Logger.Error(err);
+                                    setRuleComponents([...ruleComponents]);
+                                })
+                                .finally(() => {
+                                    setResultToCreate(null);
+                                });
+                        }}
+                    />
+                )}
+
+                {resultToCreate && resultToCreate != "http.header" && resultToCreate != "dns.data" && (
                     <GenericRuleComponent
                         isPredicate={false}
                         actionName={resultToCreate}

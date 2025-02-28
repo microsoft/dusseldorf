@@ -32,8 +32,8 @@ import { Logger } from "./Helpers/Logger";
 import { ThemeHelper } from "./Helpers/ThemeHelper";
 import { LeftNav } from "./Navigation/LeftNav";
 import { TopNavBar } from "./Navigation/TopNavBar";
-import { ScreenRouter } from "./screens/ScreenRouter";
-import { Splash } from "./screens/Splash";
+import { ScreenRouter } from "./Screens/ScreenRouter";
+import { Splash } from "./Screens/Splash";
 
 import "./App.css";
 import "./Styles/Stack.css";
