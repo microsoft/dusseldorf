@@ -65,7 +65,19 @@ def main():
                 return -1
 
             ctx = SSLContext(ssl.PROTOCOL_TLS_SERVER)
+            ctx.minimum_version = ssl.TLSVersion.TLSv1_2  # Enforce TLS 1.2
+            ctx.maximum_version = ssl.TLSVersion.TLSv1_3  # Allow up to TLS 1.3
             ctx.load_cert_chain(tls_crt_file, tls_key_file)
+            ctx.options |= (
+                ssl.OP_NO_SSLv2
+                | ssl.OP_NO_SSLv3
+                | ssl.OP_NO_TLSv1
+                | ssl.OP_NO_TLSv1_1
+                | ssl.OP_NO_TLSv1_2
+                | ssl.OP_CIPHER_SERVER_PREFERENCE
+            )  # Disable weak ciphers
+            ctx.options |= ssl.OP_NO_COMPRESSION  # Disable compression (CRIME attack prevention)
+            ctx.set_ciphers('ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384')
             server.socket = ctx.wrap_socket(
                 server.socket, 
                 server_side = True,
