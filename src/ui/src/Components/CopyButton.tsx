@@ -10,21 +10,20 @@ interface CopyButtonProps {
 }
 
 export const CopyButton = ({ text }: CopyButtonProps): JSX.Element => {
-
     return (
-        <Tooltip content={`Copy ${text} to clipboard`} relationship="label">
+        <Tooltip
+            content={`Copy ${text} to clipboard`}
+            relationship="label"
+        >
             <Button
-                appearance="transparent"
+                appearance="subtle"
                 icon={<CopyRegular />}
-                onClick={ev => {
-                    ev.preventDefault();
-                    ev.stopPropagation();
-                    navigator.clipboard.writeText(text)
-                        .catch(err => {
-                            Logger.Error(err);
-                        })
+                onClick={() => {
+                    navigator.clipboard.writeText(text).catch((err) => {
+                        Logger.Error(err);
+                    });
                 }}
             />
         </Tooltip>
     );
-}
+};

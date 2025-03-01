@@ -19,7 +19,7 @@ export const SelectRuleComponent = ({ actionName, value, setValue }: SelectRuleC
     useEffect(() => {
         if (actionName === "dns.type") {
             setOptions(
-                ["A", "AAAA", "CAA", "CNAME", "MX", "TXT"].map((dnsType) => (
+                ["A", "AAAA", "CNAME", "TXT"].map((dnsType) => (
                     <option
                         key={dnsType}
                         value={dnsType}

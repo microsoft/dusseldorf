@@ -15,7 +15,7 @@ const createDictionary = (isPredicate: boolean): Record<string, { label: string;
         },
         "dns.type": {
             label: "DNS Type",
-            onlyOne: !isPredicate
+            onlyOne: true
         },
         "http.body": {
             label: isPredicate ? "HTTP Body Regex" : "HTTP Body",
@@ -52,7 +52,7 @@ const getItemList = (isHttp: boolean, isPredicate: boolean) => {
     } else if (isPredicate) {
         return ["dns.type"];
     } else {
-        return ["dns.type", "dns.data"];
+        return ["dns.data"];
     }
 };
 
@@ -84,7 +84,13 @@ export const RuleComponentMenu = ({
                 <MenuButton
                     style={{ width: 140 }}
                     icon={<AddRegular />}
-                    disabled={isDisabled}
+                    disabled={
+                        isDisabled ||
+                        ( // dns results dropdown, disabled if we do not yet have a type
+                            isHttp == false &&
+                            isPredicate == false &&
+                            ruleComponents.find((value) => value.actionname === "dns.type") == undefined)
+                    }
                 >
                     {isPredicate ? "Add Filter" : "Add Result"}
                 </MenuButton>

@@ -9,21 +9,23 @@ interface OpenInNewTabProps {
 }
 
 export const OpenInNewTabButton = ({ url }: OpenInNewTabProps): JSX.Element => {
-
     // to prevent any xss issues, the url must start with https://
-    if (!url.startsWith('https://')) {
-        url = 'https://' + url;
+    if (!url.startsWith("https://")) {
+        url = "https://" + url;
     }
 
     return (
-        <Tooltip content={`Open ${url} in a new tab`} relationship="label">
+        <Tooltip
+            content={`Open ${url} in a new tab`}
+            relationship="label"
+        >
             <Button
-                appearance="transparent"
+                appearance="subtle"
                 icon={<OpenRegular />}
                 onClick={() => {
-                    window.open(url, '_blank');
+                    window.open(url, "_blank");
                 }}
             />
         </Tooltip>
     );
-}
+};

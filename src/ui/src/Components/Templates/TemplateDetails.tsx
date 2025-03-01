@@ -89,19 +89,12 @@ export const TemplateDetails = ({ template }: ITemplateDetailsProps): JSX.Elemen
                 <Text>
                     For more information on how to use templates, please see the documentation on{" "}
                     <Link
-                        href="https://aka.ms/dusseldocs/templates"
+                        href="https://github.com/microsoft/dusseldorf"
                         inline
                     >
-                        https://aka.ms/dusseldocs/templates
-                    </Link>{" "}
-                    for more information, and{" "}
-                    <Link
-                        href="https://dev.azure.com/securityassurance/Dusseldorf/_git/payloads"
-                        inline
-                    >
-                        ADO
-                    </Link>{" "}
-                    for some examples.
+                        https://github.com/microsoft/dusseldorf
+                    </Link>
+                    .
                 </Text>
             </div>
         );

@@ -48,7 +48,7 @@ export const AllZonesScreen = () => {
     }, [filter, allZones]);
 
     return (
-        <div className='stack vstack-gap' style={{ overflow: "auto", width: "100%", height: "100%", marginRight: 20, marginLeft: 20 }}>
+        <div className='stack vstack-gap' style={{ overflow: "auto", width: "100%", height: "100%", paddingRight: 20, marginLeft: 20 }}>
             <div className='stack hstack' style={{ marginBottom: '10px' }}>
                 <Title2>Zones</Title2>
 
