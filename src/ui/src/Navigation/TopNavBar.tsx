@@ -78,7 +78,7 @@ export const TopNavBar = ({ apiError, darkTheme, toggleTheme }: ITopNavBarProps)
 
                 <Menu>
                     <MenuTrigger disableButtonEnhancement>
-                        <Button appearance="transparent">
+                        <Button appearance="subtle">
                             <div style={{ display: "flex", flexDirection: "row", alignItems: "center" }}>
                                 <Avatar name={account?.name} />
                                 <Text style={{ color: "#ffffff", paddingLeft: 10 }}> {account?.name}</Text>

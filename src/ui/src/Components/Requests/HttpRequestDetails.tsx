@@ -147,7 +147,7 @@ export const HttpRequestDetails = ({ details }: IHttpRequestDetailsProps) => {
                                 relationship="description"
                             >
                                 <Button
-                                    appearance="transparent"
+                                    appearance="subtle"
                                     icon={<StethoscopeRegular />}
                                     onClick={() => {
                                         setPayload(header.value);
@@ -174,7 +174,7 @@ export const HttpRequestDetails = ({ details }: IHttpRequestDetailsProps) => {
                         relationship="description"
                     >
                         <Button
-                            appearance="transparent"
+                            appearance="subtle"
                             icon={showFullRawReq ? <ChevronDownUpRegular /> : <ChevronUpDownRegular />}
                             onClick={() => {
                                 UiHelper.SetPanelSettings("http.req.raw", !showFullRawReq);
@@ -199,7 +199,7 @@ export const HttpRequestDetails = ({ details }: IHttpRequestDetailsProps) => {
                             <Dialog>
                                 <DialogTrigger disableButtonEnhancement>
                                     <Button
-                                        appearance="transparent"
+                                        appearance="subtle"
                                         icon={<FireRegular />}
                                     />
                                 </DialogTrigger>
@@ -225,7 +225,7 @@ export const HttpRequestDetails = ({ details }: IHttpRequestDetailsProps) => {
                         relationship="description"
                     >
                         <Button
-                            appearance="transparent"
+                            appearance="subtle"
                             icon={showReqHeaders ? <ChevronDownUpRegular /> : <ChevronUpDownRegular />}
                             onClick={() => {
                                 UiHelper.SetPanelSettings("http.req.parsed", !showReqHeaders);
@@ -263,7 +263,7 @@ export const HttpRequestDetails = ({ details }: IHttpRequestDetailsProps) => {
                         relationship="description"
                     >
                         <Button
-                            appearance="transparent"
+                            appearance="subtle"
                             icon={showFullRawResp ? <ChevronDownUpRegular /> : <ChevronUpDownRegular />}
                             onClick={() => {
                                 UiHelper.SetPanelSettings("http.resp.raw", !showFullRawResp);
@@ -288,7 +288,7 @@ export const HttpRequestDetails = ({ details }: IHttpRequestDetailsProps) => {
                         relationship="description"
                     >
                         <Button
-                            appearance="transparent"
+                            appearance="subtle"
                             icon={showRespHeaders ? <ChevronDownUpRegular /> : <ChevronUpDownRegular />}
                             onClick={() => {
                                 UiHelper.SetPanelSettings("http.resp.parsed", !showRespHeaders);

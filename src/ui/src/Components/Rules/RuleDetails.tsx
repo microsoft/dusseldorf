@@ -105,7 +105,7 @@ export const RuleDetails = ({ rule, updateSelectedRule }: IRuleDetailsProps) => 
                         relationship="label"
                     >
                         <Button
-                            appearance="transparent"
+                            appearance="subtle"
                             icon={<SaveRegular />}
                             disabled={priority === rule.priority || !isValidPriority(priority) || showPriorityError}
                             onClick={() => {

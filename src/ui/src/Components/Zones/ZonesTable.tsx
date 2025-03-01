@@ -141,7 +141,7 @@ export const ZonesTable = ({ refreshZones, zones }: ZonesTableProps) => {
                     <DataGridCell style={{ paddingLeft: 5, paddingRight: 5 }}>
                         <Tooltip content={`Hide/unhide ${zone.fqdn}`} relationship="label">
                             <Button
-                                appearance="transparent"
+                                appearance="subtle"
                                 icon={hidden ? <EyeOffRegular /> : <EyeRegular />}
                                 onClick={() => {
                                     UiHelper.ToggleZone(zone.fqdn);

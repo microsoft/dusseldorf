@@ -4,48 +4,55 @@
 import { Button, Field, Input, Text, Tooltip } from "@fluentui/react-components";
 import { DismissRegular, SaveRegular } from "@fluentui/react-icons";
 import { useState } from "react";
+import { DnsData } from "../../../Types/DssldrfRequest";
 
 interface DnsDataComponentProps {
     onSave: (newValue: string) => void;
     onDismiss: () => void;
     oldValue?: string;
+    dnsType?: string;
 }
 
-export const DnsDataComponent = ({ onSave, onDismiss, oldValue }: DnsDataComponentProps): JSX.Element => {
-    const [value, setValue] = useState<string>(oldValue ?? '{ "data": "duSSeldoRF" }');
-    const [validationMsg, setValidationMsg] = useState<string>("");
-
-    const getValidationMsg = (newValue: string) => {
+export const DnsDataComponent = ({ onSave, onDismiss, oldValue, dnsType }: DnsDataComponentProps): JSX.Element => {
+    const parseValue = (v: string) => {
         try {
-            const parsed = JSON.parse(newValue) as object;
-            if (Object.keys(parsed).length == 0) {
-                return `Must be valid JSON of the form '{ "dnsType": "value" }'`;
-            } else if (Object.keys(parsed).length != 1) {
-                return "Can only have one key in JSON";
-            } else {
-                if (["ip", "cname", "mx", "ns", "txt", "data"].includes(Object.keys(parsed)[0])) {
-                    return "";
-                } else {
-                    console.log(Object.keys(parsed)[0])
-                    return "JSON key must be one of: ip, cname, mx, ns, txt, or data";
-                }
-            }
+            const parsed = JSON.parse(v) as DnsData;
+            return parsed.ip || parsed.cname || parsed.txt || v;
         } catch {
-            return `Must be valid JSON of the form '{ "dnsType": "value" }'`;
+            return v;
         }
-    };
+    }
+
+    const parseKey = (v: string) => {
+        try {
+            const parsed = JSON.parse(v) as DnsData;
+            return Object.keys(parsed).find(k => ["ip","cname","txt"].includes(k)) ?? "ip";
+        } catch {
+            return "ip";
+        }
+    }
+
+    const getKey = (v: string | undefined) => {
+        if (v == "A" || v == "AAAA") {
+            return "ip";
+        } else {
+            return v?.toLowerCase() ?? "ip";
+        }
+    }
+
+    const [value, setValue] = useState<string>(oldValue ? parseValue(oldValue) : "duSSeldoRF");
+    const [jsonKey] = useState<string>(oldValue ? parseKey(oldValue) : getKey(dnsType));
+
 
     return (
         <div className="stack hstack-center">
             <Field
                 label={oldValue !== undefined ? "" : "DNS Response Data"}
-                validationMessage={validationMsg ? <Text truncate>{validationMsg}</Text> : ""}
             >
                 <Input
                     value={value}
                     onChange={(_, data) => {
                         setValue(data.value);
-                        setValidationMsg(getValidationMsg(data.value));
                     }}
                 />
             </Field>
@@ -57,9 +64,8 @@ export const DnsDataComponent = ({ onSave, onDismiss, oldValue }: DnsDataCompone
                 <Button
                     appearance="subtle"
                     icon={<SaveRegular />}
-                    disabled={validationMsg.length != 0}
                     onClick={() => {
-                        onSave(value);
+                        onSave(`{ "${jsonKey}": "${value}" }`);
                     }}
                 />
             </Tooltip>

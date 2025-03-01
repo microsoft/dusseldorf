@@ -43,7 +43,7 @@ export const HomePage = () => {
     }, []);
 
     return (
-        <div style={{ overflow: "auto", width: "100%", height: "100%", marginRight: 20, marginLeft: 20 }}>
+        <div style={{ overflow: "auto", width: "100%", height: "100%", paddingRight: 20, marginLeft: 20 }}>
             <div
                 className="stack hstack-spread"
                 style={{ paddingBottom: "30px" }}
@@ -122,10 +122,10 @@ export const HomePage = () => {
                 <Text>
                     For more information and information on how to get started, go to{" "}
                     <Link
-                        href="https://aka.ms/dusseldorf/docs"
+                        href="https://github.com/microsoft/dusseldorf"
                         inline
                     >
-                        https://aka.ms/dusseldorf/docs
+                        https://github.com/microsoft/dusseldorf
                     </Link>
                     .
                 </Text>

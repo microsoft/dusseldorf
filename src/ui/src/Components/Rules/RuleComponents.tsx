@@ -65,6 +65,14 @@ const actionValueToNiceString = (actionname: string, actionvalue: string) => {
             const rest: string = hdrs.join(":");
             return `${hdrName}: ${rest}`;
         }
+        case "dns.data": {
+            try {
+                const parsed = JSON.parse(actionvalue) as DnsData;
+                return parsed.ip || parsed.cname || parsed.txt || actionvalue;
+            } catch {
+                return actionvalue;
+            }
+        }
         default:
             return actionvalue;
     }
@@ -199,7 +207,7 @@ export const RuleComponents = ({ rule, updateSelectedRule }: RuleComponentsProps
                         <Button
                             appearance="subtle"
                             icon={<EditRegular />}
-                            disabled={editComponentId !== null}
+                            disabled={editComponentId !== null || component.actionname == "dns.type"}
                             onClick={() => {
                                 setEditComponentId(component.componentid);
                             }}
@@ -217,6 +225,7 @@ export const RuleComponents = ({ rule, updateSelectedRule }: RuleComponentsProps
                         relationship="label"
                     >
                         <Button
+                            disabled={component.actionname == "dns.type"}
                             appearance="subtle"
                             icon={<DeleteRegular />}
                             onClick={() => {
@@ -305,21 +314,50 @@ export const RuleComponents = ({ rule, updateSelectedRule }: RuleComponentsProps
                             setPredicateToCreate(null);
                         }}
                         onSave={(newValue) => {
-                            DusseldorfAPI.AddRuleComponent(rule, {
-                                actionname: predicateToCreate,
-                                actionvalue: newValue,
-                                ispredicate: true
-                            })
-                                .then((newComponent) => {
-                                    setRuleComponents(ruleComponents.concat(newComponent));
-                                    updateSelectedRule(rule);
+                            if (predicateToCreate == "dns.type") {
+                                // If we are making a dns.type predicate, set the dns.type result as well
+                                DusseldorfAPI.AddRuleComponent(rule, {
+                                    actionname: predicateToCreate,
+                                    actionvalue: newValue,
+                                    ispredicate: false
                                 })
-                                .catch((err) => {
-                                    Logger.Error(err);
+                                    .then((newComponent1) => {
+                                        DusseldorfAPI.AddRuleComponent(rule, {
+                                            actionname: predicateToCreate,
+                                            actionvalue: newValue,
+                                            ispredicate: true
+                                        })
+                                            .then((newComponent2) => {
+                                                setRuleComponents(ruleComponents.concat(newComponent1, newComponent2));
+                                                updateSelectedRule(rule);
+                                            })
+                                            .catch((err) => {
+                                                Logger.Error(err);
+                                            });
+                                    })
+                                    .catch((err) => {
+                                        Logger.Error(err);
+                                    })
+                                    .finally(() => {
+                                        setPredicateToCreate(null);
+                                    });
+                            } else {
+                                DusseldorfAPI.AddRuleComponent(rule, {
+                                    actionname: predicateToCreate,
+                                    actionvalue: newValue,
+                                    ispredicate: true
                                 })
-                                .finally(() => {
-                                    setPredicateToCreate(null);
-                                });
+                                    .then((newComponent) => {
+                                        setRuleComponents(ruleComponents.concat(newComponent));
+                                        updateSelectedRule(rule);
+                                    })
+                                    .catch((err) => {
+                                        Logger.Error(err);
+                                    })
+                                    .finally(() => {
+                                        setPredicateToCreate(null);
+                                    });
+                            }
                         }}
                     />
                 )}
@@ -401,6 +439,7 @@ export const RuleComponents = ({ rule, updateSelectedRule }: RuleComponentsProps
 
                 {resultToCreate && resultToCreate == "dns.data" && (
                     <DnsDataComponent
+                        dnsType={ruleComponents.find((component) => component.actionname == "dns.type")?.actionvalue}
                         onDismiss={() => {
                             setResultToCreate(null);
                         }}
@@ -454,10 +493,9 @@ export const RuleComponents = ({ rule, updateSelectedRule }: RuleComponentsProps
                 )}
 
                 <DataGrid
-                    items={
-                        ruleComponents.filter((c) => !c.ispredicate)
-                        // .sort((a, b) => a.actionname.localeCompare(b.actionname))
-                    }
+                    items={ruleComponents
+                        .filter((c) => !c.ispredicate)
+                        .sort((a, b) => a.actionname.localeCompare(b.actionname))}
                     columns={columns}
                     resizableColumns
                     columnSizingOptions={columnSizingOptions}

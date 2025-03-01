@@ -16,6 +16,7 @@ const useStyles = makeStyles({
     root: {
         padding: "20px",
         width: "100%",
+        minWidth: "500px",
         overflowX: "hidden"
     },
     header: {

@@ -25,7 +25,7 @@ export const Splash = ({ loginClick }: ISplashProps) => {
                     and select the respective endpoint.
                 </Text>
                 <Text>See{' '}
-                    <Link href="//aka.ms/dusseldorf/docs" inline>aka.ms/dusseldorf/docs</Link>
+                    <Link href="https://github.com/microsoft/dusseldorf" inline>https://github.com/microsoft/dusseldorf</Link>
                     {' '}for more information.</Text>
             </div>
 

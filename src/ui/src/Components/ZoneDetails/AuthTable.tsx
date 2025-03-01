@@ -105,7 +105,7 @@ export const AuthTable = ({ users, refreshUsers, zone }: AuthTableProps): JSX.El
                             relationship="label"
                         >
                             <Button
-                                appearance="transparent"
+                                appearance="subtle"
                                 icon={<DeleteRegular />}
                                 disabled={
                                     // don't delete the only owner
