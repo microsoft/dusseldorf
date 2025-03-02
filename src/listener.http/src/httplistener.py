@@ -6,6 +6,7 @@ import logging
 import sys
 import ssl
 import time
+import re
 
 from httprules import get_response
 from models.httprequest import HttpRequest
@@ -24,6 +25,31 @@ class HttpRequestHandler(http.server.SimpleHTTPRequestHandler):
     """
     This object handles a given Http request and defines the response.
     """
+    MAX_CONTENT_LENGTH = 1024 * 1024 * 10 # 10MB
+    ALLOWED_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"]
+    PATH_PATTERN = re.compile(r"^/([a-zA-Z0-9-_]+)(/([a-zA-Z0-9-_]+))?(/([a-zA-Z0-9-_]+))?/?$")
+
+    def validate_request(self):
+        """
+        Validates the request, returns True if valid, False if not.
+        """
+        if self.command not in self.ALLOWED_METHODS:
+            logger.warning("Invalid method %s", self.command)
+            return False, 405
+
+        # Validate path
+        if not self.PATH_PATTERN.match(self.path):
+            logger.warning("Invalid path %s", self.path)
+            return False, 400
+        
+        # Validate content length
+        content_length = int(self.headers.get("content-length", 0))
+        if content_length > self.MAX_CONTENT_LENGTH:
+            logger.warning("Content length %d exceeds maximum %d", content_length, self.MAX_CONTENT_LENGTH)
+            return False, 413
+
+        return True, None
+
     def setup(self):
         http.server.SimpleHTTPRequestHandler.setup(self)
         self.server_version= "dusseldorf"
@@ -72,6 +98,11 @@ class HttpRequestHandler(http.server.SimpleHTTPRequestHandler):
         This looks up if we have a matching rule for the current
         request. And if we do, then let's see what to send back.
         """
+        is_valid, status_code = self.validate_request()
+        if not is_valid:
+            self.send_error(status_code)
+            return
+
         start_of_req = time.perf_counter()
         logger.debug("handling_request(%s %s)", self.command, self.path)       
       
@@ -110,7 +141,6 @@ class HttpRequestHandler(http.server.SimpleHTTPRequestHandler):
             req_body = None
 
         done_body_read = time.perf_counter()
-
 
         # we're good now, handle the http request, make a response
         req = HttpRequest( req_fqdn = req_fqdn,
@@ -170,6 +200,9 @@ class HttpRequestHandler(http.server.SimpleHTTPRequestHandler):
         else:
             logger.warning("Invalid status code %d, setting to default", http_response.status_code)
             self.send_response(HttpResponse.Empty().status_code)
+        
+        if isinstance(self.connection, ssl.SSLSocket):
+            self.send_header("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload")
 
         # skip sending this header
         skip = [ "content-length" ]
