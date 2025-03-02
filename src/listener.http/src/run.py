@@ -65,8 +65,8 @@ def main():
                 return -1
 
             ctx = SSLContext(ssl.PROTOCOL_TLS_SERVER)
-            ctx.minimum_version = ssl.TLSVersion.TLSv1_2  
             ctx.maximum_version = ssl.TLSVersion.TLSv1_3
+            ctx.minimum_version = ssl.TLSVersion.TLSv1_2
             ctx.load_cert_chain(tls_crt_file, tls_key_file)
             ctx.options |= (
                 ssl.OP_NO_SSLv2
