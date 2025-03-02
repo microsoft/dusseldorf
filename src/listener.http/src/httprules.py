@@ -32,14 +32,23 @@ def _is_dangerous_host(cls, url:str) -> bool:
         ipaddress.IPv4Network("169.254.0.0/16"),    # rfc 3927
         ipaddress.IPv4Network("168.63.129.16/32"),  # Azure Gateway
         ipaddress.IPv6Network("::1/128"),           # IPv6 loopback
+        ipaddress.IPv6Network("fc00::/7"),          # site-local
+        ipaddress.IPv6Network("fe80::/10"),         # link-local
     ]
 
     try:
-        ip = socket.gethostbyname(url)
-        return any(ipaddress.ip_address(ip) in network for network in bad_networks)
+        # Resolve all IP addresses 
+        ip_addresses = socket.getaddrinfo(url, None)
+
+        for ip_info in ip_addresses:
+            ip = ipaddress.ip_address(ip_info[4][0])
+            if any(ip in network for network in bad_networks):
+                return True
+            
+        return false
     except:
-        logger.error(f"Could not resolve host: {url}")    
-        return True # default, assume it's bad 
+        logger.error(f"Could not resolve host: {url}: {str(ex)}") 
+        return True # default, assume it's bad
 
 #region predicates
 
