@@ -44,9 +44,12 @@ async def get_db() -> AsyncIOMotorClient:
         yield db
     except ConfigurationError as ce:
         print(f"ConfigurationError: {str(ce)}")
-        raise HTTPException(status_code=500, detail="Something is misconfigured")
+        raise HTTPException(status_code=500, detail="DB - Something is misconfigured")
     except ConnectionFailure as cf:
         print(f"ConnectionFailure: {str(cf)}")
-        raise HTTPException(status_code=500, detail="DB connection failed")
+        raise HTTPException(status_code=500, detail="DB - Connection failed")
+    except Exception as e:
+        print(f"Other Exception: {str(e)}")
+        raise HTTPException(status_code=500, detail="DB - Ran into an issue")
     finally:
         pass
