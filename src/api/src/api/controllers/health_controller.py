@@ -23,7 +23,8 @@ async def health_check(
         await db.command("ping")
         return {"status": "healthy", "database": "connected"}
     except Exception as e:
-        return {"status": "unhealthy", "database": str(e)}
+        print(f"Health check failed: {str(e)}")
+        return {"status": "unhealthy", "database": "connection error" }
 
 @router.get("/health/detailed")
 async def detailed_health_check(

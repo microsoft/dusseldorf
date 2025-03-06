@@ -6,6 +6,7 @@
 
 from fastapi import Depends, HTTPException, status, Header, Security
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from pymongo.errors import ConfigurationError, ConnectionFailure
 from typing import Optional
 
 from services.azure_ad import AzureADService
@@ -37,10 +38,18 @@ async def get_current_user(
 async def get_db() -> AsyncIOMotorClient:
     """Get database connection"""
     settings = get_settings()
-    client = AsyncIOMotorClient(settings.DSSLDRF_CONNSTR, uuidRepresentation='standard')
-    db = client.get_default_database()
-    #await db_service.connect()
     try:
+        client = AsyncIOMotorClient(settings.DSSLDRF_CONNSTR, uuidRepresentation='standard')
+        db = client.get_default_database()
         yield db
+    except ConfigurationError as ce:
+        print(f"ConfigurationError: {str(ce)}")
+        raise HTTPException(status_code=500, detail="DB - Something is misconfigured")
+    except ConnectionFailure as cf:
+        print(f"ConnectionFailure: {str(cf)}")
+        raise HTTPException(status_code=500, detail="DB - Connection failed")
+    except Exception as e:
+        print(f"Other Exception: {str(e)}")
+        raise HTTPException(status_code=500, detail="DB - Ran into an issue")
     finally:
         pass
