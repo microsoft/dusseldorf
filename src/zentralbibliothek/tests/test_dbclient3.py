@@ -1,6 +1,6 @@
-'''
-This test class makes sure we can import the modules in zentralbibliothek.
-'''
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 import os
 import random
 import string
