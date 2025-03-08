@@ -41,8 +41,7 @@ You can find more information on how to run this listener in the [HTTP documenta
 ## UI
 This is the frontend web user interface.  It is implemented in React using the amazing [Fluent2](https://fluent2.microsoft.design/) design framework and provides a modern single-page-application (SPA) to communicate with the Dusseldorf API.
 
-These static pages are compiled and placed into a folder in the API, so it references a local `/api` endpoints, but can be setup to call another API endoint altogether, too.  
-
+These static pages are compiled and placed into a folder in the API, so it references a local `/api` endpoints, but can be setup to call another API endpoint altogether, too.
 The user interface's information can be found [here](ui/README.md).
 
 
