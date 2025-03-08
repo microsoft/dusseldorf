@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 from motor.motor_asyncio import AsyncIOMotorClient
 import asyncio
 import logging

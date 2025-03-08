@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 '''
 This test class makes sure we can import the modules in zentralbibliothek.
 '''

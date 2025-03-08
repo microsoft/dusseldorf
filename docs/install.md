@@ -1,10 +1,13 @@
 # **Dusseldorf Deployment Guide**
 
-This guide provides instructions for deploying the Dusseldorf system either locally using Docker Compose or on Azure using Helm charts.
+This guide provides instructions for installing and deploying Dusseldorf either locally 
+using Docker Compose or on Azure using Helm charts.  
+
+This guide assumes you have a basic understanding of Linux commands.
 
 ---
 
-## **📌 Prerequisites**
+## **Prerequisites**
 
 Ensure you have the following installed:
 
