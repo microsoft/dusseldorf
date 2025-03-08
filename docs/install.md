@@ -36,7 +36,7 @@ cd <repo-directory>
 
 #### **Step 2: Build and Push Docker Images**
 
-Before deploying locally, you need to build Docker images for each listener and API present in the `src/` directory and push them to your Azure Container Registry (ACR).
+Before deploying locally, you need to build Docker images for each listener and API present in the `dusseldorf/` directory and push them to your Azure Container Registry (ACR).
 
 ```sh
 # Build Docker images

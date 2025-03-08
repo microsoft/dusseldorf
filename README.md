@@ -8,7 +8,7 @@ It is aimed to empower security professionals to help automate the detection and
 
 Dusseldorf deploys DNS, HTTP, and HTTPS network listeners and listens on a domain name, such as `*.yourdomain.net`.  All requests to this domain name, and any subdomain in it (called _zones_, such as `foo.yourdomain.net` and `foo.bar.yourdomain.net`) are captured by these network listeners.  
 
-Using the protected graphical user interface (and corresponding REST API), you can see these captured requests and their reponses.  Furthermore, you can configure your own custom responses and filters.  
+Using the protected graphical user interface (and corresponding REST API), you can see these captured requests and their responses.  Furthermore, you can configure your own custom responses and filters.  
 
 
 
