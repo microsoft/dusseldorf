@@ -28,4 +28,5 @@ venv.bak/
 .pypirc
 .vscode/
 
-src/api/src/api/ui/
+# prevent static files
+dusseldorf/api/src/api/ui/

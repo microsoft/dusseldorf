@@ -19,7 +19,7 @@ const defaultValueDictionary: Record<number, Record<string, string>> = {
     },
     1: {
         "dns.type": "A",
-        "http.body": "*",
+        "http.body": ".*", // must be regex
         "http.header": "Cookie",
         "http.method": "GET",
         "http.path": "*"

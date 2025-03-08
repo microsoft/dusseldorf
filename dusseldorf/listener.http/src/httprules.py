@@ -86,10 +86,16 @@ class HttpBodyPredicate(Predicate):
     def satisfied_by(cls, request:HttpRequest, parameter:str):    
         if not parameter: # If we're not requiring anything, then we should let all requests satisfy the predicate.
             return True
-        
+       
         if type(request) != HttpRequest: 
             return False
-        return bool(re.search(parameter, request.body))
+        
+        try:
+            return bool(re.search(parameter, request.body))
+        except Exception as ex:
+            # maybe a bad regex pattern?
+            logger.warning(f"Error in http.body predicate: {ex}")
+            return False
 
 class HttpHeaderPredicate(Predicate):
     """
