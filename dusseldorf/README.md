@@ -20,8 +20,7 @@ For more information about this API, please consult the [API docs](api/README.md
 
 
 ## DNS Listener
-This is a network listener that responds to DNS traffic, and listens on port 53/udp for any DNS requests.   The DNS (Domain Name System) protocol is reponsible for translating hostnames to an IP address.  By acting as a domains' DNS server, Dusseldorf is able to monitor any name resolutions for those subdomains on the Internet.  
-
+This is a network listener that responds to DNS traffic, and listens on port 53/udp for any DNS requests.   The DNS (Domain Name System) protocol is responsible for translating hostnames to an IP address.  By acting as a domains' DNS server, Dusseldorf is able to monitor any name resolutions for those subdomains on the Internet.
 By default, this permissive DNS server reponds with its own IP address(es) to a name resolution.  This behaviour can be changed by assigning rules to your zone.   Currently we only support custom `A`, `AAAA`, `CNAME` and `TXT` records.
 
 Check the documentation for the DNS listener [here](listener.dns/README.md).
