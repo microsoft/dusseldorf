@@ -12,4 +12,4 @@ For help and questions about using this project, please contact dusseldorf@micro
 
 ## Microsoft Support Policy  
 
-Support for this Dusseldorf is limited to the resources listed above.
+Support for Dusseldorf is limited to the resources listed above.

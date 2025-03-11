@@ -27,7 +27,7 @@ Check the documentation for the DNS listener [here](listener.dns/README.md).
 
 
 ## HTTP/HTTPS Listener
-This network listener can be setup to listen on cleartext HTTP traffic, or it can listen on HTTPS traffic, you have the correct certificates available.  For a cleartext setup, this listener accepts HTTP requests on port 80/tcp, and respond with default, or customized HTTP responses.
+This network listener can be setup to listen on cleartext HTTP traffic, or it can listen on HTTPS traffic, if you have the correct certificates available.  For a cleartext setup, this listener accepts HTTP requests on port 80/tcp, and respond with default, or customized HTTP responses.
 Just like the DNS listener acts as a DNS server, this listener implements a very permissive HTTP server, or web server.  Using rules, you can set custom content, headers and status codes.
 
 If you have an x.509 public/private keypair, is a wildcard certificate (ex: `*.contoso.com`) the you can setup the HTTP listener to listen on HTTPS.
