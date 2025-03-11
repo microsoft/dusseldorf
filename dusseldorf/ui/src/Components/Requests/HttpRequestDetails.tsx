@@ -20,8 +20,10 @@ import {
     Subtitle1,
     TableColumnDefinition,
     Textarea,
+    tokens,
     Tooltip
 } from "@fluentui/react-components";
+
 import { ChevronDownUpRegular, ChevronUpDownRegular, FireRegular, StethoscopeRegular } from "@fluentui/react-icons";
 import { useEffect, useState } from "react";
 
@@ -188,6 +190,8 @@ export const HttpRequestDetails = ({ details }: IHttpRequestDetailsProps) => {
                     readOnly={true}
                     rows={showFullRawReq ? 10 : 3}
                     value={rawReq}
+                    // monospaced font
+                    // style={{ fontFamily: tokens.fontFamilyMonospace }}
                 />
             </div>
 
