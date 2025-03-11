@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+
 import ipaddress
 import json
 import logging
@@ -24,6 +25,7 @@ def _is_dangerous_host(cls, url:str) -> bool:
     """
     # need to convince @liks and @sukrkash to port 
     # antissrf to python3 :) 
+    # 20250311: added ranges from https://github.com/microsoft/dusseldorf/pull/28/
     bad_networks = [
         ipaddress.IPv4Network("127.0.0.0/8"),       # loopback (news letter!)
         ipaddress.IPv4Network("10.0.0.0/8"),        # rfc 1928
@@ -32,14 +34,23 @@ def _is_dangerous_host(cls, url:str) -> bool:
         ipaddress.IPv4Network("169.254.0.0/16"),    # rfc 3927
         ipaddress.IPv4Network("168.63.129.16/32"),  # Azure Gateway
         ipaddress.IPv6Network("::1/128"),           # IPv6 loopback
+        ipaddress.IPv6Network("fc00::/7"),          # site-local
+        ipaddress.IPv6Network("fe80::/10"),         # link-local
     ]
 
     try:
-        ip = socket.gethostbyname(url)
-        return any(ipaddress.ip_address(ip) in network for network in bad_networks)
-    except:
-        logger.error(f"Could not resolve host: {url}")    
-        return True # default, assume it's bad 
+        # Resolve all IP addresses 
+        ip_addresses = socket.getaddrinfo(url, None)
+
+        for ip_info in ip_addresses:
+            ip = ipaddress.ip_address(ip_info[4][0])
+            if any(ip in network for network in bad_networks):
+                return True
+
+        return False
+    except Exception as ex:
+        logger.exception("Could not resolve host %s", url, exc_info=ex)
+        return True # default, assume it's bad
 
 #region predicates
 
