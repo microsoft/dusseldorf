@@ -26,14 +26,14 @@ async def error_handler_middleware(
             "type": type(e).__name__,
         }
         
-        if request.app.debug:
-            error_detail["traceback"] = traceback.format_exc()
-            
         return JSONResponse(
             status_code=500,
             content={
                 "success": False,
-                "error": error_detail,
+                "error": {
+                    "message": "An internal error has occurred.",
+                    "type": "InternalServerError"
+                },
                 "path": str(request.url)
             }
-        ) 
+        )
