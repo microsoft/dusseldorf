@@ -34,7 +34,6 @@ def main():
 
     iface:str = os.getenv("LSTNER_HTTP_INTERFACE", "")
     port:int = int(os.getenv("LSTNER_HTTP_PORT", 443))
-    #tls:bool = bool(int(os.getenv("LSTNER_HTTP_TLS", 1))) # LSTNER_HTTP_TLS=0 for HTTP 
     tls_crt_file:str = os.environ.get("DSSLDRF_TLS_CRT_FILE", None)
     tls_key_file:str = os.environ.get("DSSLDRF_TLS_KEY_FILE", None)
 

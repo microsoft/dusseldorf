@@ -1,0 +1,33 @@
+# Zentralbibliothek library wheel name, make sure this matches the name/version listed in zenralbibliothek pyproject.toml
+ARG libFileName="zentralbibliothek-0.0.10-py3-none-any.whl" 
+
+# First stage, build the zentralbibliothek library
+FROM  mcr.microsoft.com/azurelinux/base/python:3 AS zentral-builder
+# Installing required packages
+RUN tdnf -y update
+RUN tdnf -y install build-essential kernel-headers kernel-devel python3-devel
+RUN ldconfig
+# Copying the zentralbibliothek library and building it
+WORKDIR /zentralbibliothek
+COPY ./zentralbibliothek .
+RUN pip install -r requirements.txt --break-system-packages && pip install --upgrade build --break-system-packages
+RUN python3 -m build
+
+# Second stage, build the HTTP listener
+FROM  mcr.microsoft.com/azurelinux/base/python:3
+# Setup arg
+ARG libFileName
+# Installing libpq package which is required for psycopg2
+RUN tdnf -y update 
+RUN tdnf -y install jq build-essential kernel-headers kernel-devel python3-devel gcc binutils 
+RUN ldconfig 
+# Copying the HTTP listener files
+COPY listener.http/src/ /dusseldorf
+# Copying the zentralbibliothek library
+COPY --from=zentral-builder /zentralbibliothek/dist/$libFileName /dusseldorf
+# Installing the HTTP listener dependencies
+WORKDIR /dusseldorf
+RUN pip3 install $libFileName
+RUN pip3 install -r requirements.txt
+# Defining entrypoint and executing
+ENTRYPOINT [ "python3", "run.py" ]
