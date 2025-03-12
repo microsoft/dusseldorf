@@ -17,7 +17,7 @@ RUN python3 -m build
 FROM  mcr.microsoft.com/azurelinux/base/python:3
 # Setup arg
 ARG libFileName
-# Installing libpq package which is required for psycopg2
+# Installing required packages
 RUN tdnf -y update 
 RUN tdnf -y install jq build-essential kernel-headers kernel-devel python3-devel gcc binutils 
 RUN ldconfig 
