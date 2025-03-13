@@ -12,17 +12,14 @@ import logging
 import os 
 import sys
 
-from zentralbibliothek.config import Config
 from zentralbibliothek.utils import Utils
 from zentralbibliothek.dbclient3 import DatabaseClient
-from zentralbibliothek.logging import Logger
 
 from dnsresolver import DusseldorfResolver
 from dnslib.server import DNSServer, DNSLogger
 
 def main():
     Utils.banner()
-    Logger.setup_logger()
 
     logger = logging.getLogger("listener.dns")
 
