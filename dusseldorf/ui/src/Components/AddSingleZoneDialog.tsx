@@ -145,11 +145,15 @@ export const AddSingleZoneDialog = ({
             const account = instance.getActiveAccount();
             const upn = account?.username.split("@")[0] ?? "";
             
+            // remove any dots from the upn, so we don't create a `foo.bar000` zone by accident.
+            let upnSubstr = upn.replace(/\./g, "");
+
+            // If the UPN is too long, truncate it to the first X characters
+            upnSubstr = upnSubstr.substring(0, DEFAULT_SUBDOMAIN_LENGTH - 3);
+
             const numSubStr = Math.floor(Math.random() * 1000)
             .toString()
             .padStart(3, "0");
-            // remove the dots from the upn, so we don't create a foo.bar000 zone by accident.
-            const upnSubstr = upn.substring(0, DEFAULT_SUBDOMAIN_LENGTH - 3).replace(/\./g, "");
 
             setSubdomain(upnSubstr + numSubStr);
         }
