@@ -148,7 +148,7 @@ export const AddSingleZoneDialog = ({
             const numSubStr = Math.floor(Math.random() * 1000)
             .toString()
             .padStart(3, "0");
-            // remove the dots from the upn, so we don't create a foo.bar000 zone by by accident.
+            // remove the dots from the upn, so we don't create a foo.bar000 zone by accident.
             const upnSubstr = upn.substring(0, DEFAULT_SUBDOMAIN_LENGTH - 3).replace(/\./g, "");
 
             setSubdomain(upnSubstr + numSubStr);
