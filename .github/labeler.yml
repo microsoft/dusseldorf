@@ -8,32 +8,39 @@ root:
 # For Documentation changes within 'docs' folder, or any .md file anywhere.
 Docs:
 - changed-files:
-  - any-glob-to-any-file: [ "docs/**", "*.md" ]
+  - any-glob-to-any-file: 
+    - docs/**
+    - *.md 
 
 # changes in the API
 API:
 - changed-files:
-  - any-glob-to-any-file: dusseldorf/ui/**
+  - any-glob-to-any-file: 
+    - dusseldorf/api/**
 
 # changes in the front-end 
 UI:
 - changed-files:
-  - any-glob-to-any-file: dusseldorf/ui/**
+  - any-glob-to-any-file: 
+    - dusseldorf/ui/**
 
 # changes in the DNS listener
 dns-listener:
 - changed-files:
-  - any-glob-to-any-file: dusseldorf/listener.dns/**
+  - any-glob-to-any-file: 
+    - dusseldorf/listener.dns/**
 
 # changes in the DNS listener
 http-listener:
 - changed-files:
-  - any-glob-to-any-file: dusseldorf/listener.http/**
+  - any-glob-to-any-file: 
+    - dusseldorf/listener.http/**
 
 # changes in the DNS listener
 zentral:
 - changed-files:
-  - any-glob-to-any-file: dusseldorf/zentralbibliothek**
+  - any-glob-to-any-file: 
+    - dusseldorf/zentralbibliothek**
 
 # Add 'release' label to any PR that is opened against the `main` branch
 release:
