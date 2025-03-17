@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import {
-    Body1Strong,
     Button,
     createTableColumn,
     DataGrid,
@@ -16,11 +15,26 @@ import {
     DrawerBody,
     DrawerHeader,
     DrawerHeaderTitle,
+    Field,
+    makeStyles,
+    Menu,
+    MenuItem,
+    MenuList,
+    MenuPopover,
+    MenuTrigger,
+    MessageBar,
+    SelectTabData,
+    SelectTabEvent,
+    Tab,
+    TableCellLayout,
     TableColumnDefinition,
+    TabList,
+    TabValue,
+    Text,
     Textarea
 } from "@fluentui/react-components";
 import { DismissRegular } from "@fluentui/react-icons";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { CopyButton } from "../CopyButton";
 
@@ -39,82 +53,251 @@ const claimsDictionary: Record<string, string> = {
     jti: "JWT ID (jti)"
 };
 
-const columns: TableColumnDefinition<JwtClaim>[] = [
-    createTableColumn<JwtClaim>({
-        columnId: "keyColumn",
-        renderHeaderCell: () => {
-            return "Claim";
-        },
-        renderCell: (claim) => {
-            const dictClaim = claimsDictionary[claim.key];
-            return (
-                <DataGridCell style={{ maxWidth: 300, wordWrap: "break-word" }}>{dictClaim ?? claim.key}</DataGridCell>
-            );
-        }
-    }),
-    createTableColumn<JwtClaim>({
-        columnId: "valueColumn",
-        renderHeaderCell: () => {
-            return "Value";
-        },
-        renderCell: (claim) => {
-            return <DataGridCell style={{ maxWidth: 300, wordWrap: "break-word" }}>{claim.value}</DataGridCell>;
-        }
-    }),
-    createTableColumn<JwtClaim>({
-        columnId: "copyColumn",
-        renderHeaderCell: () => {
-            return null;
-        },
-        renderCell: (claim) => {
-            return (
-                <DataGridCell style={{ minWidth: 20, maxWidth: 20 }}>
-                    <CopyButton text={claim.value} />
-                </DataGridCell>
-            );
-        }
-    })
-];
+const columnSizingOptions = {
+    claim: {
+        minWidth: 100,
+        defaultWidth: 200
+    },
+    value: {
+        minWidth: 100,
+        defaultWidth: 200
+    },
+    copy: {
+        minWidth: 30,
+        maxWidth: 30
+    }
+};
+
+const base64decode = (input: string) => {
+    try {
+        const decoded = atob(input);
+        return decoded;
+    } catch {
+        // invalid
+        return input;
+    }
+};
+
+const useStyles = makeStyles({
+    drawer: {
+        width: "40%",
+        minWidth: "400px",
+        padding: "10px"
+    },
+    code: {
+        fontFamily: "monospace"
+    },
+    panel: {
+        display: "grid",
+        padding: "10px 0px",
+        rowGap: "20px"
+    },
+    divider: {
+        padding: "20px 0px"
+    },
+    text: {
+        wordBreak: "break-word"
+    },
+    row: {
+        padding: "5px 0px"
+    }
+});
 
 interface AnalyzerProps {
     open: boolean;
     setOpen: (newOpen: boolean) => void;
-    payload: string;
+    initPayload: string;
 }
 
-export const Analyzer = ({ open, setOpen, payload }: AnalyzerProps) => {
-    // boolean to close
-    const [payload1, setPayload1] = useState<string>(payload);
-    const [payload2, setPayload2] = useState<string>("");
-    const [jwtDecoded, setJwtDecoded] = useState<string>("");
+export const Analyzer = ({ open, setOpen, initPayload }: AnalyzerProps) => {
+    const styles = useStyles();
 
-    const [showBase64Blade, setShowBase64Blade] = useState<boolean>(false);
-    const [showJwtBlade, setShowJwtBlade] = useState<boolean>(false);
+    // Control tabbing
+    const [selectedValue, setSelectedValue] = useState<TabValue>("base64");
 
-    // the JWT claims
-    const [jwtClaims, setJwtClaims] = useState<JwtClaim[]>([]);
+    const onTabSelect = (_: SelectTabEvent, data: SelectTabData) => {
+        setSelectedValue(data.value);
+    };
+
+    // Control payload
+    const [payload, setPayload] = useState<string>(initPayload);
 
     useEffect(() => {
-        setPayload1(payload);
-        setPayload2("");
-        setJwtDecoded("");
-        setShowBase64Blade(false);
-        setShowJwtBlade(false);
-    }, [payload]);
-
-    const base64decode = (input: string) => {
-        try {
-            const decoded = atob(input);
-            return decoded;
-        } catch {
-            // invalid
-            return input;
+        if (open) {
+            setPayload(initPayload);
         }
+    }, [initPayload, open]);
+
+    // refMap and Menu section of DataGrid used for accessibility reasons
+    const refMap = useRef<Record<string, HTMLElement | null>>({});
+
+    // Base64 Decode Tab
+    const Base64Tab = () => {
+        return (
+            <div
+                className={styles.panel}
+                role="tabpanel"
+                aria-labelledby="base64-tab-id"
+            >
+                <Field label="Decoded Payload">
+                    <Textarea
+                        textarea={{ className: styles.code }}
+                        rows={5}
+                        value={base64decode(payload)}
+                        readOnly={true}
+                    />
+                </Field>
+            </div>
+        );
+    };
+
+    // JWT claims table
+    const columns: TableColumnDefinition<JwtClaim>[] = [
+        createTableColumn<JwtClaim>({
+            columnId: "claim",
+            renderHeaderCell: () => {
+                return "Claim";
+            },
+            renderCell: (claim) => {
+                return <Text className={styles.text}>{claimsDictionary[claim.key] ?? claim.key}</Text>;
+            }
+        }),
+        createTableColumn<JwtClaim>({
+            columnId: "value",
+            renderHeaderCell: () => {
+                return "Value";
+            },
+            renderCell: (claim) => {
+                return <Text className={styles.text}>{claim.value}</Text>;
+            }
+        }),
+        createTableColumn<JwtClaim>({
+            columnId: "copy",
+            renderHeaderCell: () => {
+                return null;
+            },
+            renderCell: (claim) => {
+                return <CopyButton text={claim.value} />;
+            }
+        })
+    ];
+
+    // JWT Decode Tab
+    const JwtTab = () => {
+        let jwt = payload;
+
+        // The payload may have a "Bearer " prefix, we need to remove that
+        if (jwt.startsWith("Bearer ")) {
+            jwt = jwt.substring(7);
+        }
+
+        let decoded = "";
+        let claims: JwtClaim[] = [];
+        let error: "decoded" | "claims" | "none" = "none";
+
+        const parts = jwt.split(".");
+        if (parts.length === 3) {
+            // Decode the JWT
+            const header = base64decode(parts[0]);
+            const body = base64decode(parts[1]);
+            const signature = parts[2];
+            decoded = `${header}.\n${body}.\n${signature}`;
+
+            // Parse the claims
+            try {
+                const claimsRecord = JSON.parse(body) as Record<string, string>;
+                Object.entries(claimsRecord).forEach(([key, value]) => {
+                    claims.push({ key: key, value: value.toString() });
+                });
+            } catch {
+                error = "claims";
+            }
+        } else {
+            error = "decoded";
+        }
+
+        return (
+            <div
+                className={styles.panel}
+                role="tabpanel"
+                aria-labelledby="jwt-tab-id"
+            >
+                {
+                    // Show the decoded JWT if it could be decoded
+                    error !== "decoded" ? (
+                        <Field label="Decoded JWT">
+                            <Textarea
+                                textarea={{ className: styles.code }}
+                                rows={5}
+                                value={decoded}
+                                readOnly={true}
+                            />
+                        </Field>
+                    ) : (
+                        <MessageBar intent="warning">Error: Invalid JWT format</MessageBar>
+                    )
+                }
+
+                {
+                    // Show the claims if they could be parsed
+                    error === "none" && (
+                        <DataGrid
+                            aria-label="JWT Claims"
+                            items={claims}
+                            columns={columns}
+                            resizableColumns
+                            columnSizingOptions={columnSizingOptions}
+                        >
+                            <DataGridHeader>
+                                <DataGridRow selectionCell={null}>
+                                    {({ renderHeaderCell, columnId }, dataGrid) => (
+                                        <Menu openOnContext>
+                                            <MenuTrigger>
+                                                <DataGridHeaderCell ref={(el) => (refMap.current[columnId] = el)}>
+                                                    <TableCellLayout truncate>{renderHeaderCell()}</TableCellLayout>
+                                                </DataGridHeaderCell>
+                                            </MenuTrigger>
+                                            <MenuPopover>
+                                                <MenuList>
+                                                    <MenuItem
+                                                        onClick={dataGrid.columnSizing_unstable.enableKeyboardMode(
+                                                            columnId
+                                                        )}
+                                                    >
+                                                        Keyboard Column Resizing
+                                                    </MenuItem>
+                                                </MenuList>
+                                            </MenuPopover>
+                                        </Menu>
+                                    )}
+                                </DataGridRow>
+                            </DataGridHeader>
+                            <DataGridBody<JwtClaim>>
+                                {({ item }) => (
+                                    <DataGridRow<JwtClaim> className={styles.row}>
+                                        {({ renderCell }) => (
+                                            <DataGridCell>
+                                                <TableCellLayout truncate>{renderCell(item)}</TableCellLayout>
+                                            </DataGridCell>
+                                        )}
+                                    </DataGridRow>
+                                )}
+                            </DataGridBody>
+                        </DataGrid>
+                    )
+                }
+
+                {
+                    // Show an error message if the claims could not be parsed but the JWT could be decoded
+                    error === "claims" && <MessageBar intent="warning">Error: Could not parse JWT claims</MessageBar>
+                }
+            </div>
+        );
     };
 
     return (
         <Drawer
-            style={{ width: "40%", padding: 10 }}
+            className={styles.drawer}
             position="end"
             separator
             open={open}
@@ -135,125 +318,43 @@ export const Analyzer = ({ open, setOpen, payload }: AnalyzerProps) => {
                 </DrawerHeaderTitle>
             </DrawerHeader>
 
-            <DrawerBody style={{ marginTop: 10 }}>
-                <div className="stack">
-                    <Body1Strong>Original Payload</Body1Strong>
+            <DrawerBody>
+                <Field label="Original Payload">
                     <Textarea
-                        //!TODO: fix font
+                        textarea={{ className: styles.code }}
                         rows={5}
-                        value={payload1}
+                        value={payload}
                         onChange={(_, data) => {
-                            setPayload1(data.value);
+                            setPayload(data.value);
                         }}
                     />
-                </div>
+                </Field>
 
-                <Divider style={{ paddingTop: 20, paddingBottom: 20 }} />
+                <Divider className={styles.divider} />
 
-                {/* a normal Base64 decode */}
-
-                <div
-                    className="stack hstack-gap"
-                    style={{ paddingBottom: "30px" }}
+                <TabList
+                    selectedValue={selectedValue}
+                    onTabSelect={onTabSelect}
+                    appearance="subtle-circular"
                 >
-                    <Button
-                        onClick={() => {
-                            setPayload2(base64decode(payload1));
-                            setJwtDecoded("");
-                            setShowBase64Blade(true);
-                            setShowJwtBlade(false);
-                            setJwtClaims([]);
-                        }}
+                    <Tab
+                        id="base64-tab-id"
+                        value="base64"
                     >
                         Base64 Decode
-                    </Button>
-
-                    <Button
-                        onClick={() => {
-                            // The payload may have a "Bearer " prefix, we need to remove that
-                            const hdrName = "Bearer ";
-                            let _payload: string = payload1;
-                            if (_payload.startsWith(hdrName)) {
-                                _payload = _payload.substring(7);
-                            }
-
-                            const parts = _payload.split(".");
-                            if (parts.length === 3) {
-                                const header = base64decode(parts[0]);
-                                const payload = base64decode(parts[1]);
-                                const signature = parts[2];
-                                setJwtDecoded(`${header}.\n${payload}.\n${signature}`);
-
-                                // set the claims
-                                const claims = JSON.parse(payload) as Record<string, string>;
-                                const _claims: JwtClaim[] = [];
-                                Object.entries(claims).forEach(([key, value]) => {
-                                    _claims.push({ key: key, value: value });
-                                });
-                                setJwtClaims(_claims);
-                            } else {
-                                setJwtDecoded("Error: Invalid JWT");
-                                setJwtClaims([]);
-                            }
-
-                            setPayload2("");
-                            setShowBase64Blade(false);
-                            setShowJwtBlade(true);
-                        }}
+                    </Tab>
+                    <Tab
+                        id="jwt-tab-id"
+                        value="jwt"
                     >
                         JWT Decode
-                    </Button>
+                    </Tab>
+                </TabList>
+
+                <div>
+                    {selectedValue === "base64" && <Base64Tab />}
+                    {selectedValue === "jwt" && <JwtTab />}
                 </div>
-
-                {showBase64Blade && (
-                    <div className="stack">
-                        <Body1Strong>Decoded Payload</Body1Strong>
-                        <Textarea
-                            //!TODO: fix font
-                            rows={5}
-                            value={payload2}
-                            readOnly={true}
-                        />
-                    </div>
-                )}
-
-                {showJwtBlade && (
-                    <div className="stack">
-                        <Body1Strong>Decoded JWT</Body1Strong>
-
-                        <Textarea
-                            //!TODO: fix font
-                            rows={5}
-                            value={jwtDecoded}
-                            readOnly={true}
-                            style={{ marginBottom: 20 }}
-                        />
-
-                        <DataGrid
-                            items={jwtClaims}
-                            columns={columns}
-                            noNativeElements={false}
-                            style={{ tableLayout: "auto" }}
-                        >
-                            <DataGridHeader>
-                                <DataGridRow>
-                                    {({ renderHeaderCell }) => (
-                                        <DataGridHeaderCell>
-                                            <b>{renderHeaderCell()}</b>
-                                        </DataGridHeaderCell>
-                                    )}
-                                </DataGridRow>
-                            </DataGridHeader>
-                            <DataGridBody<JwtClaim>>
-                                {({ item }) => (
-                                    <DataGridRow<JwtClaim> style={{ borderWidth: 0 }}>
-                                        {({ renderCell }) => renderCell(item)}
-                                    </DataGridRow>
-                                )}
-                            </DataGridBody>
-                        </DataGrid>
-                    </div>
-                )}
             </DrawerBody>
         </Drawer>
     );

@@ -319,7 +319,7 @@ export const HttpRequestDetails = ({ details }: IHttpRequestDetailsProps) => {
             </div>
 
             <Analyzer
-                payload={payload}
+                initPayload={payload}
                 open={showAnalyzer}
                 setOpen={setShowAnalyzer}
             />
