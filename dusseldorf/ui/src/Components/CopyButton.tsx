@@ -2,7 +2,9 @@
 // Licensed under the MIT License.
 
 import { Button, Tooltip } from "@fluentui/react-components";
-import { CopyRegular } from "@fluentui/react-icons";
+import { CheckmarkFilled, CopyRegular } from "@fluentui/react-icons";
+import { useState } from "react";
+
 import { Logger } from "../Helpers/Logger";
 
 interface CopyButtonProps {
@@ -10,18 +12,32 @@ interface CopyButtonProps {
 }
 
 export const CopyButton = ({ text }: CopyButtonProps): JSX.Element => {
+    const [content, setContent] = useState<string>(`Copy ${text} to clipboard`);
+    const [icon, setIcon] = useState<JSX.Element>(<CopyRegular />);
+
     return (
         <Tooltip
-            content={`Copy ${text} to clipboard`}
+            content={content}
             relationship="label"
         >
             <Button
                 appearance="subtle"
-                icon={<CopyRegular />}
+                icon={icon}
                 onClick={() => {
-                    navigator.clipboard.writeText(text).catch((err) => {
-                        Logger.Error(err);
-                    });
+                    navigator.clipboard
+                        .writeText(text)
+                        .then(() => {
+                            setContent("Copied!");
+                            setIcon(<CheckmarkFilled color="green" />);
+
+                            setTimeout(() => {
+                                setContent(`Copy ${text} to clipboard`);
+                                setIcon(<CopyRegular />);
+                            }, 2000);
+                        })
+                        .catch((err) => {
+                            Logger.Error(err);
+                        });
                 }}
             />
         </Tooltip>
