@@ -187,11 +187,10 @@ export const HttpRequestDetails = ({ details }: IHttpRequestDetailsProps) => {
                 </div>
 
                 <Textarea
+                    textarea={{ style: { fontFamily: "monospace" } }}
                     readOnly={true}
                     rows={showFullRawReq ? 10 : 3}
                     value={rawReq}
-                    // monospaced font
-                    // style={{ fontFamily: tokens.fontFamilyMonospace }}
                 />
             </div>
 
@@ -278,6 +277,7 @@ export const HttpRequestDetails = ({ details }: IHttpRequestDetailsProps) => {
                 </div>
 
                 <Textarea
+                    textarea={{ style: { fontFamily: "monospace" } }}
                     readOnly={true}
                     rows={showFullRawResp ? 10 : 3}
                     value={rawResp}

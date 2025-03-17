@@ -10,7 +10,6 @@ import { YamlHelper } from "../../Helpers/YamlHelper";
 import { NewRule } from "../../Types/Rule";
 import { Template } from "../../Types/Template";
 
-//!TODO: make the monospace font happen
 const useStyles = makeStyles({
     textarea: {
         minHeight: "250px"
@@ -68,6 +67,7 @@ export const TemplateDetails = ({ template }: ITemplateDetailsProps): JSX.Elemen
 
                 <Textarea
                     className={styles.textarea}
+                    textarea={{ style: { fontFamily: "monospace" } }}
                     onChange={(_, data) => {
                         setPayload(data.value);
                         parseTemplateRules(data.value);
