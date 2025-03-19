@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  namespace: default
+  name: mongo
+spec:
+  selector:
+    matchLabels:
+      app: mongo
+  serviceName: "mongo"
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: mongo
+    spec:
+      containers:
+      - name: mongo
+        image: mongo
+        ports:
+          - containerPort: 27017
+        command:
+        - mongod
+        - "--bind_ip_all"
+        - "--replSet"
+        - rs0
+        volumeMounts:
+          - name: mongovol
+            mountPath: /data/db
+  volumeClaimTemplates:
+  - metadata:
+      name: mongovol
+      annotations:
+        volume.beta.kubernetes.io/storage-class: azureblob-fuse-premium
+    spec:
+      accessModes:
+      - ReadWriteMany
+      storageClassName: mongo-blobstorage
+      resources:
+        requests:
+          storage: 1000Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: default
+  name: svc-mongo
+spec:
+  ports:
+    - port: 27017
+      targetPort: 27017
+  clusterIP: None
+  selector:
+    app: mongo
