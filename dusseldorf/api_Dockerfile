@@ -1,0 +1,26 @@
+# First stage, build the UI
+FROM  mcr.microsoft.com/azurelinux/base/nodejs:20 AS ui-builder
+WORKDIR /ui
+COPY /ui .
+RUN npm install
+RUN npm run build
+
+# Second stage, build the API
+FROM mcr.microsoft.com/azurelinux/base/python:3
+# Set working directory
+WORKDIR /app
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    ENVIRONMENT=production
+# Install system dependencies
+RUN tdnf -y update && tdnf -y install build-essential curl ca-certificates
+# Install Python dependencies
+COPY api/src/api/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+# Copy API code
+COPY api/src/api .
+# Copy UI code
+COPY --from=ui-builder /ui/build ./ui
+# Run it
+CMD ["python3", "main.py"]
