@@ -10,7 +10,7 @@ Docs:
 - changed-files:
   - any-glob-to-any-file: 
     - docs/**
-    - *.md
+    - '**/*.md'
 
 # changes in the API
 API:
