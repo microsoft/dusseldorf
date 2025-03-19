@@ -93,6 +93,7 @@ export const AddBulkZoneDialog = ({
                             orientation="horizontal"
                         >
                             <Select
+                                title="Select a domain"
                                 style={{ width: 140 }}
                                 value={domain}
                                 onChange={(_, data) => {
@@ -112,6 +113,7 @@ export const AddBulkZoneDialog = ({
                             validationState={Number.isNaN(numZones) || numZones > 100 ? "error" : "none"}
                         >
                             <Input
+                                title="Number of zones to be created"
                                 style={{ width: 140 }}
                                 value={Number.isNaN(numZones) ? "" : numZones.toString()}
                                 onChange={(_, data) => {

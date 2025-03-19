@@ -181,6 +181,7 @@ export const AddSingleZoneDialog = ({
                                 validationState={!isChecking && subdomainErrorMsg ? "warning" : "none"}
                             >
                                 <Input
+                                    title="Zone name"
                                     style={{ width: 140 }}
                                     value={subdomain}
                                     onChange={(_, data) => {
@@ -191,6 +192,7 @@ export const AddSingleZoneDialog = ({
                             </Field>
                             <Text style={{ paddingLeft: "3px", paddingRight: "3px" }}>.</Text>
                             <Select
+                                title="Select a domain"
                                 style={{ width: 140 }}
                                 value={domain}
                                 onChange={(_, data) => {
