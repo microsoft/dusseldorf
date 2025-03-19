@@ -67,7 +67,7 @@ app.include_router(default_router)
 # app.include_router(health_router)
 
 dusseldorf.mount("/api", app)
-dusseldorf.mount("/ui", StaticFiles(directory="src/api/ui", html=True), name="ui")
+dusseldorf.mount("/ui", StaticFiles(directory="./ui", html=True), name="ui")
 
 uvicorn.run(dusseldorf, host="0.0.0.0", port=int(os.environ.get("API_PORT", 10443)), ssl_keyfile=os.environ.get("API_TLS_KEY_FILE"), ssl_certfile=os.environ.get("API_TLS_CRT_FILE"))
 # uvicorn.run(dusseldorf, host="0.0.0.0", port=8000, ssl_keyfile="/app/key.pem", ssl_certfile="/app/cert.pem")
