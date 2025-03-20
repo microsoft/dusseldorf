@@ -1,0 +1,49 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: init-db-job
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    # Ensure this Job is only created once Mongo is already deployed
+    "helm.sh/hook": post-install,post-upgrade
+    # clean up the Job
+    "helm.sh/hook-delete-policy": hook-succeeded
+    
+    # Ordering before listener deployment by adding a weight
+    "helm.sh/hook-weight": "0"
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: init-mongo
+        # Use python base image or whichever suits you
+        image: python:3.9
+        # We'll run a shell command that does everything in sequence
+        command: ["/bin/sh"]
+        args:
+          - "-c"
+          - |
+            echo "[INFO] Installing dependencies..."
+            pip install pymongo
+            pip install getopts
+
+            echo "[INFO] Running init_mongo.py..."
+            python /scripts/init_mongo.py --domain {{ .Values.init.domain }} --ips {{ .Values.init.ips }}
+            echo "[INFO] init_mongo.py completed!"
+        env:
+        - name: DSSLDRF_CONNSTR
+          valueFrom:
+            secretKeyRef:
+              name: csi-secrets
+              key: app-secret
+        volumeMounts:
+        - name: init-script-vol
+          mountPath: /scripts
+      volumes:
+      - name: init-script-vol
+        configMap:
+          name: init-mongo-script
+          items:
+            - key: init_mongo.py
+              path: init_mongo.py
