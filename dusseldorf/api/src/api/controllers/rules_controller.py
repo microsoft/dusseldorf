@@ -114,7 +114,7 @@ async def create_rule(
     if rule.priority <= 0 or rule.priority > MAX_PRIORITY:
         raise HTTPException(status_code=400, detail="Invalid priority")
 
-    priority_result = await db.rules.find({"zone": rule.zone}, {"_id": 0, "priority": 1}).to_list(None)
+    priority_result = await db.rules.find({"zone": rule.zone, "networkprotocol": rule.networkprotocol}, {"_id": 0, "priority": 1}).to_list(None)
     if priority_result:
         priority_only_list = []
         for priority in priority_result:
