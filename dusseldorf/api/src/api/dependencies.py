@@ -48,8 +48,5 @@ async def get_db() -> AsyncIOMotorClient:
     except ConnectionFailure as cf:
         print(f"ConnectionFailure: {str(cf)}")
         raise HTTPException(status_code=500, detail="DB - Connection failed")
-    except Exception as e:
-        print(f"Other Exception: {str(e)}")
-        raise HTTPException(status_code=500, detail="DB - Ran into an issue")
     finally:
         pass
