@@ -5,14 +5,14 @@
 # aka.ms/dusseldorf
 
 from pydantic import BaseModel, Field
-from typing import List, Optional
+from typing import List, Optional, Union
 from uuid import UUID, uuid4
 
 class ComponentBase(BaseModel):
     ispredicate: bool
     actionname: str
-    #actionvalue: Union[str, Json]
-    actionvalue: str
+    actionvalue: Union[str, Json]
+    #actionvalue: str
 
 class ComponentAction(BaseModel):
     actionvalue: str
