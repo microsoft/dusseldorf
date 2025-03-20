@@ -81,8 +81,8 @@ data:
             
             # Check if database exists
             db_list = client.list_database_names()
-            if db_name not in db_list:
-                logger.error(f"Database '{db_name}' does not exist")
+            if db_name in db_list:
+                logger.error(f"Database '{db_name}' exists already, exiting")
                 sys.exit(0)
             
             # Get database reference
