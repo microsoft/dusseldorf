@@ -4,6 +4,9 @@ kind: Deployment
 metadata:
   name: "{{ .Values.listeners.listenerDNS.name }}-deployment"
   namespace: {{ .Release.Namespace }}
+  annotations:
+  "helm.sh/hook": post-install,post-upgrade
+  "helm.sh/hook-weight": "1"
 spec:
   replicas: 1
   selector:
@@ -86,6 +89,9 @@ kind: Deployment
 metadata:
   name: "{{ .Values.listeners.listenerHTTP.name }}-deployment"
   namespace: {{ .Release.Namespace }}
+  annotations:
+  "helm.sh/hook": post-install,post-upgrade
+  "helm.sh/hook-weight": "1"
 spec:
   replicas: 1
   selector:
@@ -158,6 +164,9 @@ kind: Deployment
 metadata:
   name: "{{ .Values.listeners.listenerHTTPS.name }}-deployment"
   namespace: {{ .Release.Namespace }}
+  annotations:
+  "helm.sh/hook": post-install,post-upgrade
+  "helm.sh/hook-weight": "1"
 spec:
   replicas: 1
   selector:
@@ -240,6 +249,9 @@ kind: Deployment
 metadata:
   name: "{{ .Values.api.name }}-deployment"
   namespace: {{ .Release.Namespace }}
+  annotations:
+  "helm.sh/hook": post-install,post-upgrade
+  "helm.sh/hook-weight": "1"
 spec:
   replicas: 1
   selector:

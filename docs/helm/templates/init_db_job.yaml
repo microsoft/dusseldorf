@@ -6,10 +6,6 @@ metadata:
   annotations:
     # Ensure this Job is only created once Mongo is already deployed
     "helm.sh/hook": post-install,post-upgrade
-    # clean up the Job
-    "helm.sh/hook-delete-policy": hook-succeeded
-    
-    # Ordering before listener deployment by adding a weight
     "helm.sh/hook-weight": "0"
 spec:
   template:
@@ -27,6 +23,8 @@ spec:
             echo "[INFO] Installing dependencies..."
             pip install pymongo
             pip install getopts
+
+            sleep 30s
 
             echo "[INFO] Running init_mongo.py..."
             python /scripts/init_mongo.py --domain {{ .Values.init.domain }} --ips {{ .Values.init.ips }}

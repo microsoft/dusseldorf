@@ -3,6 +3,9 @@ kind: StatefulSet
 metadata:
   namespace: {{ .Release.Namespace }}
   name: mongo
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "-1"
 spec:
   selector:
     matchLabels:
