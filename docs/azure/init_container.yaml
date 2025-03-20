@@ -1,0 +1,182 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: mongodb-python-init
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            app: mongodb-python-init
+    template:
+        metadata:
+            labels:
+                app: mongodb-python-init
+        spec:
+            containers:
+            - name: mongodb
+                image: mongo:latest
+                ports:
+                - containerPort: 27017
+            initContainers:
+            - name: init-mongo
+                image: python:3.9-slim
+                # Pass required arguments to the script
+                command: ["python", "/scripts/init_mongo.py", "--domain", "example.com", "--ips", "10.0.0.1,10.0.0.2"]
+                env:
+                - name: DSSLDRF_CONNSTR
+                    value: "mongodb://mongodb:27017/"
+                volumeMounts:
+                - name: init-script
+                    mountPath: /scripts
+            volumes:
+            - name: init-script
+                configMap:
+                    name: init-mongo-script
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+    name: init-mongo-script
+data:
+    init_mongo.py: |
+        # Script to initialize MongoDB for Dusseldorf application
+        # Designed to run in a Kubernetes initContainer
+        
+        from pymongo import MongoClient
+        import logging
+        import os
+        import sys
+        import getopt
+        from datetime import datetime
+
+        # Configure logging
+        logging.basicConfig(level=logging.INFO)
+        logger = logging.getLogger(__name__)
+
+        # Main entry point for database initialization
+        # This script runs directly without calling subroutines
+
+        # Define usage information for command line arguments
+        usage = "Usage: init_mongo.py [-vh] --domain <domain> [--delete] --ips <ip1,ip2,...>"
+        helpmsg = ("--domain <domain> : (required) specify the FQDN to use\n" + 
+                   "--ips <ip1,ip2,...> : specify the public IP addresses for the domain\n" +
+                   "--delete : optionally deletes the collections before initializing\n" + 
+                   "-v, --verbose : enable debug logging\n" + 
+                   "-h : show this help message")
+
+        # Initialize variables
+        domain = None
+        db_name = "dusseldorf"
+        delete_dbs = False
+        ips = []
+
+        # Parse command line arguments
+        try:
+            opts, args = getopt.getopt(sys.argv[1:], "vh", ["domain=", "delete", "verbose", "ips="])
+        except getopt.GetoptError:
+            print(usage)
+            sys.exit(2)
+
+        for opt, arg in opts:
+            if opt == "-h":
+                print(usage)
+                print(helpmsg)
+                sys.exit(0)
+            elif opt == "--domain":
+                domain = arg
+            elif opt == "--delete":
+                delete_dbs = True
+            elif opt in ("--verbose", "-v"):
+                logger.setLevel(logging.DEBUG)
+            elif opt == "--ips":
+                ips = arg.split(",")
+
+        # Ensure we have a domain
+        if not domain:
+            logger.error("Domain parameter is required")
+            print(usage)
+            sys.exit(2)
+
+        # Get MongoDB connection string from environment variable
+        mongodb_url = os.getenv("DSSLDRF_CONNSTR")
+        if not mongodb_url:
+            logger.error("DSSLDRF_CONNSTR environment variable not set")
+            sys.exit(2)
+
+        logger.info(f"Starting initialization with domain={domain}, delete={delete_dbs}, ips={ips}")
+
+        # ---- Database Initialization ----
+        try:
+            # Create synchronous client connection
+            client = MongoClient(mongodb_url, serverSelectionTimeoutMS=5000)
+            
+            # Test the connection
+            client.admin.command('ping')
+            logger.info("Successfully connected to MongoDB")
+            
+            # Get database reference
+            db = client[db_name]
+
+            # Delete collections if requested
+            if delete_dbs:
+                logger.info("Deleting existing collections")
+                db.domains.drop()
+                db.zones.drop()
+                db.requests.drop()
+                db.rules.drop()
+                logger.debug("Deleted collections")
+
+            # Create collections
+            logger.info("Creating collections")
+            db.create_collection("domains")
+            db.create_collection("zones")
+            db.create_collection("requests")
+            db.create_collection("rules")
+            logger.debug("Created collections")
+
+            # Create indexes for better query performance
+            logger.info("Creating indexes")
+            db.domains.create_index("domain", unique=True)
+            db.zones.create_index("fqdn", unique=True)
+            db.zones.create_index([("fqdn", 1), ("alias", 1)])
+            db.requests.create_index([("_id", 1), ("time", 1)])
+            db.requests.create_index([("zone", 1), ("time", 1)])
+            db.rules.create_index([("zone", 1), ("priority", 1)], unique=True)
+            db.rules.create_index("name")
+            logger.debug("Created indexes")
+
+            # Validate and add domain if specified
+            if domain:
+                logger.info(f"Adding domain {domain}")
+
+                # Validate IP addresses
+                ip_addresses = []
+                for ip in ips:
+                    # Simple validation: check for correct number of dots in IPv4
+                    if ip.count(".") != 3:
+                        logger.error(f"Invalid IP address: {ip}")
+                        raise ValueError(f"Invalid IP address: {ip}")
+                    ip_addresses.append(ip)
+
+                # Create domain document
+                first_domain = {
+                    "domain": domain,
+                    "owner": "dusseldorf",  # Default owner
+                    "users": [],  # Default empty user list
+                    "public_ips": ip_addresses,
+                    "created_at": datetime.now()
+                }
+
+                # Insert initial domain
+                db.domains.insert_one(first_domain)
+                logger.info(f"Inserted initial domain: {domain}")
+
+            logger.info("Database initialization completed successfully")
+            
+        except Exception as e:
+            # Log any errors and exit with error code
+            logger.error(f"Database initialization failed: {str(e)}")
+            sys.exit(1)
+        finally:
+            # Always close the connection
+            client.close()
