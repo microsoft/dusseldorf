@@ -4,7 +4,7 @@
 # duSSeldoRF v3
 # aka.ms/dusseldorf
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, Json
 from typing import List, Optional, Union
 from uuid import UUID, uuid4
 
