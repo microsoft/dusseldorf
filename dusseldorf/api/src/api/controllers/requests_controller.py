@@ -49,7 +49,7 @@ async def get_requests(
         conv_protocols = [protocol.upper() for protocol in protocols.split(",")]
         query["protocol"] = {"$in": conv_protocols}
 
-    requests = await db.requests.find(query).sort({"_id": -1, "time": -1}).skip(skip).limit(limit).to_list(None)
+    requests = await db.requests.find(query).sort({"time": -1}).skip(skip).limit(limit).to_list(None)
     if not requests:
         logger.debug(f"No requests found for zone {zone}")
         return [] # raise HTTPException(status_code=404, detail="Requests not found")
