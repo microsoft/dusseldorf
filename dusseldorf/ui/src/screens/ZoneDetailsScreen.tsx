@@ -11,6 +11,7 @@ import { AuthDialog } from "../Components/ZoneDetails/AuthDialog";
 import { DeleteZoneDialog } from "../Components/ZoneDetails/DeleteZoneDialog";
 import { QRCodeDialog } from "../Components/ZoneDetails/QRCodeDialog";
 import { OpenInNewTabButton } from "../Components/OpenInNewTabButton";
+import { CopyButton } from "../Components/CopyButton";
 
 const useStyles = makeStyles({
     root: {
@@ -58,6 +59,7 @@ export const ZoneDetailsScreen = ({ showRules = false }: ZoneDetailsScreenProps)
                     {zone}
                 </Title2>
 
+                <CopyButton text={zone} />
                 <OpenInNewTabButton url={zone} />
 
                 <Toolbar>
