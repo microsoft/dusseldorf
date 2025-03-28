@@ -43,7 +43,7 @@ check_dependency "envsubst"
 
 # Help Menu
 function show_help {
-    echo -e "${GREEN}Usage:${NC} ./deploy-azure.sh -p <prefix> -r <region> -g <resource-group> -s <subscription> -d <domain-name> [--tenant-id <tenant_id>] [--app-id <app_id>]"
+    echo -e "${GREEN}Usage:${NC} ./create_dusseldorf_resources.sh -p <prefix> -r <region> -g <resource-group> -s <subscription> -d <domain-name> [--tenant-id <tenant_id>] [--app-id <app_id>]"
     echo ""
     echo -e "${GREEN}Required parameters:${NC}"
     echo "  -p  Prefix for naming Azure resources (e.g., myproject)"
