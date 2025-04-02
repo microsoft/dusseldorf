@@ -194,6 +194,8 @@ async def delete_zone(
     # Check for existing rules
     if await db.rules.find_one({"zone": fqdn}):
         raise HTTPException(status_code=400, detail="Cannot delete zone with existing rules")
+
+    del_request = await db.requests.delete_many({"zone": fqdn})
     
     result = await db.zones.delete_one({"fqdn": fqdn})
     if result.deleted_count == 0:
