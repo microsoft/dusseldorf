@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  namespace: {{ .Release.Namespace }}
+  name: mongofiles
+spec:
+  selector:
+    matchLabels:
+      app: mongofiles
+  serviceName: "mongo"
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: mongofiles
+    spec:
+      containers:
+      - name: mongofile
+        image: mongo
+        ports:
+          - containerPort: 27017
+        command:
+        - mongod
+        - "--bind_ip_all"
+        - "--replSet"
+        - rs0
+        volumeMounts:
+          - name: mongofilevol
+            mountPath: /data/db
+  volumeClaimTemplates:
+  - metadata:
+      name: mongofilevol
+      annotations:
+        volume.beta.kubernetes.io/storage-class: azurefile-csi
+    spec:
+      accessModes:
+      - ReadWriteMany
+      storageClassName: mongo-filestorage
+      resources:
+        requests:
+          storage: 1000Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: dusseldorf
+  name: mongo
+spec:
+  ports:
+    - port: 27017
+      targetPort: 27017
+  clusterIP: None
+  selector:
+    app: mongofiles
