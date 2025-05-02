@@ -24,7 +24,7 @@ def main():
 
     Utils.banner()
 
-    logging.basicConfig(level = logging.DEBUG)
+    logging.basicConfig(level = logging.INFO)
     tls:bool = bool(int(os.getenv("LSTNER_HTTP_TLS", 1))) # LSTNER_HTTP_TLS=0 for HTTP
     LISTENER_NAME = "listener.http"
     if tls:
