@@ -46,7 +46,7 @@ opentelemetry-semantic-conventions==0.51b0
 opentelemetry-util-http==0.51b0
 packaging==24.2
 psutil==5.9.8
-requests==2.32.3
+requests==2.32.4
 requests-oauthlib==2.0.0
 six==1.17.0
 typing_extensions==4.12.2
