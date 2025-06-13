@@ -4,7 +4,7 @@
 # duSSeldoRF v3
 # aka.ms/dusseldorf
 
-from azure.identity import DefaultAzureCredential
+from azure.identity import DefaultAzureCredential, ManagedIdentityCredential
 from azure.keyvault.secrets import SecretClient
 from msal import ConfidentialClientApplication
 from typing import Optional, Dict
@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 class AzureADService:
     def __init__(self):
         self.settings = Settings()
-        self.credential = DefaultAzureCredential()
+        self.credential = ManagedIdentityCredential(client_id=self.settings.AZURE_CLIENT_ID)
         self._app = None
         self._token_cache = {}
         self._signing_keys = None
