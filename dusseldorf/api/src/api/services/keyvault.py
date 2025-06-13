@@ -4,7 +4,7 @@
 # duSSeldoRF v3
 # aka.ms/dusseldorf
 
-from azure.identity import DefaultAzureCredential
+from azure.identity import DefaultAzureCredential, ManagedIdentityCredential
 from azure.keyvault.secrets import SecretClient
 from typing import Optional
 import logging
@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 class KeyVaultService:
     def __init__(self, settings: Settings):
         self.settings = settings
-        self.credential = DefaultAzureCredential()
+        self.credential = ManagedIdentityCredential(client_id=self.settings.AZURE_CLIENT_ID)
         self.client = SecretClient(
             vault_url=settings.KEY_VAULT_URL,
             credential=self.credential
