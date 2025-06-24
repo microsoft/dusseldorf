@@ -48,7 +48,7 @@ packaging==23.2
 pluggy==1.4.0
 portalocker==2.8.2
 proto-plus==1.26.0
-protobuf==4.25.3
+protobuf==4.25.8
 psutil==5.9.8
 pyasn1==0.5.1
 pyasn1_modules==0.4.1
