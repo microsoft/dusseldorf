@@ -15,7 +15,7 @@ import {
     Text,
     Tooltip
 } from "@fluentui/react-components";
-import { SettingsRegular } from "@fluentui/react-icons";
+import { ColumnRegular, SettingsRegular } from "@fluentui/react-icons";
 import { useState } from "react";
 
 const useStyles = makeStyles({
@@ -77,7 +77,7 @@ export const ColumnManager = ({ columns, onColumnsChange }: ColumnManagerProps) 
                 <Tooltip content="Manage Columns" relationship="label">
                     <Button
                         appearance="subtle"
-                        icon={<SettingsRegular />}
+                        icon={<ColumnRegular />} // More relevant icon for columns
                         onClick={() => setOpen(true)}
                     />
                 </Tooltip>
