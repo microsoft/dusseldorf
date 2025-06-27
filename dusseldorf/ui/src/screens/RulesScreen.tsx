@@ -7,9 +7,7 @@ import {
     AccordionItem,
     AccordionPanel,
     Button,
-    Divider,
     Link,
-    makeStyles,
     MessageBar,
     MessageBarActions,
     MessageBarBody,
@@ -23,6 +21,7 @@ import { useNavigate } from "react-router-dom";
 import { AddRuleDialog } from "../Components/Rules/AddRuleDialog";
 import { RuleDetails } from "../Components/Rules/RuleDetails";
 import { RuleTable } from "../Components/Rules/RuleTable";
+import { ResizableSplitPanel } from "../Components/ResizableSplitPanel";
 import { DusseldorfAPI } from "../DusseldorfApi";
 import { Logger } from "../Helpers/Logger";
 import { Rule } from "../Types/Rule";
@@ -148,36 +147,12 @@ const makeLocalhostRule = async (zone: string): Promise<Rule> => {
     return newRule6;
 };
 
-const useStyles = makeStyles({
-    root: {
-        display: "flex",
-        flexDirection: "row"
-    },
-    left: {
-        minWidth: "38%",
-        maxWidth: "38%",
-        display: "flex",
-        flexDirection: "column",
-        rowGap: "10px",
-        height: "100%"
-    },
-    right: {
-        minWidth: "58%",
-        maxWidth: "58%"
-    },
-    divider: {
-        paddingLeft: "2%",
-        paddingRight: "2%"
-    }
-});
-
 interface IRulesScreenProps {
     zone: string;
 }
 
 export const RulesScreen = ({ zone }: IRulesScreenProps) => {
     const navigate = useNavigate();
-    const styles = useStyles();
 
     // Control current rule
     const [rule, setRule] = useState<Rule | undefined>();
@@ -192,115 +167,111 @@ export const RulesScreen = ({ zone }: IRulesScreenProps) => {
     }, [zone]);
 
     return (
-        <div className={styles.root}>
-            <div className={styles.left}>
-                <Subtitle1>Rules</Subtitle1>
+        <ResizableSplitPanel
+            leftPanel={
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px", height: "100%" }}>
+                    <Subtitle1>Rules</Subtitle1>
 
-                <RuleTable
-                    zone={zone}
-                    ruleId={ruleId}
-                    setRuleId={setRuleId}
-                    rule={rule}
-                    setRule={setRule}
-                    nudge={nudge}
-                />
+                    <RuleTable
+                        zone={zone}
+                        ruleId={ruleId}
+                        setRuleId={setRuleId}
+                        rule={rule}
+                        setRule={setRule}
+                        nudge={nudge}
+                    />
 
-                <AddRuleDialog
-                    zone={zone}
-                    onSave={(newRule: Rule) => {
-                        setRuleId(newRule.ruleid);
-                        setNudge(!nudge);
-                    }}
-                />
+                    <AddRuleDialog
+                        zone={zone}
+                        onSave={(newRule: Rule) => {
+                            setRuleId(newRule.ruleid);
+                            setNudge(!nudge);
+                        }}
+                    />
 
-                <Divider style={{ paddingBottom: 20, paddingTop: 20 }} />
+                    <div style={{ paddingBottom: 20, paddingTop: 20, borderTop: "1px solid var(--colorNeutralStroke2)" }} />
 
-                <Accordion
-                    collapsible
-                    openItems={openItems}
-                    onToggle={(_, data) => {
-                        setOpenItems(data.openItems);
-                    }}
-                >
-                    <AccordionItem value="1">
-                        <AccordionHeader>Quick start examples</AccordionHeader>
-                        <AccordionPanel>
-                            <div className="stack vstack-gap">
-                                <MessageBar layout="multiline">
-                                    <MessageBarBody className="stack vstack-gap">
-                                        <MessageBarTitle>HelloWorld Example:</MessageBarTitle>
-                                        <Text
-                                            wrap
-                                            style={{ wordWrap: "break-word", display: "block" }}
-                                        >
-                                            This will create a rule that responds to all HTTP(s) GET and POST requests
-                                            sent to <strong>{zone}</strong> with <strong>"hello world"</strong>.
-                                        </Text>
-                                    </MessageBarBody>
-                                    <MessageBarActions>
-                                        <Button
-                                            appearance="primary"
-                                            onClick={() => {
-                                                makeHelloWorldRule(zone)
-                                                    .then((newRule) => {
-                                                        setRuleId(newRule.ruleid);
-                                                        setNudge(!nudge);
-                                                    })
-                                                    .catch((err) => Logger.Error(err))
-                                                    .finally(() => {
-                                                        setOpenItems([]);
-                                                    });
-                                            }}
-                                        >
-                                            Create "Hello World"
-                                        </Button>
-                                    </MessageBarActions>
-                                </MessageBar>
-                                <MessageBar layout="multiline">
-                                    <MessageBarBody className="stack vstack-gap">
-                                        <MessageBarTitle>DNS Example:</MessageBarTitle>
-                                        <Text
-                                            wrap
-                                            style={{ wordWrap: "break-word", display: "block" }}
-                                        >
-                                            This will make 2 rules to make this DNS zone resolve to{" "}
-                                            <strong>localhost</strong>. It will respond to both both{" "}
-                                            <strong>127.0.0.1</strong> and <strong>::1</strong> for DNS A and AAAA
-                                            requests send to <strong>{zone}</strong>.
-                                        </Text>
-                                    </MessageBarBody>
-                                    <MessageBarActions>
-                                        <Button
-                                            appearance="primary"
-                                            onClick={() => {
-                                                makeLocalhostRule(zone)
-                                                    .then((newRule) => {
-                                                        setRuleId(newRule.ruleid);
-                                                        setNudge(!nudge);
-                                                    })
-                                                    .catch((err) => Logger.Error(err))
-                                                    .finally(() => {
-                                                        setOpenItems([]);
-                                                    });
-                                            }}
-                                        >
-                                            Always respond with 127.0.0.1
-                                        </Button>
-                                    </MessageBarActions>
-                                </MessageBar>
-                                <Link onClick={() => navigate("/templates")}>More rule templates &raquo;</Link>
-                            </div>
-                        </AccordionPanel>
-                    </AccordionItem>
-                </Accordion>
-            </div>
-
-            <Divider
-                vertical
-                className={styles.divider}
-            />
-
-            <div className={styles.right}>
+                    <Accordion
+                        collapsible
+                        openItems={openItems}
+                        onToggle={(_, data) => {
+                            setOpenItems(data.openItems);
+                        }}
+                    >
+                        <AccordionItem value="1">
+                            <AccordionHeader>Quick start examples</AccordionHeader>
+                            <AccordionPanel>
+                                <div className="stack vstack-gap">
+                                    <MessageBar layout="multiline">
+                                        <MessageBarBody className="stack vstack-gap">
+                                            <MessageBarTitle>HelloWorld Example:</MessageBarTitle>
+                                            <Text
+                                                wrap
+                                                style={{ wordWrap: "break-word", display: "block" }}
+                                            >
+                                                This will create a rule that responds to all HTTP(s) GET and POST requests
+                                                sent to <strong>{zone}</strong> with <strong>"hello world"</strong>.
+                                            </Text>
+                                        </MessageBarBody>
+                                        <MessageBarActions>
+                                            <Button
+                                                appearance="primary"
+                                                onClick={() => {
+                                                    makeHelloWorldRule(zone)
+                                                        .then((newRule) => {
+                                                            setRuleId(newRule.ruleid);
+                                                            setNudge(!nudge);
+                                                        })
+                                                        .catch((err) => Logger.Error(err))
+                                                        .finally(() => {
+                                                            setOpenItems([]);
+                                                        });
+                                                }}
+                                            >
+                                                Create "Hello World"
+                                            </Button>
+                                        </MessageBarActions>
+                                    </MessageBar>
+                                    <MessageBar layout="multiline">
+                                        <MessageBarBody className="stack vstack-gap">
+                                            <MessageBarTitle>DNS Example:</MessageBarTitle>
+                                            <Text
+                                                wrap
+                                                style={{ wordWrap: "break-word", display: "block" }}
+                                            >
+                                                This will make 2 rules to make this DNS zone resolve to{" "}
+                                                <strong>localhost</strong>. It will respond to both both{" "}
+                                                <strong>127.0.0.1</strong> and <strong>::1</strong> for DNS A and AAAA
+                                                requests send to <strong>{zone}</strong>.
+                                            </Text>
+                                        </MessageBarBody>
+                                        <MessageBarActions>
+                                            <Button
+                                                appearance="primary"
+                                                onClick={() => {
+                                                    makeLocalhostRule(zone)
+                                                        .then((newRule) => {
+                                                            setRuleId(newRule.ruleid);
+                                                            setNudge(!nudge);
+                                                        })
+                                                        .catch((err) => Logger.Error(err))
+                                                        .finally(() => {
+                                                            setOpenItems([]);
+                                                        });
+                                                }}
+                                            >
+                                                Always respond with 127.0.0.1
+                                            </Button>
+                                        </MessageBarActions>
+                                    </MessageBar>
+                                    <Link onClick={() => navigate("/templates")}>More rule templates &raquo;</Link>
+                                </div>
+                            </AccordionPanel>
+                        </AccordionItem>
+                    </Accordion>
+                </div>
+            }
+            rightPanel={
                 <RuleDetails
                     rule={rule}
                     updateSelectedRule={(newRule: Rule | undefined) => {
@@ -309,7 +280,10 @@ export const RulesScreen = ({ zone }: IRulesScreenProps) => {
                         setNudge(!nudge);
                     }}
                 />
-            </div>
-        </div>
+            }
+            initialLeftWidth={38}
+            minLeftWidth={25}
+            maxLeftWidth={65}
+        />
     );
 };
