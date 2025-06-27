@@ -24,6 +24,7 @@ import {
 } from "@fluentui/react-components";
 import { useEffect, useRef, useState } from "react";
 
+import { ColumnManager, ColumnConfig } from "../ColumnManager";
 import { DusseldorfAPI } from "../../DusseldorfApi";
 import { Logger } from "../../Helpers/Logger";
 import { Rule } from "../../Types/Rule";
