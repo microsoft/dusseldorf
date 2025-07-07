@@ -14,21 +14,17 @@ It allows an authenticated user to manage zones, rules and requests.
 
 ### Option 1: Local Installation
 
-1. Clone the repository:
-bash
-git clone <repository-url>
-cd dusseldorf-api
-
-2. Create and activate a virtual environment:
+1. Create and activate a virtual environment for Python:
 ```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+python3 -m venv venv
+source venv/bin/activate 
+```
+Then, install the dependencies:
+
+```bash
+python3 -m pip install -r requirements.txt
 ```
 
-3. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
 
 4. Set up environment variables:
 TODO: Get a connection string from Azure.
