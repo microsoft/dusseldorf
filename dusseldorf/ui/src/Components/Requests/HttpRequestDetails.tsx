@@ -89,7 +89,11 @@ interface IHttpRequestDetailsProps {
 
 const downloadBase64Content = (b64content: string, filename: string) => {
     const content = atob(b64content);
-    const blob = new Blob([content], { type: "application/octet-stream" });
+    const byteArray = new Uint8Array(content.length);
+    for (let i = 0; i < content.length; i++) {
+        byteArray[i] = content.charCodeAt(i);
+    }
+    const blob = new Blob([byteArray], { type: "application/octet-stream" });
 
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -244,7 +248,7 @@ export const HttpRequestDetails = ({ details }: IHttpRequestDetailsProps) => {
                             </Button>
                         </div>
                     </div>      
-                ) : ''}
+                ) : null}
             </div>
 
             <div className="stack">
