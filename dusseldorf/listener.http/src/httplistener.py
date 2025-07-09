@@ -129,7 +129,7 @@ class HttpRequestHandler(http.server.SimpleHTTPRequestHandler):
        
         done_zone_check = time.perf_counter()
 
-        req_body_bytes:str = None
+        req_body_bytes:bytes = None
         req_body:str = None
         req_body_b64:str = None
 
