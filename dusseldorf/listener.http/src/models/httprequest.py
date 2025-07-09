@@ -25,6 +25,9 @@ class HttpRequest(NetworkRequest):
     body:str 
     """A string representing the body"""
 
+    body_b64:str
+    """A string representing a base64 encoded body, if the body is binary or not UTF-8 encoded"""
+
     tls:bool
     """Whether this request was done over a TLS protected connection"""
 
@@ -35,7 +38,7 @@ class HttpRequest(NetworkRequest):
         self.zone_fqdn = zone_fqdn
         self.remote_addr = remote_addr
         
-        allowed_keys = [ "method", "path", "version", "headers", "body", "tls"]
+        allowed_keys = [ "method", "path", "version", "headers", "body", "body_b64", "tls"]
         for key in allowed_keys:
             self.__setattr__(key, kwargs.get(key))
 
@@ -48,6 +51,7 @@ class HttpRequest(NetworkRequest):
             'version': self.version,
             'headers': self.headers,
             'body': self.body,
+            'body_b64': self.body_b64,
             'tls': self.tls,
         }))
 

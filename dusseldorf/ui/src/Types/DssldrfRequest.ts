@@ -54,6 +54,7 @@ export interface HttpHeader {
 export interface HttpRequest {
     tls: boolean;
     body?: string;
+    body_b64?: string;
     path: string;
     method: string;
     headers: Record<string, string>;
