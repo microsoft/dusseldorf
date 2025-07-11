@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import http.server
+import base64
 import logging
 import sys
 import ssl
@@ -128,17 +129,27 @@ class HttpRequestHandler(http.server.SimpleHTTPRequestHandler):
        
         done_zone_check = time.perf_counter()
 
+        req_body_bytes:bytes = b''
         req_body:str = None
+        req_body_b64:str = None
 
         try:
             content_len:int = int(self.headers.get("content-length", 0))
             if(content_len > 0):
-                req_body = self.rfile.read(content_len).decode('utf-8')
+                req_body_bytes = self.rfile.read(content_len)
         except Exception as e:
             logger.error("Error reading body content")
             logger.exception(e)
             content_len = 0
-            req_body = None
+            req_body_bytes = None
+
+        if req_body_bytes is not None:
+            # if we have a body, let's decode it.
+            try:
+                req_body = req_body_bytes.decode('utf-8')
+            except UnicodeDecodeError:
+                # if we can't decode it, let's base64 encode it
+                req_body_b64 = base64.b64encode(req_body_bytes).decode('utf-8')
 
         done_body_read = time.perf_counter()
 
@@ -151,6 +162,7 @@ class HttpRequestHandler(http.server.SimpleHTTPRequestHandler):
                            headers = {h:v for h,v in self.headers.items()}, # self.headers is not a dict so we need to make it one.
                            version = self.request_version,
                            body = req_body,
+                           body_b64 = req_body_b64,
                            tls = isinstance(self.connection, ssl.SSLSocket))
 
         # gets the response from the rule engine, and check if empty.

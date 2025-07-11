@@ -24,7 +24,7 @@ import {
     Tooltip
 } from "@fluentui/react-components";
 
-import { ChevronDownUpRegular, ChevronUpDownRegular, FireRegular, StethoscopeRegular } from "@fluentui/react-icons";
+import { ArrowDownloadRegular, ChevronDownUpRegular, ChevronUpDownRegular, CopyRegular, FireRegular, StethoscopeRegular } from "@fluentui/react-icons";
 import { useEffect, useState } from "react";
 
 import { Analyzer } from "./Analyzer";
@@ -57,6 +57,8 @@ const buildRawReq = (req: HttpRequest): string => {
             .join("\n");
     if (req.body) {
         newRawReq = newRawReq.concat("\n\n", req.body);
+    } else if (req.body_b64) {
+        newRawReq = newRawReq.concat("\n\n", "[binary content not shown]");
     }
     return newRawReq;
 };
@@ -83,6 +85,25 @@ const buildRawResp = (resp: HttpResponse): string => {
 
 interface IHttpRequestDetailsProps {
     details: DssldrfRequest;
+}
+
+const downloadBase64Content = (b64content: string, filename: string) => {
+    const content = atob(b64content);
+    const byteArray = new Uint8Array(content.length);
+    for (let i = 0; i < content.length; i++) {
+        byteArray[i] = content.charCodeAt(i);
+    }
+    const blob = new Blob([byteArray], { type: "application/octet-stream" });
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
 }
 
 export const HttpRequestDetails = ({ details }: IHttpRequestDetailsProps) => {
@@ -166,6 +187,15 @@ export const HttpRequestDetails = ({ details }: IHttpRequestDetailsProps) => {
         })
     ];
 
+    const downloadBodyBytes = () => {
+        if (!req.body_b64) {
+            console.warn("No bytes to download");
+            return;
+        }
+
+        downloadBase64Content(req.body_b64, `request-content-${Date.now()}.bin`)
+    };
+
     return (
         <div className="stack vstack-gap">
             <div className="stack">
@@ -193,6 +223,32 @@ export const HttpRequestDetails = ({ details }: IHttpRequestDetailsProps) => {
                     // monospaced font
                     // style={{ fontFamily: tokens.fontFamilyMonospace }}
                 />
+                {(!req.body && req.body_b64 && showFullRawReq) ? (
+                    <div className="stack">
+                        <div style={{margin: 5, marginTop: 10}}>
+                            Because the body of this request contains binary content, it cannot be shown inside Dusseldorf. You can
+                            download the body content or copy it to your clipboard as base64. 
+                        </div>
+                        <div className="stack hstack-gap" style={{margin: 5}}>
+                            <Button
+                                appearance="primary"
+                                icon={<ArrowDownloadRegular />}
+                                onClick={downloadBodyBytes}
+                            >
+                                Download content
+                            </Button>
+                            <Button
+                                appearance="primary"
+                                icon={<CopyRegular />}
+                                onClick={() => (
+                                    navigator.clipboard.writeText(req.body_b64!)
+                                )}
+                            >
+                                Copy as base64
+                            </Button>
+                        </div>
+                    </div>      
+                ) : null}
             </div>
 
             <div className="stack">
