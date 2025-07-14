@@ -1,4 +1,4 @@
-fastapi==0.109.2
+fastapi[standard]==0.116.1
 uvicorn==0.27.1
 motor==3.3.2
 pymongo==4.6.3
@@ -12,7 +12,7 @@ dnspython==2.6.1
 pytest==8.0.0
 pytest-asyncio==0.23.5
 mongomock==4.1.2
-httpx==0.26.0 
+httpx 
 asgiref==3.8.1
 azure-core==1.32.0
 azure-core-tracing-opentelemetry==1.0.0b11
