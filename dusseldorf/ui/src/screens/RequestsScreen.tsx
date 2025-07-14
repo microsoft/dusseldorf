@@ -1,40 +1,48 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { Button, Divider, makeStyles, Subtitle1, Tooltip } from "@fluentui/react-components";
+import { Button, makeStyles, Subtitle1, Tooltip } from "@fluentui/react-components";
 import { ArrowSyncRegular } from "@fluentui/react-icons";
 import { useEffect, useState } from "react";
 
+import { ColumnManager, ColumnConfig } from "../Components/ColumnManager";
 import { RequestDetails } from "../Components/Requests/RequestDetails";
 import { RequestTable } from "../Components/Requests/RequestTable";
+import { ResizableSplitPanel } from "../Components/ResizableSplitPanel";
 import { DssldrfRequest } from "../Types/DssldrfRequest";
 
 const useStyles = makeStyles({
-    root: {
-        display: "flex",
-        flexDirection: "row"
-    },
-    left: {
-        minWidth: "48%",
-        maxWidth: "48%",
-        display: "flex",
-        flexDirection: "column",
-        columnGap: "10px"
-    },
-    right: {
-        minWidth: "48%",
-        maxWidth: "48%"
-    },
     header: {
         display: "flex",
         flexDirection: "row",
-        alignItems: "center"
+        alignItems: "center",
+        justifyContent: "space-between",
+        marginBottom: "10px"
     },
-    divider: {
-        paddingLeft: "2%",
-        paddingRight: "2%"
+    headerLeft: {
+        display: "flex",
+        flexDirection: "row",
+        alignItems: "center",
+        gap: "8px"
+    },
+    headerRight: {
+        display: "flex",
+        flexDirection: "row",
+        alignItems: "center",
+        gap: "4px"
     }
 });
+
+/**
+ * Default column configuration
+ */
+const defaultColumnConfig: ColumnConfig[] = [
+    { id: "protocol", label: "Protocol", visible: true },
+    { id: "clientip", label: "Client IP", visible: true },
+    { id: "timestamp", label: "Timestamp", visible: true, required: true },
+    { id: "request", label: "Request", visible: true, required: true },
+    { id: "response", label: "Response", visible: true }
+];
 
 interface IRequestsScreenProps {
     zone: string;
@@ -45,6 +53,11 @@ export const RequestsScreen = ({ zone }: IRequestsScreenProps) => {
 
     // Control current request
     const [request, setRequest] = useState<DssldrfRequest | undefined>();
+
+    // Control column management
+    const [columnConfig, setColumnConfig] = useState<ColumnConfig[]>(defaultColumnConfig);
+
+    // Control refresh nudge
     const [nudge, setNudge] = useState<boolean>(false);
 
     // When zone changes, reset current request
@@ -53,44 +66,53 @@ export const RequestsScreen = ({ zone }: IRequestsScreenProps) => {
     }, [zone]);
 
     return (
-        <div className={styles.root}>
-            <div className={styles.left}>
-                <div className={styles.header}>
-                    <Subtitle1>Network Requests</Subtitle1>
+        <ResizableSplitPanel
+            leftPanel={
+                <div>
+                    <div className={styles.header}>
+                        <div className={styles.headerLeft}>
+                            <Subtitle1>Network Requests</Subtitle1>
+                        </div>
+                        
+                        <div className={styles.headerRight}>
+                            <ColumnManager
+                                columns={columnConfig}
+                                onColumnsChange={setColumnConfig}
+                            />
+                            
+                            <Tooltip
+                                content="Refresh"
+                                relationship="label"
+                            >
+                                <Button
+                                    appearance="subtle"
+                                    icon={<ArrowSyncRegular />}
+                                    onClick={() => {
+                                        setNudge(!nudge);
+                                    }}
+                                />
+                            </Tooltip>
+                        </div>
+                    </div>
 
-                    <Tooltip
-                        content="Refresh"
-                        relationship="label"
-                    >
-                        <Button
-                            appearance="subtle"
-                            icon={<ArrowSyncRegular />}
-                            onClick={() => {
-                                setNudge(!nudge);
-                            }}
-                        />
-                    </Tooltip>
+                    <RequestTable
+                        zone={zone}
+                        request={request}
+                        setRequest={setRequest}
+                        nudge={nudge}
+                        columnConfig={columnConfig}
+                    />
                 </div>
-
-                <RequestTable
-                    zone={zone}
-                    request={request}
-                    setRequest={setRequest}
-                    nudge={nudge}
-                />
-            </div>
-
-            <Divider
-                vertical
-                className={styles.divider}
-            />
-
-            <div className={styles.right}>
+            }
+            rightPanel={
                 <RequestDetails
                     zone={zone}
                     request={request}
                 />
-            </div>
-        </div>
+            }
+            initialLeftWidth={48}
+            minLeftWidth={25}
+            maxLeftWidth={75}
+        />
     );
 };

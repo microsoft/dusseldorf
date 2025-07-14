@@ -29,6 +29,7 @@ import {
 import { ChevronLeftRegular, ChevronRightRegular } from "@fluentui/react-icons";
 import { useEffect, useRef, useState } from "react";
 
+import { ColumnManager, ColumnConfig } from "../ColumnManager";
 import { DusseldorfAPI } from "../../DusseldorfApi";
 import { Logger } from "../../Helpers/Logger";
 import { DssldrfRequest } from "../../Types/DssldrfRequest";
@@ -65,9 +66,9 @@ const formatTimestamp = (timestamp: string | number): string => {
 };
 
 /**
- * Columns: protocol, client ip, timestamp, request, and response
+ * All available columns for the requests table
  */
-const columns: TableColumnDefinition<DssldrfRequest>[] = [
+const allColumns: TableColumnDefinition<DssldrfRequest>[] = [
     createTableColumn<DssldrfRequest>({
         columnId: "protocol",
         renderHeaderCell: () => {
@@ -115,6 +116,17 @@ const columns: TableColumnDefinition<DssldrfRequest>[] = [
     })
 ];
 
+/**
+ * Default column configuration
+ */
+const defaultColumnConfig: ColumnConfig[] = [
+    { id: "protocol", label: "Protocol", visible: true },
+    { id: "clientip", label: "Client IP", visible: true },
+    { id: "timestamp", label: "Timestamp", visible: true, required: true },
+    { id: "request", label: "Request", visible: true, required: true },
+    { id: "response", label: "Response", visible: true }
+];
+
 const columnSizingOptions = {
     protocol: {
         minWidth: 30,
@@ -143,12 +155,24 @@ interface RequestTableProps {
     request: DssldrfRequest | undefined;
     setRequest: (request: DssldrfRequest | undefined) => void;
     nudge: boolean;
+    columnConfig: ColumnConfig[];
 }
 
-export const RequestTable = ({ zone, request, setRequest, nudge }: RequestTableProps) => {
+export const RequestTable = ({ zone, request, setRequest, nudge, columnConfig }: RequestTableProps) => {
     // Control what is shown: nothing, text that there is no reqeust, or requests
     const [loaded, setLoaded] = useState<boolean>(false);
     const [requests, setRequests] = useState<DssldrfRequest[]>([]);
+
+    // Column management - use prop instead of local state
+    const [visibleColumns, setVisibleColumns] = useState<TableColumnDefinition<DssldrfRequest>[]>([]);
+
+    // Update visible columns when column config changes
+    useEffect(() => {
+        const visible = allColumns.filter(col => 
+            columnConfig.find(config => config.id === col.columnId && config.visible)
+        );
+        setVisibleColumns(visible);
+    }, [columnConfig]);
 
     // Control what is selected - should always match request.id
     const [selectedRows, setSelectedRows] = useState(new Set<TableRowId>(request ? [JSON.stringify(request)] : []));
@@ -231,7 +255,7 @@ export const RequestTable = ({ zone, request, setRequest, nudge }: RequestTableP
         <div>
             <DataGrid
                 items={requests}
-                columns={columns}
+                columns={visibleColumns}
                 selectionMode="single"
                 selectedItems={selectedRows}
                 onSelectionChange={onSelectionChange}
