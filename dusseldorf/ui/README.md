@@ -11,7 +11,7 @@ To load this locally, do the following:
 ``` bash
 $ npm install 
 $ npm test # <-- this runs our tests, to make sure your site will run. 
-$ npm start 
+$ HTTPS=true npm start 
 ```
 
 Then go to localhost:3000 to see the UI working.  It will connect to a relative endpoint being `api/`, as this is the default 
