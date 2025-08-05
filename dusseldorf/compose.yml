@@ -1,0 +1,121 @@
+
+services:
+  mongodb:
+    image: mongo:6.0
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./env/mongo-data:/data/db
+      - ./env/mongo-scripts/init.js:/docker-entrypoint-initdb.d/init.js:ro
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGO_DB_NAME}
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp
+    networks:
+      - local_network
+
+  api-server:
+    build:
+      context: .
+      dockerfile: api_Dockerfile
+    container_name: api-server
+    ports:
+      - "8080:8080"
+    environment:
+      DSSLDRF_CONNSTR: "mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@mongodb:27017/${MONGO_DB_NAME}"
+      API_VERSION: ${API_VERSION}
+      API_PORT: 8080
+      ENVIRONMENT: ${ENVIRONMENT}
+      AZURE_CLIENT_ID: ${AZURE_CLIENT_ID}
+      AZURE_TENANT_ID: ${AZURE_TENANT_ID}
+    depends_on:
+      - mongodb
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - local_network
+    develop:
+      watch:
+        - action: sync
+          path: ./api
+          target: /app/api
+
+  listener-http:
+    build:
+      context: .
+      dockerfile: http-listener_Dockerfile
+    container_name: listener-http
+    ports:
+      - "${LSTNER_HTTP_PORT}:${LSTNER_HTTP_PORT}"
+    environment:
+      DSSLDRF_CONNSTR: "mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@mongodb:27017/${MONGO_DB_NAME}"
+      DSSLDRF_TLS_CRT_FILE: /certs/tls.crt
+      DSSLDRF_TLS_KEY_FILE: /certs/tls.key
+      LSTNER_HTTP_PORT: ${LSTNER_HTTP_PORT}
+      LSTNER_HTTP_INTERFACE: ${LSTNER_HTTP_INTERFACE}
+    volumes:
+      - ${DSSLDRF_TLS_CRT_FILE}:/certs/tls.crt
+      - ${DSSLDRF_TLS_KEY_FILE}:/certs/tls.key
+    depends_on:
+      - mongodb
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      local_network:
+        ipv4_address: 172.18.0.9
+    develop:
+      watch:
+        - action: sync
+          path: ./listener.http/src
+          target: /dusseldorf
+
+
+  listener-dns:
+    build:
+      context: .
+      dockerfile: dns-listener_Dockerfile
+    container_name: listener-dns
+    ports:
+      - "10053:${LSTNER_DNS_PORT}"
+    environment:
+      DSSLDRF_CONNSTR: "mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@mongodb:27017/${MONGO_DB_NAME}"
+      LSTNER_DNS_PORT: ${LSTNER_DNS_PORT}
+      LSTNER_DNS_INTERFACE: ${LSTNER_DNS_INTERFACE}
+      LSTNER_DNS_UDP: ${LSTNER_DNS_UDP}
+    depends_on:
+      - mongodb
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      local_network:
+        ipv4_address: 172.18.0.10
+    develop:
+      watch:
+        - action: sync
+          path: ./listener.dns/src
+          target: /dusseldorf
+
+  # ui:
+  #   image: ${ACR_NAME}.azurecr.io/legacy-ui:latest
+  #   container_name: ui
+  #   ports:
+  #     - "3000:3000"
+  #   depends_on:
+  #     - api-server
+  #   security_opt:
+  #     - no-new-privileges:true
+  #   networks:
+  #     - local_network
+
+networks:
+  local_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.18.0.0/16
+          gateway: 172.18.0.1

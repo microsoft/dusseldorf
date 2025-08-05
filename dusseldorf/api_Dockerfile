@@ -14,7 +14,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     ENVIRONMENT=production
 # Install system dependencies
-RUN tdnf -y update && tdnf -y install build-essential curl ca-certificates
+RUN tdnf -y update && tdnf -y install build-essential curl ca-certificates python3-devel
 # Install Python dependencies
 COPY api/src/api/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
