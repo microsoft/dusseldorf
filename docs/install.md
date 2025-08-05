@@ -25,6 +25,11 @@ Ensure you have the following installed:
 
 ### **1️⃣ Local Deployment**
 
+> [!WARNING]
+> These local deployment instructions are not actively maintained and do not reflect the current structure of
+> the repository. It is recommended that you instead follow the devenv setup instructions from the `dusseldorf/`
+> directory [here](https://github.com/microsoft/dusseldorf/tree/main/dusseldorf).
+
 For detailed local deployment instructions, navigate to the `docs/local` directory and refer to the `Readme.md` file.
 
 #### **Step 1: Clone the Repository**
