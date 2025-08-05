@@ -1,5 +1,10 @@
 # **Dusseldorf Local Deployment Guide**
 
+> [!WARNING]
+> These local deployment instructions are not actively maintained and do not reflect the current structure of
+> the repository. It is recommended that you instead follow the devenv setup instructions from the `dusseldorf/`
+> directory [here](https://github.com/microsoft/dusseldorf/tree/main/dusseldorf).
+
 This guide provides instructions for deploying the Dusseldorf system locally using Docker Compose.
 
 ---
