@@ -4,7 +4,7 @@ Dusseldorf is a versatile out-of-band application security testing (OAST) tool. 
 
 It is aimed to empower security professionals to help automate the detection and exploitation of OOB (out of band) security vulnerabilities such as *Server Side Request Forgery* (SSRF), *Cross Site Scripting* (XSS), *Server Side Template Injection* (SSTI), *eXternal XML Entities* (XXE) and many other classes of security defects.  
 
-> This project is often stylized as *duSSeldoRF*, following a [common practice](https://en.wikipedia.org/wiki/List_of_Microsoft_codenames) to use place names.  The beautiful Bavarian city Düsseldorf is one of the few places in the world with the letters *SSRF* in its name.  For ease of use we substituted the umlaut character (alt-0252) ü for a normal u.
+> This project is often stylized as *duSSeldoRF*, following a [common practice](https://en.wikipedia.org/wiki/List_of_Microsoft_codenames) to use place names.  The beautiful city Düsseldorf is one of the few places in the world with the letters *SSRF* in its name.  For ease of use we substituted the umlaut character (alt-0252) ü for a normal u.
 
 Dusseldorf deploys DNS, HTTP, and HTTPS network listeners and listens on a domain name, such as `*.yourdomain.net`.  All requests to this domain name, and any subdomain in it (called _zones_, such as `foo.yourdomain.net` and `foo.bar.yourdomain.net`) are captured by these network listeners.  
 
