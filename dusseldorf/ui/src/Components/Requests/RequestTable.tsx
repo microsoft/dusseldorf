@@ -29,7 +29,7 @@ import {
 import { ChevronLeftRegular, ChevronRightRegular } from "@fluentui/react-icons";
 import { useEffect, useRef, useState } from "react";
 
-import { ColumnManager, ColumnConfig } from "../ColumnManager";
+import { ColumnConfig } from "../ColumnManager";
 import { DusseldorfAPI } from "../../DusseldorfApi";
 import { Logger } from "../../Helpers/Logger";
 import { DssldrfRequest } from "../../Types/DssldrfRequest";
