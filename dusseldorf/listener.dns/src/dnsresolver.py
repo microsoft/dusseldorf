@@ -126,6 +126,22 @@ class DusseldorfResolver(BaseResolver):
             if resp := DnsResponse.forZone(req):
                 answer = self.make_resource_record(resp)
                 reply.add_answer(answer)
+
+                # if this is a CAA request, we need to add an additional CAA record
+                if qtype_s == "CAA":
+                    # hardcoded CAA resp
+                    email = "caarecordaware@microsoft.com" 
+                    resp = req.default_response
+                    resp._rdata = { "flags": 0, "tag": "contactemail", "value": email }                    
+                    caa_answer = self.make_resource_record(resp)
+                    reply.add_answer(caa_answer)
+
+                    # also iodef
+                    resp = req.default_response
+                    resp._rdata = { "flags": 0, "tag": "iodef", "value": f"mailto:{email}" }                    
+                    iodef_answer = self.make_resource_record(resp)
+                    reply.add_answer(iodef_answer)
+
             else:
                 logger.warning(f"could not make RR for zone request {qtype_s}/{request_fqdn}")
                 reply.header.set_rcode(NXDOMAIN)
