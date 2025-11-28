@@ -2,7 +2,8 @@
 
 This component is the graphical user interface for Project Dusseldorf, for more info on the project, please check https://aka.ms/dusseldorf.
 
-This component provides a simple but rich UI to make it easier to work with Dusseldorf.  It's a static web page build in React, and talks to the REST API.  By default, it is hosted as a static component within the API repository under the `/ui` path. 
+This component provides a simple but rich UI to make it easier to work with Dusseldorf.  It's a static web page build in React, and talks to the REST API.  By default, it is hosted as a static component within the API repository under the `/ui` path.  
+
 
 
 # Running Locally

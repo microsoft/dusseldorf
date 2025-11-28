@@ -16,7 +16,7 @@ const API_HOST = (() => {
     const envHost = process.env.REACT_APP_API_HOST;
     if (envHost && envHost.trim() !== "") return envHost.trim();
     try {
-        const lsHost = window?.localStorage?.getItem("api_host");
+        const lsHost = localStorage?.getItem("api_host");
         if (lsHost && lsHost.trim() !== "") return lsHost.trim();
     } catch {
         // ignore access errors (e.g., privacy mode)
@@ -40,7 +40,7 @@ export default {
     client_id:  config.client_id,
     tenant_id:  config.tenant_id,
     // redir_url:  MYURL,
-
+    
     // success or not
     loaded:     false,
 

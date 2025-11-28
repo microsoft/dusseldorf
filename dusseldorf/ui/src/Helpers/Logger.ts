@@ -82,7 +82,7 @@ export class Logger {
         this.Trace(msg, 'warn');
     };
 
-    static Error = (msg: any) => {
+    static Error = (msg: string | Error | unknown) => {
         const msgStr = String(msg)
         console.log(this.RED + msgStr + this.RESET)
         this.Trace(msgStr, 'error');
