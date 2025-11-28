@@ -1,8 +1,10 @@
 # Dusseldorf UI
-This is the graphical user interface for [Dusseldorf](https://aka.ms/dusseldorf), which provides an easy 
-human way to interface with Dusseldorf's API. 
+
+This is the graphical user interface for Dusseldorf, which provides an easy graphical human way to interface with Dusseldorf's API. 
 
 This runs as its own component, it's a static web page build in the React Framework, hosted as a static component within the API repository. 
+
+For more info on Dusseldorf, please check https://aka.ms/dusseldorf
 
 # Running Locally
 
@@ -24,4 +26,9 @@ in the console of the DevTools in your favourite browser to any value to change 
 
 # Design 
 This UI is build upon the amazing [Fluent2](https://fluent2.microsoft.design/) design framework.
+
+
+# Changelog
+- 2025-11-28: set API host precedence to  `REACT_APP_API_HOST` > `localStorage['api_host']` > `"/api"` and split panel resize.
+
 
