@@ -23,7 +23,7 @@ const useStyles = makeStyles({
         flexDirection: "column"
     },
     divider: {
-        width: "8px",
+        width: "19px",
         cursor: "col-resize",
         backgroundColor: "transparent",
         display: "flex",
@@ -109,17 +109,11 @@ export const ResizableSplitPanel = ({
 
     return (
         <div ref={containerRef} className={styles.container}>
-            <div 
-                className={styles.leftPanel} 
-                style={{ width: `${leftWidth}%` }}
-            >
+            <div className={styles.leftPanel} style={{ width: `${leftWidth}%` }}>
                 {leftPanel}
             </div>
             
-            <div 
-                className={styles.divider}
-                onMouseDown={handleMouseDown}
-            >
+            <div className={styles.divider} onMouseDown={handleMouseDown}>
                 <div className={styles.dividerLine} />
             </div>
             
