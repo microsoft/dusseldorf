@@ -71,4 +71,76 @@ REACT_APP_CLIENT_ID=$AZURE_CLIENT_ID
 REACT_APP_TENANT_ID=$AZURE_TENANT_ID
 REACT_APP_API_HOST=http://localhost:8080/api
 EOF
-echo "Environment setup complete. You can now start running Dusseldorf with docker compose up."
+echo "Environment setup complete. You can now start running Dusseldorf with docker compose up."#!/bin/bash
+set -e
+
+EXAMPLE_CLIENT_ID="dc1b6b75-8167-4baf-9e75-d3d1f755de1b"
+EXAMPLE_TENANT_ID="72f988bf-86f1-41af-91ab-2d7cd011db47"
+
+CLIENT_ID_DEFAULT="${AZURE_CLIENT_ID:-$EXAMPLE_CLIENT_ID}"
+TENANT_ID_DEFAULT="${AZURE_TENANT_ID:-$EXAMPLE_TENANT_ID}"
+
+read -p "Azure Client ID [$CLIENT_ID_DEFAULT]: " INPUT_CLIENT_ID || true
+[[ -n "$INPUT_CLIENT_ID" && "$INPUT_CLIENT_ID" =~ ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$ ]] && AZURE_CLIENT_ID="$INPUT_CLIENT_ID" || AZURE_CLIENT_ID="$CLIENT_ID_DEFAULT"
+
+read -p "Azure Tenant ID [$TENANT_ID_DEFAULT]: " INPUT_TENANT_ID || true
+[[ -n "$INPUT_TENANT_ID" && "$INPUT_TENANT_ID" =~ ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$ ]] && AZURE_TENANT_ID="$INPUT_TENANT_ID" || AZURE_TENANT_ID="$TENANT_ID_DEFAULT"
+
+echo "Using Client ID: $AZURE_CLIENT_ID"
+echo "Using Tenant ID: $AZURE_TENANT_ID"
+
+mkdir -p env/certs env/mongo-data env/mongo-scripts ui
+openssl req -newkey rsa:2048 -nodes -keyout "env/certs/tls.key" -x509 -days 365 -out "env/certs/tls.crt" -subj "/CN=localhost" >/dev/null 2>&1 || { echo "openssl not found" >&2; exit 1; }
+
+MONGO_PASSWORD=$(openssl rand -hex 12)
+cat <<EOF > env/mongo-scripts/init.js
+db = db.getSiblingDB("dusseldorf");
+db.createUser({
+  user: "admin",
+  pwd: "$MONGO_PASSWORD",
+  roles: [{ role: "readWrite", db: "dusseldorf" }]
+});
+
+db.createCollection("domains");
+db.createCollection("zones");
+db.createCollection("requests");
+db.createCollection("rules");
+
+db.domains.createIndex({domain: 1}, { unique: true });
+db.zones.createIndex({fqdn: 1}, { unique: true });
+db.requests.createIndex({
+  "zone": 1,
+  "time": 1
+});
+db.domains.insertOne({"domain": "dusseldorf.local", "public_ips": ["172.18.0.9"], "owner": "dusseldorf"});
+EOF
+
+cat <<EOF > .env
+# Dusseldorf Environment Variables
+API_VERSION=1
+ENVIRONMENT=development
+AZURE_CLIENT_ID=$AZURE_CLIENT_ID
+AZURE_TENANT_ID=$AZURE_TENANT_ID
+
+MONGO_USERNAME=admin
+MONGO_PASSWORD=$MONGO_PASSWORD
+MONGO_DB_NAME=dusseldorf
+MONGODB_DB_NAME=dusseldorf
+
+DSSLDRF_TLS_CRT_FILE=./env/certs/tls.crt
+DSSLDRF_TLS_KEY_FILE=./env/certs/tls.key
+LSTNER_HTTP_PORT=443
+LSTNER_HTTP_INTERFACE=0.0.0.0
+
+LSTNER_DNS_PORT=10053
+LSTNER_DNS_INTERFACE=0.0.0.0
+LSTNER_DNS_UDP=false
+EOF
+
+cat <<EOF > ui/.env
+REACT_APP_CLIENT_ID=$AZURE_CLIENT_ID
+REACT_APP_TENANT_ID=$AZURE_TENANT_ID
+REACT_APP_API_HOST=http://localhost:8080/api
+EOF
+
+echo "Environment setup complete. Run: docker compose up"
