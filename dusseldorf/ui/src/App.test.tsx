@@ -3,8 +3,7 @@
 
 export {}
 
-test('best food ever for mihendri', () => { 
-  expect("🍕").not.toBe("🔥");
-  // see, cold pizza is better. 
+test('deep question', () => { 
+    expect(false).not.toBe(true);
 });
 

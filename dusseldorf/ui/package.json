@@ -33,7 +33,7 @@
     "eject": "node_modules/react-scripts/bin/react-scripts.js eject",
     "start": "node_modules/react-scripts/bin/react-scripts.js start",
     "start-quick": "react-scripts start",
-    "test": "jest",
+    "test": "jest --env=node",
     "lint": "eslint ."
   },
   "browserslist": {
@@ -55,10 +55,13 @@
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "",
     "@babel/preset-typescript": "^7.24.1",
+    "@babel/preset-env": "^7.26.0",
+    "@babel/preset-react": "^7.26.3",
     "@eslint/js": "^9.18.0",
     "@types/bad-words": "^3.0.3",
     "@types/js-yaml": "^4.0.5",
     "@types/react": "^18.3.18",
+    "babel-jest": "^29.7.0",
     "eslint": "^8.57.1",
     "eslint-plugin-react": "^7.37.4",
     "jest": "^29.7.0",
