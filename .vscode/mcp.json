@@ -1,0 +1,15 @@
+{
+    "servers": {
+        "dusseldorf": {
+            "type": "stdio",
+            "command": "${workspaceFolder}/mcp-server/.venv/Scripts/python.exe",
+            "args": ["-m", "dusseldorf_mcp.server"],
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/mcp-server/src",
+                "DUSSELDORF_API_URL": "${env:DUSSELDORF_API_URL}",
+                "DUSSELDORF_CLIENT_ID": "${env:DUSSELDORF_CLIENT_ID}",
+                "DUSSELDORF_TOKEN": "${env:DUSSELDORF_TOKEN}"
+            }
+        }
+    }
+}
