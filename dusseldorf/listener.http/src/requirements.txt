@@ -1,6 +1,6 @@
 asgiref==3.8.1
 attrs==25.1.0
-azure-core==1.32.0
+azure-core==1.38.0
 azure-core-tracing-opentelemetry==1.0.0b11
 azure-identity==1.19.0
 azure-monitor-opentelemetry==1.6.4
@@ -48,7 +48,7 @@ packaging==23.2
 pluggy==1.4.0
 portalocker==2.8.2
 proto-plus==1.26.0
-protobuf==4.25.8
+protobuf==5.29.6
 psutil==5.9.8
 pyasn1==0.5.1
 pyasn1_modules==0.4.1
@@ -67,8 +67,8 @@ setuptools==78.1.1
 six==1.17.0
 tomli==2.2.1
 typing_extensions==4.12.2
-urllib3==2.5.0
-wheel==0.43.0
+urllib3==2.6.3
+wheel==0.46.2
 wrapt==1.17.2
 zentralbibliothek
 zipp==3.21.0
