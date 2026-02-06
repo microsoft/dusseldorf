@@ -140,7 +140,7 @@ EOF
 cat <<EOF > ui/.env
 REACT_APP_CLIENT_ID=$AZURE_CLIENT_ID
 REACT_APP_TENANT_ID=$AZURE_TENANT_ID
-REACT_APP_API_HOST=http://localhost:8080/api
+REACT_APP_API_HOST=https://localhost:8080/api
 EOF
 
 echo "Environment setup complete. Run: docker compose up"
