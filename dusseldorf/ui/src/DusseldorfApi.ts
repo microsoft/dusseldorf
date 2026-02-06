@@ -452,6 +452,7 @@ export class DusseldorfAPI {
 
         return this.get("domains")
             .then((resp) => {
+                console.log(resp);
                 if (resp.ok) {
                     return resp.json();
                 } else {

@@ -55,7 +55,7 @@ export const App = ({ msal }: IAppProps) => {
     const [domains, setDomains] = useState<string[]>();
 
     useEffect(() => {
-        if (!domains) {
+        if (!domains || domains.length === 0) {            
             DusseldorfAPI.GetDomains()
                 .then((newDomains) => {
                     if (newDomains.length === 0) {

@@ -19,7 +19,7 @@ from dnsruleengine import get_response
 from models.dnsrequest import DnsRequest
 from models.dnsresponse import DnsResponse
 
-DEFAULT_TTL:int = 60 * 30
+DEFAULT_TTL:int = 60 * 30 # in seconds, thus 30 minutes
 NOERROR:int = 0
 NXDOMAIN:int = 3
 
@@ -68,8 +68,8 @@ class DusseldorfResolver(BaseResolver):
             reply.add_answer(answer)
             return reply
 
-        # not sure if this is to be _optional_, but qname always have a trailing period.
-        # Cutting that out for now.
+        # not sure if this is to be _optional_, but qname always 
+        # has a trailing period. Cutting that out for now.
         if qname_s[-1] == '.':
             qname_s = qname_s[:-1]
         
@@ -220,14 +220,16 @@ class DusseldorfResolver(BaseResolver):
             return None
 
         rtype = None
-        def _RR(rdata:any, ttl:int = 60) -> RR:
+        def _RR(rdata:any) -> RR: # type: ignore
             """Embedded method to return dns.RR type"""
+            ttl = response.TTL if response.TTL is not None else DEFAULT_TTL
             rname = response.ResponseName
             return RR(rname=rname,
                       rtype=rtype,
                       rclass=1,
                       ttl=ttl,
                       rdata=rdata)
+
 
         # fail quickly
         supported_types = list(dnslib.QTYPE.forward.values())

@@ -6,10 +6,23 @@
 //                 :
 //                 "http://localhost:3000/" ;
 
-// This is the hostname of the API we talk to.  
-// To set a manual one, do the following
-// localStorage.setItem("api_host", "https://localhost:1337")
-const API_HOST = process.env.REACT_APP_API_HOST ?? window.localStorage.getItem("api_host") ?? "/api";
+// This is the hostname of the API we talk to.
+// Resolution order:
+// 1. Environment variable REACT_APP_API_HOST (at build/start time)
+// 2. localStorage key "api_host" (runtime override)
+// 3. Default "/api"
+// Empty strings are treated as unset so they fall through to the next source.
+const API_HOST = (() => {
+    const envHost = process.env.REACT_APP_API_HOST;
+    if (envHost && envHost.trim() !== "") return envHost.trim();
+    try {
+        const lsHost = localStorage?.getItem("api_host");
+        if (lsHost && lsHost.trim() !== "") return lsHost.trim();
+    } catch {
+        // ignore access errors (e.g., privacy mode)
+    }
+    return "/api";
+})();
 
 const config = {
     // https://ms.portal.azure.com/#blade/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/Overview/appId/dc1b6b75-8167-4baf-9e75-d3d1f755de1b/isMSAApp/
@@ -27,7 +40,7 @@ export default {
     client_id:  config.client_id,
     tenant_id:  config.tenant_id,
     // redir_url:  MYURL,
-
+    
     // success or not
     loaded:     false,
 

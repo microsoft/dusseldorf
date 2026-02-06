@@ -29,7 +29,7 @@ import {
 import { ChevronLeftRegular, ChevronRightRegular } from "@fluentui/react-icons";
 import { useEffect, useRef, useState } from "react";
 
-import { ColumnManager, ColumnConfig } from "../ColumnManager";
+import { ColumnConfig } from "../ColumnManager";
 import { DusseldorfAPI } from "../../DusseldorfApi";
 import { Logger } from "../../Helpers/Logger";
 import { DssldrfRequest } from "../../Types/DssldrfRequest";
@@ -116,16 +116,7 @@ const allColumns: TableColumnDefinition<DssldrfRequest>[] = [
     })
 ];
 
-/**
- * Default column configuration
- */
-const defaultColumnConfig: ColumnConfig[] = [
-    { id: "protocol", label: "Protocol", visible: true },
-    { id: "clientip", label: "Client IP", visible: true },
-    { id: "timestamp", label: "Timestamp", visible: true, required: true },
-    { id: "request", label: "Request", visible: true, required: true },
-    { id: "response", label: "Response", visible: true }
-];
+// Removed unused `defaultColumnConfig` constant.
 
 const columnSizingOptions = {
     protocol: {
