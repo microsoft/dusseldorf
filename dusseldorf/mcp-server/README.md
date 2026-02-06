@@ -10,7 +10,6 @@ This MCP server allows AI assistants like GitHub Copilot to:
 - **Configure custom responses** - Define rules for DNS/HTTP responses
 - **Monitor captured requests** - Check if vulnerabilities were triggered
 - **Generate payloads** - Create ready-to-use SSRF, XXE, and other test payloads
-- **Trigger HTTP requests** - Send requests to test for vulnerabilities
 
 ## Installation
 
@@ -131,12 +130,11 @@ Or if installed via pip:
 | `dusseldorf_get_requests` | Get captured requests for a zone |
 | `dusseldorf_get_request_details` | Get full details of a specific request |
 
-### Payload Generation & Testing
+### Payload Generation
 
 | Tool | Description |
 |------|-------------|
 | `dusseldorf_generate_payload` | Generate SSRF/XXE/DNS test payloads |
-| `dusseldorf_trigger_http` | Make HTTP requests to trigger vulnerabilities |
 
 ### Utility
 
@@ -166,10 +164,7 @@ Here's how an AI assistant might use these tools to test for SSRF:
    dusseldorf_add_rule_component(zone="...", rule_id="...", is_predicate=false, action_name="http.code", action_value="200")
    ```
 
-4. **Trigger the vulnerability**:
-   ```
-   dusseldorf_trigger_http(url="https://target.com/api?url=http://abc123xyz.dusseldorf.example.com/")
-   ```
+4. **Inject the payload** into the target application and trigger the vulnerability.
 
 5. **Check for callbacks**:
    ```

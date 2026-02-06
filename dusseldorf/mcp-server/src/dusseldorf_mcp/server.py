@@ -430,56 +430,6 @@ Returns ready-to-use payloads for:
         }
     ),
     
-    # HTTP Trigger
-    Tool(
-        name="dusseldorf_trigger_http",
-        description="""Make an HTTP request to trigger potential SSRF/OOB vulnerabilities.
-
-Use this to send requests to target applications that may be vulnerable.
-The request can include custom headers, body, and method.
-
-NOTE: This makes actual HTTP requests. Use responsibly and only against authorized targets.""",
-        inputSchema={
-            "type": "object",
-            "properties": {
-                "url": {
-                    "type": "string",
-                    "description": "Target URL to send the request to"
-                },
-                "method": {
-                    "type": "string",
-                    "enum": ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"],
-                    "description": "HTTP method to use",
-                    "default": "GET"
-                },
-                "headers": {
-                    "type": "object",
-                    "description": "Optional headers to include in the request"
-                },
-                "body": {
-                    "type": "string",
-                    "description": "Optional request body"
-                },
-                "timeout": {
-                    "type": "integer",
-                    "description": "Request timeout in seconds (default 10)",
-                    "default": 10
-                },
-                "follow_redirects": {
-                    "type": "boolean",
-                    "description": "Whether to follow redirects (default true)",
-                    "default": True
-                },
-                "verify_ssl": {
-                    "type": "boolean",
-                    "description": "Whether to verify SSL certificates (default true)",
-                    "default": True
-                }
-            },
-            "required": ["url"]
-        }
-    ),
-    
     # Connectivity Check
     Tool(
         name="dusseldorf_ping",
@@ -544,10 +494,6 @@ async def _handle_tool(name: str, arguments: dict) -> str:
     # Payload Generation
     elif name == "dusseldorf_generate_payload":
         return await handle_generate_payload(arguments)
-    
-    # HTTP Trigger
-    elif name == "dusseldorf_trigger_http":
-        return await handle_trigger_http(arguments)
     
     # Connectivity
     elif name == "dusseldorf_ping":
@@ -792,62 +738,6 @@ async def handle_generate_payload(arguments: dict) -> str:
     
     result += "Use dusseldorf_get_requests to check for incoming connections."
     return result
-
-
-async def handle_trigger_http(arguments: dict) -> str:
-    """Handle dusseldorf_trigger_http"""
-    import httpx
-    
-    url = arguments["url"]
-    method = arguments.get("method", "GET")
-    headers = arguments.get("headers", {})
-    body = arguments.get("body")
-    timeout = arguments.get("timeout", 10)
-    follow_redirects = arguments.get("follow_redirects", True)
-    verify_ssl = arguments.get("verify_ssl", True)
-    
-    try:
-        async with httpx.AsyncClient(
-            timeout=timeout,
-            follow_redirects=follow_redirects,
-            verify=verify_ssl
-        ) as client:
-            response = await client.request(
-                method=method,
-                url=url,
-                headers=headers,
-                content=body
-            )
-            
-            # Format response headers
-            resp_headers = "\n".join(f"  {k}: {v}" for k, v in response.headers.items())
-            
-            # Truncate body if too long
-            body_text = response.text
-            if len(body_text) > 2000:
-                body_text = body_text[:2000] + f"\n... (truncated, {len(response.text)} total chars)"
-            
-            return f"""HTTP Request sent successfully!
-
-Request:
-  {method} {url}
-  Headers: {json.dumps(headers) if headers else "(none)"}
-  Body: {body[:200] + '...' if body and len(body) > 200 else body or "(none)"}
-
-Response:
-  Status: {response.status_code} {response.reason_phrase}
-  Headers:
-{resp_headers}
-
-  Body:
-{body_text}"""
-            
-    except httpx.TimeoutException:
-        return f"Request timed out after {timeout} seconds."
-    except httpx.ConnectError as e:
-        return f"Connection error: {str(e)}"
-    except Exception as e:
-        return f"Request failed: {type(e).__name__}: {str(e)}"
 
 
 async def handle_ping(arguments: dict) -> str:
