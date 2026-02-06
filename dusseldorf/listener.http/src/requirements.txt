@@ -1,6 +1,6 @@
 asgiref==3.8.1
 attrs==25.1.0
-azure-core==1.32.0
+azure-core==1.38.0
 azure-core-tracing-opentelemetry==1.0.0b11
 azure-identity==1.19.0
 azure-monitor-opentelemetry==1.6.4
