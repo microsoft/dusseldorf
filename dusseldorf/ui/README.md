@@ -25,7 +25,7 @@ localStorage['api_host'] = "localhost:5001"
 in the console of the DevTools in your favourite browser to any value to change which API endpoint you talk to. 
 
 # Design 
-This UI is build upon the amazing [Fluent2](https://fluent2.microsoft.design/) design framework.
+This UI is built upon the amazing [Fluent2](https://fluent2.microsoft.design/) design framework.
 
 
 # Changelog
