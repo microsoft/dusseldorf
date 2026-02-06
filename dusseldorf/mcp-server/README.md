@@ -23,7 +23,7 @@ This MCP server allows AI assistants like GitHub Copilot to:
 ### Install from source
 
 ```bash
-cd mcp-server
+cd dusseldorf/mcp-server
 pip install -e .
 ```
 
@@ -74,10 +74,10 @@ Add the following to your `.vscode/mcp.json`:
   "servers": {
     "dusseldorf": {
       "type": "stdio",
-      "command": "${workspaceFolder}/mcp-server/.venv/Scripts/python.exe",
+      "command": "${workspaceFolder}/dusseldorf/mcp-server/.venv/Scripts/python.exe",
       "args": ["-m", "dusseldorf_mcp.server"],
       "env": {
-        "PYTHONPATH": "${workspaceFolder}/mcp-server/src",
+        "PYTHONPATH": "${workspaceFolder}/dusseldorf/mcp-server/src",
         "DUSSELDORF_API_URL": "${env:DUSSELDORF_API_URL}",
         "DUSSELDORF_CLIENT_ID": "${env:DUSSELDORF_CLIENT_ID}",
         "DUSSELDORF_TOKEN": "${env:DUSSELDORF_TOKEN}"
@@ -218,10 +218,82 @@ pytest
 
 ### Running the Server Directly
 
+**Stdio mode (local):**
 ```bash
-export DUSSELDORF_TOKEN="your-token"
+export DUSSELDORF_API_URL="https://your-dusseldorf-instance.example.com"
+export DUSSELDORF_CLIENT_ID="your-azure-ad-app-client-id"
+az login
 python -m dusseldorf_mcp.server
 ```
+
+**SSE mode (remote):**
+```bash
+export DUSSELDORF_API_URL="https://your-dusseldorf-instance.example.com"
+export ENVIRONMENT=development  # Skip TLS for local testing
+python -m dusseldorf_mcp.server --sse --port 8080
+```
+
+## SSE Mode (Remote Deployment)
+
+For remote deployment, the MCP server can run in SSE (Server-Sent Events) mode, allowing remote clients to connect over HTTPS.
+
+### Configuration
+
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `DUSSELDORF_API_URL` | Base URL of the Dusseldorf API | Yes |
+| `MCP_SSE_PORT` | Port for SSE server | No (default: 8080) |
+| `ENVIRONMENT` | Set to "development" to disable TLS | No |
+| `API_TLS_CRT_FILE` | TLS certificate file | Yes (in production) |
+| `API_TLS_KEY_FILE` | TLS key file | Yes (in production) |
+
+### Running with Docker
+
+**Build the image:**
+```bash
+cd dusseldorf
+docker build -f mcp-server_Dockerfile -t dusseldorf-mcp-server .
+```
+
+**Run in development mode:**
+```bash
+docker run -p 8080:8080 \
+  -e DUSSELDORF_API_URL=https://dusseldorf.example.com \
+  -e ENVIRONMENT=development \
+  dusseldorf-mcp-server
+```
+
+**Run in production mode:**
+```bash
+docker run -p 8080:8080 \
+  -e DUSSELDORF_API_URL=https://dusseldorf.example.com \
+  -e API_TLS_CRT_FILE=/certs/cert.pem \
+  -e API_TLS_KEY_FILE=/certs/key.pem \
+  -v /path/to/certs:/certs:ro \
+  dusseldorf-mcp-server
+```
+
+### Client Authentication
+
+SSE mode requires clients to provide an Azure AD Bearer token in the `Authorization` header:
+
+```bash
+# Get a token
+TOKEN=$(az account get-access-token --resource=<dusseldorf-client-id> --query accessToken -o tsv)
+
+# Connect to the SSE endpoint
+curl -H "Authorization: Bearer $TOKEN" https://mcp-server.example.com:8080/sse
+```
+
+The MCP server validates tokens by passing them through to the Dusseldorf API. If the token is invalid, API requests will fail with a 401 error.
+
+### Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/health` | GET | Health check (no auth required) |
+| `/sse` | GET | SSE connection endpoint (auth required) |
+| `/messages` | POST | Message handling endpoint (auth required) |
 
 ## License
 

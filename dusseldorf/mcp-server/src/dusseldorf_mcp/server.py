@@ -6,14 +6,21 @@ Dusseldorf MCP Server
 
 This MCP server provides tools for interacting with a Dusseldorf OAST platform,
 enabling automated out-of-band security testing workflows.
+
+Supports two transport modes:
+- stdio: For local VS Code / Copilot integration (default)
+- SSE: For remote server deployment
 """
 
 import os
+import sys
 import json
 import asyncio
-import subprocess
+import logging
+import argparse
 from typing import Optional
 from datetime import datetime
+from contextvars import ContextVar
 
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
@@ -25,6 +32,10 @@ from mcp.types import (
 
 from .client import DusseldorfClient, Zone, Rule, Request
 
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("dusseldorf-mcp")
+
 
 # ============================================================================
 # Server Configuration
@@ -32,21 +43,42 @@ from .client import DusseldorfClient, Zone, Rule, Request
 
 # Configuration via environment variables:
 #   DUSSELDORF_API_URL   - Base URL of the Dusseldorf API (required)
-#   DUSSELDORF_CLIENT_ID - Azure AD client ID for token acquisition (required for auto-auth)
+#   DUSSELDORF_CLIENT_ID - Azure AD client ID for token acquisition (required for auto-auth in stdio mode)
 #   DUSSELDORF_TOKEN     - Bearer token (optional, overrides automatic token acquisition)
 #
-# Example:
+# SSE mode additional configuration:
+#   ENVIRONMENT          - Set to "development" to disable TLS
+#   MCP_SSE_PORT         - Port for SSE server (default: 8080)
+#   API_TLS_CRT_FILE     - TLS certificate file (required in production)
+#   API_TLS_KEY_FILE     - TLS key file (required in production)
+#
+# Example (stdio mode):
 #   export DUSSELDORF_API_URL="https://dusseldorf.example.com"
 #   export DUSSELDORF_CLIENT_ID="your-azure-ad-client-id"
+#
+# Example (SSE mode):
+#   export DUSSELDORF_API_URL="https://dusseldorf.example.com"
+#   export MCP_SSE_PORT=8080
+#   export API_TLS_CRT_FILE="/path/to/cert.pem"
+#   export API_TLS_KEY_FILE="/path/to/key.pem"
 
 DUSSELDORF_API_URL = os.environ.get("DUSSELDORF_API_URL", "")
 DUSSELDORF_CLIENT_ID = os.environ.get("DUSSELDORF_CLIENT_ID", "")
 DUSSELDORF_TOKEN = os.environ.get("DUSSELDORF_TOKEN", "")
 
+# SSE mode configuration
+MCP_SSE_PORT = int(os.environ.get("MCP_SSE_PORT", "8080"))
+ENVIRONMENT = os.environ.get("ENVIRONMENT", "production")
+API_TLS_CRT_FILE = os.environ.get("API_TLS_CRT_FILE", "")
+API_TLS_KEY_FILE = os.environ.get("API_TLS_KEY_FILE", "")
+
 # Create the MCP server
 server = Server("dusseldorf-mcp")
 
-# Token cache
+# Context variable for per-request token (used in SSE mode)
+_request_token: ContextVar[Optional[str]] = ContextVar("request_token", default=None)
+
+# Token cache for stdio mode
 _cached_token: str | None = None
 _token_expires: datetime | None = None
 
@@ -56,8 +88,17 @@ _token_expires: datetime | None = None
 # ============================================================================
 
 def get_token() -> str:
-    """Get a valid token, using Azure CLI credentials if no token is set"""
+    """Get a valid token for the current request.
+    
+    In SSE mode: Returns the token from the request context (passed by client).
+    In stdio mode: Returns token from env var or Azure CLI credentials.
+    """
     global _cached_token, _token_expires
+    
+    # Check for per-request token (SSE mode)
+    request_token = _request_token.get()
+    if request_token:
+        return request_token
     
     # If token is provided via environment, use it
     if DUSSELDORF_TOKEN:
@@ -825,17 +866,22 @@ Timestamp: {result.get('pong', 'unknown')}"""
 
 
 # ============================================================================
-# Main Entry Point
+# Main Entry Points
 # ============================================================================
 
 def main():
-    """Main entry point for the MCP server"""
-    import asyncio
-    asyncio.run(run_server())
+    """Main entry point for stdio mode (default)"""
+    asyncio.run(run_server_stdio())
 
 
-async def run_server():
-    """Run the MCP server"""
+def main_sse():
+    """Main entry point for SSE mode"""
+    run_server_sse()
+
+
+async def run_server_stdio():
+    """Run the MCP server in stdio mode (for VS Code / Copilot)"""
+    logger.info("Starting Dusseldorf MCP server in stdio mode")
     async with stdio_server() as (read_stream, write_stream):
         await server.run(
             read_stream,
@@ -844,5 +890,130 @@ async def run_server():
         )
 
 
+def run_server_sse():
+    """Run the MCP server in SSE mode (for remote deployment)"""
+    import uvicorn
+    from starlette.applications import Starlette
+    from starlette.routing import Route, Mount
+    from starlette.responses import JSONResponse
+    from mcp.server.sse import SseServerTransport
+    
+    # Validate configuration
+    if not DUSSELDORF_API_URL:
+        logger.error("DUSSELDORF_API_URL environment variable is not set")
+        sys.exit(1)
+    
+    if ENVIRONMENT != "development":
+        if not API_TLS_CRT_FILE:
+            logger.error("API_TLS_CRT_FILE not found in environment variables")
+            sys.exit(1)
+        if not API_TLS_KEY_FILE:
+            logger.error("API_TLS_KEY_FILE not found in environment variables")
+            sys.exit(1)
+    
+    # Create SSE transport
+    sse_transport = SseServerTransport("/messages")
+    
+    async def handle_sse(request):
+        """Handle SSE connection requests"""
+        # Extract Bearer token from Authorization header
+        auth_header = request.headers.get("Authorization", "")
+        if not auth_header.startswith("Bearer "):
+            return JSONResponse(
+                {"error": "Missing or invalid Authorization header. Expected: Bearer <token>"},
+                status_code=401
+            )
+        
+        token = auth_header[7:]  # Remove "Bearer " prefix
+        
+        # Set the token in context for this connection
+        token_ctx = _request_token.set(token)
+        
+        try:
+            async with sse_transport.connect_sse(
+                request.scope, request.receive, request._send
+            ) as streams:
+                await server.run(
+                    streams[0],
+                    streams[1],
+                    server.create_initialization_options()
+                )
+        finally:
+            _request_token.reset(token_ctx)
+    
+    async def handle_messages(request):
+        """Handle POST messages for SSE transport"""
+        # Extract Bearer token from Authorization header
+        auth_header = request.headers.get("Authorization", "")
+        if not auth_header.startswith("Bearer "):
+            return JSONResponse(
+                {"error": "Missing or invalid Authorization header. Expected: Bearer <token>"},
+                status_code=401
+            )
+        
+        token = auth_header[7:]  # Remove "Bearer " prefix
+        
+        # Set the token in context for this request
+        token_ctx = _request_token.set(token)
+        
+        try:
+            return await sse_transport.handle_post_message(request.scope, request.receive, request._send)
+        finally:
+            _request_token.reset(token_ctx)
+    
+    async def health_check(request):
+        """Health check endpoint"""
+        return JSONResponse({"status": "healthy", "service": "dusseldorf-mcp"})
+    
+    # Create Starlette app
+    app = Starlette(
+        debug=(ENVIRONMENT == "development"),
+        routes=[
+            Route("/health", endpoint=health_check, methods=["GET"]),
+            Route("/sse", endpoint=handle_sse, methods=["GET"]),
+            Route("/messages", endpoint=handle_messages, methods=["POST"]),
+        ]
+    )
+    
+    # Run with uvicorn
+    logger.info(f"Starting Dusseldorf MCP server in SSE mode on port {MCP_SSE_PORT}")
+    logger.info(f"Environment: {ENVIRONMENT}")
+    logger.info(f"Dusseldorf API URL: {DUSSELDORF_API_URL}")
+    
+    if ENVIRONMENT == "development":
+        logger.info("TLS disabled (development mode)")
+        uvicorn.run(app, host="0.0.0.0", port=MCP_SSE_PORT)
+    else:
+        logger.info(f"TLS enabled with cert: {API_TLS_CRT_FILE}")
+        uvicorn.run(
+            app, 
+            host="0.0.0.0", 
+            port=MCP_SSE_PORT,
+            ssl_keyfile=API_TLS_KEY_FILE,
+            ssl_certfile=API_TLS_CRT_FILE
+        )
+
+
 if __name__ == "__main__":
-    main()
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(description="Dusseldorf MCP Server")
+    parser.add_argument(
+        "--sse", 
+        action="store_true", 
+        help="Run in SSE mode for remote deployment (default: stdio mode)"
+    )
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=None,
+        help=f"Port for SSE server (default: {MCP_SSE_PORT}, set via MCP_SSE_PORT env var)"
+    )
+    args = parser.parse_args()
+    
+    if args.port:
+        MCP_SSE_PORT = args.port
+    
+    if args.sse:
+        main_sse()
+    else:
+        main()

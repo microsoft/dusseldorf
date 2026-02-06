@@ -28,6 +28,8 @@ dependencies = [
     "httpx>=0.25.0",
     "pydantic>=2.0.0",
     "azure-identity>=1.15.0",
+    "starlette>=0.27.0",
+    "uvicorn>=0.23.0",
 ]
 
 [project.optional-dependencies]
@@ -38,6 +40,7 @@ dev = [
 
 [project.scripts]
 dusseldorf-mcp = "dusseldorf_mcp.server:main"
+dusseldorf-mcp-sse = "dusseldorf_mcp.server:main_sse"
 
 [tool.setuptools.packages.find]
 where = ["src"]
