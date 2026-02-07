@@ -1,0 +1,22 @@
+{
+    "servers": {
+        "dusseldorf": {
+            "type": "stdio",
+            "command": "${workspaceFolder}/dusseldorf/mcp-server/.venv/Scripts/python.exe",
+            "args": ["-m", "dusseldorf_mcp.server"],
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/dusseldorf/mcp-server/src",
+                "DUSSELDORF_API_URL": "${env:DUSSELDORF_API_URL}",
+                "DUSSELDORF_CLIENT_ID": "${env:DUSSELDORF_CLIENT_ID}",
+                "DUSSELDORF_TOKEN": "${env:DUSSELDORF_TOKEN}"
+            }
+        },
+        "dusseldorf-remote": {
+            "type": "sse",
+            "url": "${env:DUSSELDORF_MCP_URL}",
+            "headers": {
+                "Authorization": "Bearer ${env:DUSSELDORF_TOKEN}"
+            }
+        }
+    }
+}

@@ -96,6 +96,9 @@ async def create_zone(
 ):
     # Set initial domain to "public" fqdn
     query_result = await db.domains.find_one({"owner": "dusseldorf"})
+    if not query_result:
+        logger.error("No public domain configured. Please initialize database with a domain having owner='dusseldorf'")
+        raise HTTPException(status_code=500, detail="No public domain configured")
     domain = query_result["domain"]
 
     user_id:str = current_user["preferred_username"]
