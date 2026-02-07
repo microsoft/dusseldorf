@@ -170,7 +170,7 @@ spec:
     spec:
       containers:
       - name: {{ .Values.listeners.listenerHTTPS.name }}
-        image: {{ .Values.listeners.listenerHTTP.acrRepo }}
+        image: {{ .Values.listeners.listenerHTTPS.acrRepo }}
         imagePullPolicy: Always    
         ports:
         - containerPort: {{ .Values.listeners.listenerHTTPS.port }}
@@ -255,7 +255,7 @@ spec:
         image: {{ .Values.api.acrRepo }}
         imagePullPolicy: Always
         ports:
-        - containerPort: {{ .Values.api.port }}
+        - containerPort: {{ .Values.api.targetPort }}
         env:
         - name: AZURE_TENANT_ID
           valueFrom:
