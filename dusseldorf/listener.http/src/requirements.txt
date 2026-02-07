@@ -68,6 +68,6 @@ six==1.17.0
 tomli==2.2.1
 typing_extensions==4.12.2
 urllib3==2.6.3
-wheel==0.46.2
+wheel
 wrapt==1.17.2
 zipp==3.21.0
