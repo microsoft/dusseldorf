@@ -63,8 +63,9 @@ export const LeftNav = ({ refreshToken }: ILeftNavProps) => {
         DusseldorfAPI.GetZones()
             .then((zones) => {
                 CacheHelper.SetZones(zones);
+                const orderedZones = UiHelper.ApplyZoneOrder(zones);
                 setZoneLinks(
-                    zones
+                    orderedZones
                         .filter((zone) => !UiHelper.IsZoneHidden(zone.fqdn))
                         .slice(0, 13)
                         .map((zone) => (

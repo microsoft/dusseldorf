@@ -1,10 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+import { Zone } from "../Types/Zone";
+
 // TODO: mihendri - remove this or make this better.
 export class UiHelper {
 
     static readonly KEYZONES = 'uihelper.hidden_zones';
+    static readonly KEYZONEORDER = 'uihelper.zone_order';
     static readonly delim = ";";
 
     static GetPanelSettings = (key: string) => {
@@ -47,5 +50,35 @@ export class UiHelper {
      */
     static IsZoneHidden = (key: string) =>
         UiHelper._hidden_zones.includes(key);
+
+    static GetZoneOrder = (): string[] => {
+        const stored = localStorage.getItem(UiHelper.KEYZONEORDER);
+        return stored ? stored.split(UiHelper.delim).filter((fqdn) => fqdn.length > 0) : [];
+    }
+
+    static SetZoneOrder = (order: string[]) => {
+        localStorage.setItem(UiHelper.KEYZONEORDER, order.join(UiHelper.delim));
+    }
+
+    static ApplyZoneOrder = (zones: Zone[]): Zone[] => {
+        const order = UiHelper.GetZoneOrder();
+        if (order.length === 0) {
+            return zones;
+        }
+
+        const zoneMap = new Map(zones.map((zone) => [zone.fqdn, zone]));
+        const ordered: Zone[] = [];
+
+        for (const fqdn of order) {
+            const zone = zoneMap.get(fqdn);
+            if (zone) {
+                ordered.push(zone);
+                zoneMap.delete(fqdn);
+            }
+        }
+
+        zoneMap.forEach((zone) => ordered.push(zone));
+        return ordered;
+    }
 
 }

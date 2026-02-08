@@ -43,6 +43,26 @@ export const DeleteZoneDialog = ({ zone }: DeleteZoneDialogProps) => {
     const [confirmDelete, setConfirmDelete] = useState<boolean>(false);
     const [showDeleted, setShowDeleted] = useState<boolean>(false);
 
+    // if the zone still has rules, show text that the user must delete the rules first before deleting the zone
+    const [hasRRules, setHasRules] = useState<boolean>(false);
+
+    useState(() => {
+        DusseldorfAPI.GetRules(zone)
+            .then(rules => {
+                if (rules.length > 0) {
+                    setHasRules(true);
+                }
+                else {
+                }
+            })
+            .catch(err => {
+                setHasRules(false);
+                Logger.Error(err);
+            })
+    });
+
+
+
     return (
         <Dialog
             onOpenChange={(_, data) => setOpen(data.open)}
@@ -67,13 +87,22 @@ export const DeleteZoneDialog = ({ zone }: DeleteZoneDialogProps) => {
                             </Text>
 
                             <Text>
-                                This will remove all requests, responses, and rules.
+                                This will remove all requests, responses.
                             </Text>
                         </div>
 
-                        <MessageBar intent="warning">
-                            This action cannot be undone.
-                        </MessageBar>
+                        {
+                            hasRRules &&
+                            <MessageBar intent="error">
+                                This zone still has rules. Please remove all rules.
+                            </MessageBar>    
+                        }
+                        {
+                            !hasRRules &&
+                            <MessageBar intent="warning">
+                                This action cannot be undone.
+                            </MessageBar>
+                        }
 
                         <Checkbox
                             label="I understand that this will permanently delete the zone and all of its data."
@@ -84,6 +113,7 @@ export const DeleteZoneDialog = ({ zone }: DeleteZoneDialogProps) => {
                                     setConfirmDelete(false);
                                 }
                             }}
+                            disabled={hasRRules}
                         />
                         
                         {
@@ -98,18 +128,21 @@ export const DeleteZoneDialog = ({ zone }: DeleteZoneDialogProps) => {
                             appearance="primary"
                             disabled={showDeleted || !confirmDelete}
                             onClick={() => {
-                                setShowDeleted(true);
 
                                 DusseldorfAPI.DeleteZone(zone)
+                                    .then(() => {
+                                        setShowDeleted(true);
+                                        setTimeout(() => {
+                                            setShowDeleted(false);
+                                            setOpen(false);
+                                            navigate("/zones");
+                                        }, 1337);
+                                    })
                                     .catch(err => {
                                         Logger.Error(err);
+                                        alert(err);
                                     })
 
-                                setTimeout(() => {
-                                    setShowDeleted(false);
-                                    setOpen(false);
-                                    navigate("/zones");
-                                }, 1337);
                             }}
                         >
                             Permanently Delete Zone

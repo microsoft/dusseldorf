@@ -1,6 +1,6 @@
 {
   "name": "dusseldorf",
-  "version": "2025.11.28",
+  "version": "2026.02.07",
   "description": "out of band network request platform. https://aka.ms/dusseldorf",
   "author": "dusseldorf@mirosoft.com",
   "contributors": [
@@ -15,6 +15,7 @@
     "@fluentui/react-components": "^9.58.3",
     "@fluentui/react-icons": "^2.0.274",
     "@fluentui/react-nav-preview": "^0.11.3",
+    "@hello-pangea/dnd": "^18.0.1",
     "@microsoft/applicationinsights-react-js": "^17.2.0",
     "@microsoft/applicationinsights-web": "^3.2.1",
     "@testing-library/jest-dom": "^6.4.5",
@@ -54,9 +55,9 @@
   },
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "",
-    "@babel/preset-typescript": "^7.24.1",
     "@babel/preset-env": "^7.26.0",
     "@babel/preset-react": "^7.26.3",
+    "@babel/preset-typescript": "^7.24.1",
     "@eslint/js": "^9.18.0",
     "@types/bad-words": "^3.0.3",
     "@types/js-yaml": "^4.0.5",

@@ -18,6 +18,8 @@ import {
     Tooltip
 } from "@fluentui/react-components";
 import { EyeOffRegular, EyeRegular } from "@fluentui/react-icons";
+import { useEffect, useRef, useState } from "react";
+import type { DragEvent } from "react";
 import { useNavigate } from 'react-router-dom';
 
 import { UiHelper } from '../../Helpers/UIHelper';
@@ -49,6 +51,49 @@ export const ZonesTable = ({ refreshZones, zones }: ZonesTableProps) => {
 
     const styles = useStyles();
     const navigate = useNavigate();
+    const [orderedZones, setOrderedZones] = useState<Zone[]>([]);
+    const dragIndexRef = useRef<number | null>(null);
+    const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+
+    useEffect(() => {
+        setOrderedZones(UiHelper.ApplyZoneOrder(zones));
+    }, [zones]);
+
+    const handleDragStart = (index: number) => (event: DragEvent<HTMLDivElement>) => {
+        dragIndexRef.current = index;
+        event.dataTransfer.effectAllowed = "move";
+        event.dataTransfer.setData("text/plain", orderedZones[index]?.fqdn ?? "");
+    };
+
+    const handleDragOver = (index: number) => (event: DragEvent<HTMLDivElement>) => {
+        event.preventDefault();
+        setDragOverIndex(index);
+        event.dataTransfer.dropEffect = "move";
+    };
+
+    const handleDragLeave = () => {
+        setDragOverIndex(null);
+    };
+
+    const handleDrop = (index: number) => (event: DragEvent<HTMLDivElement>) => {
+        event.preventDefault();
+        const fromIndex = dragIndexRef.current;
+        dragIndexRef.current = null;
+        setDragOverIndex(null);
+
+        if (fromIndex === null || fromIndex === index) {
+            return;
+        }
+
+        const nextZones = [...orderedZones];
+        const [moved] = nextZones.splice(fromIndex, 1);
+        if (!moved) {
+            return;
+        }
+        nextZones.splice(index, 0, moved);
+        setOrderedZones(nextZones);
+        UiHelper.SetZoneOrder(nextZones.map((zone) => zone.fqdn));
+    };
 
     const columns: TableColumnDefinition<Zone>[] = [
         createTableColumn<Zone>({
@@ -157,9 +202,9 @@ export const ZonesTable = ({ refreshZones, zones }: ZonesTableProps) => {
 
     return (
         <DataGrid
-            items={zones}
+            items={orderedZones}
             columns={columns}
-            sortable
+            sortable={false}
             noNativeElements={false}
             style={{ tableLayout: "auto" }}
         >
@@ -171,13 +216,26 @@ export const ZonesTable = ({ refreshZones, zones }: ZonesTableProps) => {
                 </DataGridRow>
             </DataGridHeader>
             <DataGridBody<Zone>>
-                {({ item }) => (
-                    <DataGridRow<Zone>>
-                        {({ renderCell }) => (
-                            renderCell(item)
-                        )}
-                    </DataGridRow>
-                )}
+                {({ item }) => {
+                    const rowIndex = orderedZones.findIndex((zone) => zone.fqdn === item.fqdn);
+                    return (
+                        <DataGridRow<Zone>
+                            draggable
+                            onDragStart={handleDragStart(rowIndex)}
+                            onDragOver={handleDragOver(rowIndex)}
+                            onDragLeave={handleDragLeave}
+                            onDrop={handleDrop(rowIndex)}
+                            style={{
+                                cursor: "grab",
+                                backgroundColor: dragOverIndex === rowIndex ? tokens.colorNeutralBackground3 : "transparent",
+                            }}
+                        >
+                            {({ renderCell }) => (
+                                renderCell(item)
+                            )}
+                        </DataGridRow>
+                    );
+                }}
             </DataGridBody>
         </DataGrid>
     );

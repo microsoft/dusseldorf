@@ -106,10 +106,17 @@ export class DusseldorfAPI {
             throw Error(`API.DeleteZone(${fqdn}) bad arguments`);
         }
 
-        return this.delete(`zones/${fqdn}`).then((resp) => {
-            if (!resp.ok) {
-                throw Error(`API.DeleteZone(${fqdn}) failed`);
+        return this.delete(`zones/${fqdn}`)
+        .then((resp) => 
+        {
+            if (!resp.ok) 
+            {
+                Logger.Error(`API.DeleteZone(${fqdn}) failed: ${resp.status}`);
             }
+        })
+        .catch((err) => {
+            Logger.Error(err);
+            throw err;
         });
     };
 
