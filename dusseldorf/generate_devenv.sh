@@ -5,8 +5,8 @@ set -e
 echo "We are going to need some information to set up your development environment."
 echo "----------------------------------------------------"
 echo "We need the client ID and tenant ID of your Azure AD application that you want to use for your developer environment."
-read -p "Azure Client ID (example: dc1b6b75-8167-4baf-9e75-d3d1f755de1b): " AZURE_CLIENT_ID
-read -p "Azure Tenant ID (example: 72f988bf-86f1-41af-91ab-2d7cd011db47): " AZURE_TENANT_ID
+read -p "Azure Client ID (example: 11111111-1111-4111-1111-111111111111): " AZURE_CLIENT_ID
+read -p "Azure Tenant ID (example: 11111111-1111-4111-1111-111111111111): " AZURE_TENANT_ID
 echo "----------------------------------------------------"
 echo "Setting up with client ID: $AZURE_CLIENT_ID and tenant ID: $AZURE_TENANT_ID"
 
@@ -74,8 +74,8 @@ EOF
 echo "Environment setup complete. You can now start running Dusseldorf with docker compose up."#!/bin/bash
 set -e
 
-EXAMPLE_CLIENT_ID="dc1b6b75-8167-4baf-9e75-d3d1f755de1b"
-EXAMPLE_TENANT_ID="72f988bf-86f1-41af-91ab-2d7cd011db47"
+EXAMPLE_CLIENT_ID="11111111-1111-4111-1111-111111111111"
+EXAMPLE_TENANT_ID="11111111-1111-4111-1111-111111111111"
 
 CLIENT_ID_DEFAULT="${AZURE_CLIENT_ID:-$EXAMPLE_CLIENT_ID}"
 TENANT_ID_DEFAULT="${AZURE_TENANT_ID:-$EXAMPLE_TENANT_ID}"
