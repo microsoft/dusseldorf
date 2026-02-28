@@ -17,18 +17,19 @@
 ## Technology Choice
 
 - Language: Python 3.10+
-- CLI framework: Typer (Click-based)
+- CLI framework: Typer (Click-based) - provides automatic `-h` short flag support
 - HTTP client: httpx
+- Authentication: MSAL (Microsoft Authentication Library for Python)
 - Packaging: Python package with console entrypoint `dssldrf`
 - Optional binary packaging: PyInstaller or Nuitka (per-OS build)
 
-Rationale: Python + Typer is a small codebase, cross-platform, supports shell completion, and is easy to ship as both script and binary.
+Rationale: Python + Typer is a small codebase, cross-platform, supports shell completion, and is easy to ship as both script and binary. MSAL provides robust EntraID authentication with device code flow.
 
 ## CLI Command Contract (MVP)
 
 ### 1) Config
 
-- `dssldrf config set --api-url <url> [--domain <domain>] [--token <token>] [--clear-token]`
+- `dssldrf config set --api-url <url> [--domain <domain>] [--token <token>] [--client-id <id>] [--tenant-id <id>] [--clear-token]`
 - `dssldrf config show`
 
 Stores configuration in `~/.dssldrf/config.json`.
@@ -37,34 +38,54 @@ Fields:
 - `api_url`: Dusseldorf API base URL (example `https://frontend/api`)
 - `domain`: default backend domain (example `dssldrf.net`)
 - `auth_token`: optional local token (env var preferred)
+- `client_id`: EntraID application client ID (for `dssldrf login`)
+- `tenant_id`: EntraID tenant ID (for `dssldrf login`)
 
 ### 2) Zone management
 
-- `dssldrf zone --add <label> [--domain <domain>]`
-  - Example: `dssldrf zone --add test`
+- `dssldrf zone` (no flags) — Lists all accessible zones (default behavior)
+- `dssldrf zone --add <label> [-a] [--domain <domain>]`
+  - Example: `dssldrf zone --add test` or `dssldrf zone -a test`
   - Calls `POST /zones` with `{ "zone": "test", "domain": "dssldrf.net", "num": 1 }`
-- `dssldrf zone --list [--domain <domain>]`
+- `dssldrf zone --list [-l] [--domain <domain>]`
   - Calls `GET /zones`
-- `dssldrf zone --delete <label|fqdn> [--domain <domain>]`
+- `dssldrf zone --delete <label|fqdn> [-d] [--domain <domain>]`
   - Calls `DELETE /zones/{fqdn}`
 
 ### 3) Requests
 
-- `dssldrf req <label|fqdn> [--limit <n>] [--protocols <csv>]`
-  - Example: `dssldrf req test`
+- `dssldrf req <label|fqdn> [--limit <n> / -n] [--protocols <csv> / -p]`
+  - Example: `dssldrf req test` or `dssldrf req test -n 50`
   - Resolves to `test.dssldrf.net` if default domain is set.
   - Calls `GET /requests/{zone}?limit=<n>&protocols=<csv>`
 
-### 4) Output
+### 4) Authentication
+
+- `dssldrf login`
+  - Interactive EntraID device code flow
+  - Opens browser or shows device code for authentication
+  - Stores token in config after successful login
+  - Requires `client_id` and `tenant_id` configured first
+
+### 5) Output
 
 - Default: human-readable lines.
 - `--json` option for machine-readable output.
+- All commands support `-h` short flag for help.
 
-## Authentication Model (MVP)
+## Authentication Model
 
-Priority order:
+**Priority order:**
 1. Environment variable `DSSLDRF_AUTH_TOKEN`
-2. Stored token in config file
+2. Stored token in config file (from `dssldrf login` or manual `config set --token`)
+
+**Authentication methods:**
+- **Device Code Flow** (recommended): `dssldrf login`
+  - Uses MSAL Python library
+  - Requires EntraID app registration (public client)
+  - User configures `client_id` and `tenant_id` once
+  - Token stored after successful authentication
+- **Manual token**: `export DSSLDRF_AUTH_TOKEN=<token>` or `dssldrf config set --token <token>`
 
 API auth header:
 - `Authorization: Bearer <token>`
@@ -113,7 +134,8 @@ Typer completion is enabled. Users install shell completion once:
 
 ## Next Iteration Candidates
 
-- Device-code login command for Entra ID.
-- Rule CRUD commands.
-- Rich formatting (`table`) and filter presets.
-- Auto-discover domain from `/domains` when not configured.
+- ~~Device-code login command for Entra ID~~ ✅ Implemented
+- Rule CRUD commands
+- Rich formatting (`table`) and filter presets
+- Auto-discover domain from `/domains` when not configured
+- Token refresh handling (MSAL cache)
