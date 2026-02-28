@@ -49,8 +49,8 @@ You need to grant the CLI app permission to call your Dusseldorf API.
 
 1. Go to the **Overview** page of your app registration
 2. Copy these two values:
-   - **Application (client) ID** — a GUID like `12345678-1234-1234-1234-123456789abc`
-   - **Directory (tenant) ID** — a GUID like `87654321-4321-4321-4321-cba987654321`
+   - **Application (client) ID** - a GUID like `12345678-1234-1234-1234-123456789abc`
+   - **Directory (tenant) ID** - a GUID like `87654321-4321-4321-4321-cba987654321`
 
 ### 5. Configure the CLI
 
@@ -121,7 +121,7 @@ OR each user can consent on first login (they'll see a consent screen in the bro
 
 - The CLI uses **device code flow**, which is designed for input-constrained devices and CLIs
 - No client secret is needed (public client)
-- Tokens are stored locally in `~/.dssldrf/config.json` — keep this file secure
+- Tokens are stored locally in `~/.dssldrf/config.json` - keep this file secure
 - Consider setting `chmod 600 ~/.dssldrf/config.json` on Linux/macOS to restrict access
 
 ## Advanced: Using a Different Resource/Scope

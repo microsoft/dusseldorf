@@ -43,7 +43,7 @@ Fields:
 
 ### 2) Zone management
 
-- `dssldrf zone` (no flags) — Lists all accessible zones (default behavior)
+- `dssldrf zone` (no flags) - Lists all accessible zones (default behavior)
 - `dssldrf zone --add <label> [-a] [--domain <domain>]`
   - Example: `dssldrf zone --add test` or `dssldrf zone -a test`
   - Calls `POST /zones` with `{ "zone": "test", "domain": "dssldrf.net", "num": 1 }`

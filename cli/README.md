@@ -6,12 +6,12 @@ Once installed, you'll have a `dssldrf` command you can run from anywhere.
 
 ## What you can do
 
-- `dssldrf login` — Authenticate with EntraID (browser/device code)
-- `dssldrf zone` — List all your zones (default)
-- `dssldrf zone --add test` or `dssldrf zone -a test` — Create a new zone
-- `dssldrf zone --delete test` or `dssldrf zone -d test` — Delete a zone
-- `dssldrf req test` — View recent requests for a zone
-- `dssldrf config set --api-url <url> --domain <domain>` — Configure settings
+- `dssldrf login` - Authenticate with EntraID (browser/device code)
+- `dssldrf zone` - List all your zones (default)
+- `dssldrf zone --add test` or `dssldrf zone -a test` - Create a new zone
+- `dssldrf zone --delete test` or `dssldrf zone -d test` - Delete a zone
+- `dssldrf req test` - View recent requests for a zone
+- `dssldrf config set --api-url <url> --domain <domain>` - Configure settings
 
 > **Tip:** Most commands support short flags: `-a` for `--add`, `-d` for `--delete`, `-l` for `--list`, `-n` for `--limit`, `-h` for `--help`
 
@@ -220,8 +220,8 @@ To use `dssldrf login`, you need an Azure AD (EntraID) app registration. Here's 
 ### 4. Get Your IDs
 
 1. Go to **Overview** in your app registration
-2. Copy the **Application (client) ID** — this is your `--client-id`
-3. Copy the **Directory (tenant) ID** — this is your `--tenant-id`
+2. Copy the **Application (client) ID** - this is your `--client-id`
+3. Copy the **Directory (tenant) ID** - this is your `--tenant-id`
 
 ### 5. Configure CLI
 
