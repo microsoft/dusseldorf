@@ -87,7 +87,7 @@ export class UiHelper {
 
   /**
    * Get list of all favorited zone FQDNs
-   * @returns : array of favorable zone FQDNs
+   * @returns : array of favorited zone FQDNs
    */
   static GetFavoritedZones = () => UiHelper._favorite_zones;
 }
