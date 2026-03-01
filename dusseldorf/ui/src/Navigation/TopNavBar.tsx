@@ -72,7 +72,7 @@ export const TopNavBar = ({ apiError, darkTheme, toggleTheme }: ITopNavBarProps)
         <>
             <div
                 className="stack hstack-spread"
-                style={{ height: "6%", backgroundColor: "#003846", paddingLeft: 10, paddingRight: 10 }}
+                style={{ height: "4%", backgroundColor: "#003846", paddingLeft: 10, paddingRight: 10, paddingTop: 4, paddingBottom: 4 }}
             >
                 <Logo />
 
