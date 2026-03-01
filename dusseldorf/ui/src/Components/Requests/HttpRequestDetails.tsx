@@ -33,7 +33,7 @@ import {
   StethoscopeRegular,
   TextFontRegular,
 } from "@fluentui/react-icons";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 import { Analyzer } from "./Analyzer";
 import { CopyButton } from "../CopyButton";
@@ -154,6 +154,29 @@ export const HttpRequestDetails = ({ details }: IHttpRequestDetailsProps) => {
   const [monospacedReqFont, setMonospacedReqFont] = useState<boolean>(false);
   const [monospacedRespFont, setMonospacedRespFont] = useState<boolean>(false);
 
+  // Refs for Textarea elements to apply font styling
+  const rawReqTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const rawRespTextareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Apply font styling to textareas
+  useEffect(() => {
+    if (rawReqTextareaRef.current) {
+      rawReqTextareaRef.current.style.fontFamily = monospacedReqFont
+        ? "Consolas, Courier New, monospace"
+        : "Segoe UI, sans-serif";
+      rawReqTextareaRef.current.style.fontSize = "13px";
+    }
+  }, [monospacedReqFont]);
+
+  useEffect(() => {
+    if (rawRespTextareaRef.current) {
+      rawRespTextareaRef.current.style.fontFamily = monospacedRespFont
+        ? "Consolas, Courier New, monospace"
+        : "Segoe UI, sans-serif";
+      rawRespTextareaRef.current.style.fontSize = "13px";
+    }
+  }, [monospacedRespFont]);
+
   // Update variables when details changes
   useEffect(() => {
     const newReq = details.request as HttpRequest;
@@ -251,8 +274,13 @@ export const HttpRequestDetails = ({ details }: IHttpRequestDetailsProps) => {
               <Button
                 appearance="subtle"
                 icon={<TextFontRegular />}
-                onClick={() => setMonospacedReqFont(!monospacedReqFont)}
-                style={{ opacity: monospacedReqFont ? 1 : 0.5 }}
+                onClick={() => {
+                  setMonospacedReqFont(!monospacedReqFont);
+                }}
+                style={{
+                  opacity: monospacedReqFont ? 1 : 0.5,
+                  cursor: "pointer",
+                }}
               />
             </Tooltip>
             <Tooltip
@@ -278,14 +306,10 @@ export const HttpRequestDetails = ({ details }: IHttpRequestDetailsProps) => {
         </div>
 
         <Textarea
+          ref={rawReqTextareaRef}
           readOnly={true}
           rows={showFullRawReq ? 10 : 3}
           value={rawReq}
-          style={{
-            fontFamily: monospacedReqFont
-              ? tokens.fontFamilyMonospace
-              : "inherit",
-          }}
         />
         {!req.body && req.body_b64 && showFullRawReq ? (
           <div className="stack">
@@ -399,8 +423,13 @@ export const HttpRequestDetails = ({ details }: IHttpRequestDetailsProps) => {
               <Button
                 appearance="subtle"
                 icon={<TextFontRegular />}
-                onClick={() => setMonospacedRespFont(!monospacedRespFont)}
-                style={{ opacity: monospacedRespFont ? 1 : 0.5 }}
+                onClick={() => {
+                  setMonospacedRespFont(!monospacedRespFont);
+                }}
+                style={{
+                  opacity: monospacedRespFont ? 1 : 0.5,
+                  cursor: "pointer",
+                }}
               />
             </Tooltip>
             <Tooltip
@@ -426,14 +455,10 @@ export const HttpRequestDetails = ({ details }: IHttpRequestDetailsProps) => {
         </div>
 
         <Textarea
+          ref={rawRespTextareaRef}
           readOnly={true}
           rows={showFullRawResp ? 10 : 3}
           value={rawResp}
-          style={{
-            fontFamily: monospacedRespFont
-              ? tokens.fontFamilyMonospace
-              : "inherit",
-          }}
         />
       </div>
 
