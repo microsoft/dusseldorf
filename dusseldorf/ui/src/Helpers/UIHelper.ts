@@ -67,7 +67,7 @@ export class UiHelper {
       );
     } else {
       // add the zone to favorites
-      UiHelper._favorite_zones.push(key);
+      UiHelper._favorite_zones = [...UiHelper._favorite_zones, key];
     }
 
     // set local storage too
