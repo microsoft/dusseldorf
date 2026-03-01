@@ -17,7 +17,12 @@ import {
   tokens,
   Tooltip,
 } from "@fluentui/react-components";
-import { EyeOffRegular, EyeRegular, PinRegular } from "@fluentui/react-icons";
+import {
+  EyeOffRegular,
+  EyeRegular,
+  PinFilled,
+  PinRegular,
+} from "@fluentui/react-icons";
 import { useNavigate } from "react-router-dom";
 
 import { UiHelper } from "../../Helpers/UIHelper";
@@ -123,7 +128,7 @@ export const ZonesTable = ({ refreshZones, zones }: ZonesTableProps) => {
             >
               <Button
                 appearance="subtle"
-                icon={<PinRegular />}
+                icon={isFavorite ? <PinFilled /> : <PinRegular />}
                 onClick={() => {
                   UiHelper.ToggleFavoriteZone(zone.fqdn);
                   refreshZones();

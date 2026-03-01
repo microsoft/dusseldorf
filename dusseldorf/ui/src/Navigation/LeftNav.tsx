@@ -8,6 +8,7 @@ import {
   TargetRegular,
   WindowBulletListRegular,
   WindowEditRegular,
+  PinRegular,
 } from "@fluentui/react-icons";
 import {
   Hamburger,
@@ -62,6 +63,11 @@ export const LeftNav = ({ refreshToken }: ILeftNavProps) => {
     };
   }, []);
 
+  useEffect(() => {
+    // when hidden zones change, refresh the list
+    refreshZones();
+  }, [UiHelper._hidden_zones, UiHelper._favorite_zones]);
+
   // Fetches an updated list of zones
   const refreshZones = () => {
     DusseldorfAPI.GetZones()
@@ -97,10 +103,11 @@ export const LeftNav = ({ refreshToken }: ILeftNavProps) => {
                       overflow: "hidden",
                       width: 200,
                       display: "block",
-                      fontWeight: isFavorite ? "bold" : "normal",
                     }}
                   >
-                    {isFavorite ? "📌 " : ""}
+                    {isFavorite && (
+                      <PinRegular fontSize={12} style={{ marginRight: 4 }} />
+                    )}
                     {zone.fqdn}
                   </Text>
                 </NavSubItem>
@@ -139,6 +146,7 @@ export const LeftNav = ({ refreshToken }: ILeftNavProps) => {
   ) => {
     setSelectedCategoryValue(data.categoryValue);
     setSelectedValue(data.value);
+    refreshZones();
     if (data.value && data.categoryValue) {
       navigate("/" + data.categoryValue + "/" + data.value);
     } else if (data.value) {
