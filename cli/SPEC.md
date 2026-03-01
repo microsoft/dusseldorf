@@ -56,12 +56,43 @@ Fields:
 
 ### 3) Requests
 
-- `dssldrf req <label|fqdn> [--limit <n> / -n] [--skip <n> / -s] [--protocols <csv> / -p] [--human]`
-  - Example: `dssldrf req test` or `dssldrf req test -n 50 -s 10`
+- `dssldrf req <label|fqdn> [--limit <n> / -n] [--skip <n> / -s] [--protocols <csv> / -p] [--human] [--details] [--id <request-id>]`
+  - Example: `dssldrf req test` or `dssldrf req test -n 50 -s 10 --details`
   - Resolves to `test.dssldrf.net` if default domain is set.
   - Calls `GET /requests/{zone}?limit=<n>&skip=<n>&protocols=<csv>`
+  - `--limit` - Max requests to return (default 20, max 1000)
   - `--skip` - Skip first N requests (useful for pagination)
+  - `--protocols` - CSV filter by protocol (e.g., `HTTP`, `DNS`, `HTTP,DNS`)
   - `--human` - Format timestamp as MM:DD hh:mm:ss instead of Unix timestamp
+  - `--details` - Show summary view: includes method/path, first 3 headers, response status and body preview (truncated to 100 chars)
+  - `--id <request-id>` - Show full details of a specific request; accepts either Unix timestamp or MongoDB `_id`; displays complete REQUEST and RESPONSE sections with all headers and full body
+
+**View modes:**
+- *Compact* (default): Shows timestamp, protocol, client IP per row
+- *Summary* (`--details`): Each request includes method/path, sample headers, response status
+- *Full* (`--id <request-id>`): Complete REQUEST/RESPONSE details for one request
+
+**Example workflows:**
+```bash
+# List recent requests
+dssldrf req test
+
+# See request details (headers, body preview)
+dssldrf req test --details
+
+# Inspect a specific request in detail
+dssldrf req test --id 1738034859
+
+# With human-readable timestamps
+dssldrf req test --details --human
+dssldrf req test --id 1738034859 --human
+
+# Paginate through requests
+dssldrf req test -n 20 -s 20  # Get requests 20-40
+
+# Filter by protocol
+dssldrf req test --protocols HTTP
+```
 
 ### 4) Authentication
 

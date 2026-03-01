@@ -197,23 +197,57 @@ dssldrf zone
 
 ### View requests for a zone
 
+#### Compact list (default)
+
 ```bash
 dssldrf req mytest --limit 20
 # Or short version:
 dssldrf req mytest -n 20
 ```
 
-View requests with pagination (skip first 10):
+Shows timestamp, protocol, and client IP for each request (e.g., `1738034859 HTTP 174.181.87.109`)
+
+#### Summary view (with headers and body preview)
 
 ```bash
-dssldrf req mytest -n 20 -s 10
+dssldrf req mytest --details
 ```
 
-View requests with human-readable timestamps:
+Shows method/path, first 3 headers, response status code, and a preview of the request body (truncated to 100 chars). Useful for quickly inspecting what was in a request.
+
+#### Full details for a specific request
+
+```bash
+dssldrf req mytest --id 1738034859
+```
+
+Shows complete REQUEST and RESPONSE sections with all headers, full body, HTTP method, path, TLS flag, etc. You can pass either a timestamp (Unix) or MongoDB `_id`.
+
+#### Human-readable timestamps
 
 ```bash
 dssldrf req mytest --human
 # Shows timestamps as MM:DD hh:mm:ss instead of Unix timestamps
+
+dssldrf req mytest --details --human
+dssldrf req mytest --id 1738034859 --human
+```
+
+Works with all view modes.
+
+#### Pagination
+
+```bash
+dssldrf req mytest --limit 20 --skip 10
+# Or short version:
+dssldrf req mytest -n 20 -s 10
+```
+
+#### Filter by protocol
+
+```bash
+dssldrf req mytest --protocols HTTP,DNS
+dssldrf req mytest --protocols HTTP  # HTTP only
 ```
 
 This shows the last 20 requests received by `mytest.yourdomain.net`.
