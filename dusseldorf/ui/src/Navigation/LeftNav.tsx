@@ -63,11 +63,6 @@ export const LeftNav = ({ refreshToken }: ILeftNavProps) => {
     };
   }, []);
 
-  useEffect(() => {
-    // when hidden zones change, refresh the list
-    refreshZones();
-  }, [UiHelper._hidden_zones, UiHelper._favorite_zones]);
-
   // Fetches an updated list of zones
   const refreshZones = () => {
     DusseldorfAPI.GetZones()
