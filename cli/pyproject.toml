@@ -1,11 +1,16 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+# Project duSSeldoRF CLI
+
 [build-system]
 requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "dssldrf-cli"
-version = "0.2.0"
-description = "Minimal cross-platform CLI for Dusseldorf"
+version = "0.3.0"
+description = "Minimal cross-platform command line client tool for Dusseldorf"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
