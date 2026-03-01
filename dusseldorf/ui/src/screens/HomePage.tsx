@@ -11,6 +11,7 @@ import { CacheHelper } from "../Helpers/CacheHelper";
 import { HomepageCards } from "../Components/HomepageCards";
 import { SuccesBanner } from "../Components/SuccesBanner";
 import { Logger } from "../Helpers/Logger";
+import { UiHelper } from "../Helpers/UIHelper";
 import { Zone } from "../Types/Zone";
 import { DusseldorfAPI } from "../DusseldorfApi";
 
@@ -71,7 +72,17 @@ export const HomePage = () => {
             </div>
 
             <HomepageCards
-                zones={recentZones}
+                zones={recentZones.sort((a, b) => {
+                    const aIsFavorite = UiHelper.IsFavoriteZone(a.fqdn);
+                    const bIsFavorite = UiHelper.IsFavoriteZone(b.fqdn);
+
+                    // If one is favorite and the other isn't, favorite goes first
+                    if (aIsFavorite && !bIsFavorite) return -1;
+                    if (!aIsFavorite && bIsFavorite) return 1;
+
+                    // If both are favorite or both are not, sort alphabetically
+                    return a.fqdn.localeCompare(b.fqdn);
+                })}
                 onNewClick={() => {
                     setShowAddZone(true);
                 }}
