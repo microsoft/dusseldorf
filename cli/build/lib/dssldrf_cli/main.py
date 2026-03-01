@@ -92,6 +92,123 @@ def _install_completion() -> None:
         return
 
 
+def _format_timestamp(timestamp: str | int, human: bool) -> str:
+    """Format timestamp as Unix or human-readable."""
+    if not human or not timestamp:
+        return str(timestamp)
+    try:
+        dt = datetime.fromtimestamp(int(timestamp))
+        return dt.strftime("%m:%d %H:%M:%S")
+    except (ValueError, TypeError):
+        return str(timestamp)
+
+
+def _format_request_summary(item: dict, human: bool) -> None:
+    """Display summary info for a request (used with --details)."""
+    timestamp = item.get("time", "")
+    protocol = item.get("protocol", "")
+    client_ip = item.get("clientip", "")
+    formatted_time = _format_timestamp(timestamp, human)
+
+    # Basic info
+    typer.echo(f"{formatted_time} {protocol} {client_ip}")
+
+    # Request object
+    request_data = item.get("request", {})
+    if isinstance(request_data, dict):
+        if protocol.upper() == "HTTP":
+            method = request_data.get("method", "")
+            path = request_data.get("path", "")
+            if method or path:
+                typer.echo(f"  → {method} {path}")
+            headers = request_data.get("headers", {})
+            if headers:
+                for key, val in list(headers.items())[:3]:  # Show first 3 headers
+                    typer.echo(f"    {key}: {val}")
+                if len(headers) > 3:
+                    typer.echo(f"    ... and {len(headers) - 3} more headers")
+            body = request_data.get("body", "")
+            if body:
+                preview = str(body)[:100]
+                suffix = " ..." if len(str(body)) > 100 else ""
+                typer.echo(f"    Body: {preview}{suffix}")
+
+    # Response object
+    response_data = item.get("response", {})
+    if isinstance(response_data, dict):
+        if protocol.upper() == "HTTP":
+            status = response_data.get("status", "")
+            if status:
+                typer.echo(f"  ← {status}")
+
+
+def _format_request_detail(item: dict, human: bool) -> None:
+    """Display full details for a single request."""
+    timestamp = item.get("time", "")
+    protocol = item.get("protocol", "").upper()
+    client_ip = item.get("clientip", "")
+    zone = item.get("zone", "")
+    fqdn = item.get("fqdn", "")
+    formatted_time = _format_timestamp(timestamp, human)
+
+    typer.echo(f"\n{'='*60}")
+    typer.echo(f"Request: {formatted_time}")
+    typer.echo(f"Zone: {zone or fqdn}")
+    typer.echo(f"Protocol: {protocol}")
+    typer.echo(f"Client IP: {client_ip}")
+    typer.echo(f"{'='*60}\n")
+
+    # Request details
+    request_data = item.get("request", {})
+    if isinstance(request_data, dict):
+        typer.echo("REQUEST:")
+        if protocol == "HTTP":
+            method = request_data.get("method", "N/A")
+            path = request_data.get("path", "N/A")
+            tls = request_data.get("tls", False)
+            typer.echo(f"  Method: {method}")
+            typer.echo(f"  Path: {path}")
+            if tls:
+                typer.echo(f"  TLS: Yes")
+            headers = request_data.get("headers", {})
+            if headers:
+                typer.echo(f"  Headers:")
+                for key, val in headers.items():
+                    typer.echo(f"    {key}: {val}")
+            body = request_data.get("body", "")
+            if body:
+                typer.echo(f"  Body: {body}")
+        elif protocol == "DNS":
+            query = request_data.get("query", "N/A")
+            qtype = request_data.get("type", "N/A")
+            typer.echo(f"  Query: {query}")
+            typer.echo(f"  Type: {qtype}")
+
+    # Response details
+    response_data = item.get("response", {})
+    if isinstance(response_data, dict) and response_data:
+        typer.echo("\nRESPONSE:")
+        if protocol == "HTTP":
+            status = response_data.get("status", "N/A")
+            typer.echo(f"  Status: {status}")
+            headers = response_data.get("headers", {})
+            if headers:
+                typer.echo(f"  Headers:")
+                for key, val in headers.items():
+                    typer.echo(f"    {key}: {val}")
+            body = response_data.get("body", "")
+            if body:
+                typer.echo(f"  Body: {body}")
+        elif protocol == "DNS":
+            data = response_data.get("data", [])
+            if isinstance(data, list):
+                for answer in data:
+                    typer.echo(f"  {answer}")
+            else:
+                typer.echo(f"  Data: {data}")
+    typer.echo(f"\n{'='*60}\n")
+
+
 def _resolve_fqdn(zone: str, domain: str) -> str:
     normalized_zone = zone.strip().lower()
     if "." in normalized_zone:
@@ -333,6 +450,16 @@ def req_command(
         "--human",
         help="Show timestamps in human-readable format (MM:DD hh:mm:ss)",
     ),
+    details: bool = typer.Option(
+        False,
+        "--details",
+        help="Show summary details (headers, body preview, etc.)",
+    ),
+    show_id: Optional[str] = typer.Option(
+        None,
+        "--id",
+        help="Show full details of a specific request by ID (timestamp or _id)",
+    ),
     json_output: bool = typer.Option(False, "--json", help="Print raw JSON"),
 ) -> None:
     _require_config()
@@ -347,30 +474,43 @@ def req_command(
         result = client.get(f"/requests/{zone_fqdn}", params=params)
     except RuntimeError as exc:
         _handle_api_error(exc)
+    
     if json_output:
         typer.echo(json.dumps(result, indent=2))
         return
+    
     if not result:
         typer.echo("No requests found")
         return
 
-    for item in result:
-        timestamp = item.get("time", "")
-        protocol = item.get("protocol", "")
-        client_ip = item.get("clientip", "")
-
-        # Format timestamp if human-readable format is requested
-        if human and timestamp:
-            try:
-                # Assume timestamp is Unix timestamp (seconds since epoch)
-                dt = datetime.fromtimestamp(int(timestamp))
-                formatted_time = dt.strftime("%m:%d %H:%M:%S")
-            except (ValueError, TypeError):
-                formatted_time = str(timestamp)
+    # Show full details of a specific request
+    if show_id:
+        found = None
+        for item in result:
+            item_id = item.get("_id", "")
+            item_time = str(item.get("time", ""))
+            if item_id == show_id or item_time == show_id:
+                found = item
+                break
+        if found:
+            _format_request_detail(found, human)
         else:
-            formatted_time = str(timestamp)
+            typer.echo(f"Request not found with ID/timestamp: {show_id}", err=True)
+            raise typer.Exit(1)
+        return
 
-        typer.echo(f"{formatted_time} {protocol} {client_ip}")
+    # List with optional summary details
+    for item in result:
+        if details:
+            _format_request_summary(item, human)
+            typer.echo()  # Blank line between requests
+        else:
+            # Compact view (original behavior)
+            timestamp = item.get("time", "")
+            protocol = item.get("protocol", "")
+            client_ip = item.get("clientip", "")
+            formatted_time = _format_timestamp(timestamp, human)
+            typer.echo(f"{formatted_time} {protocol} {client_ip}")
 
 
 def run() -> None:

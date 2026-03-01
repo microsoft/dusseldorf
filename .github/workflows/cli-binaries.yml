@@ -5,11 +5,11 @@ on:
   push:
     branches: ["main"]
     paths:
-      - "cli/**"
+      - "cli/src/**"
       - ".github/workflows/cli-binaries.yml"
   pull_request:
     paths:
-      - "cli/**"
+      - "cli/src/**"
       - ".github/workflows/cli-binaries.yml"
 
 permissions:
