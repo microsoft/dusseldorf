@@ -18,85 +18,49 @@ Full spec: [SPEC.md](SPEC.md)
 
 ---
 
-## Installation (Choose One)
+## Installation
 
-### Option 1: Download Pre-Built Binary (Easiest)
-
-**No Python installation needed!**
-
-1. Go to [Releases](../../releases) and download the file for your system:
-   - **Linux/WSL**: `dssldrf-linux-amd64`
-   - **macOS**: `dssldrf-macos-amd64`
-   - **Windows**: `dssldrf-windows-amd64.exe`
-
-2. Make it executable and move it to a system folder:
-
-   **Linux/WSL:**
-   ```bash
-   chmod +x dssldrf-linux-amd64
-   sudo mv dssldrf-linux-amd64 /usr/local/bin/dssldrf
-   ```
-
-   **macOS:**
-   ```bash
-   chmod +x dssldrf-macos-amd64
-   sudo mv dssldrf-macos-amd64 /usr/local/bin/dssldrf
-   ```
-
-   **Windows PowerShell (run as Administrator):**
-   ```powershell
-   # Create a tools folder if it doesn't exist
-   New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\bin"
-   # Move the file
-   Move-Item .\dssldrf-windows-amd64.exe "$env:USERPROFILE\bin\dssldrf.exe"
-   # Add to PATH (one-time setup)
-   [Environment]::SetEnvironmentVariable("Path", $env:Path + ";$env:USERPROFILE\bin", "User")
-   ```
-
-3. Close and reopen your terminal, then test:
-   ```bash
-   dssldrf --help
-   ```
-
-### Option 2: Install with Python
+### Quick Start (Recommended)
 
 **If you have Python 3.10 or newer installed:**
 
 This installs the `dssldrf` command automatically using a tool called `pipx` (which keeps it isolated from your other Python packages).
 
-1. Open your terminal
+1. Open your terminal and navigate to the `cli/` folder in this repository
 
-2. Navigate to the `cli/` folder in this repository
+2. Run these commands for your platform:
 
-3. Run these commands:
+    **Ubuntu/Debian/WSL:**
+    ```bash
+    sudo apt update
+    sudo apt install pipx
+    pipx ensurepath
+    pipx install .
+    ```
 
-   **Ubuntu/Debian/WSL (Ubuntu):**
-   
-   ```bash
-   # Install pipx from system package manager
-   sudo apt update
-   sudo apt install pipx
-   pipx ensurepath
-   pipx install .
-   ```
+    **Other Linux/macOS:**
+    ```bash
+    python3 -m pip install --upgrade pip
+    python3 -m pip install pipx
+    pipx ensurepath
+    pipx install .
+    ```
 
-   **Other Linux/macOS:**
-   
-   ```bash
-   python3 -m pip install --upgrade pip
-   python3 -m pip install pipx
-   pipx ensurepath
-   pipx install .
-   ```
+    **Windows PowerShell (as Administrator):**
+    ```powershell
+    python -m pip install --upgrade pip
+    python -m pip install pipx
+    pipx ensurepath
+    pipx install .
+    ```
 
-   **Windows PowerShell:**
-   
-   ```powershell
-   python -m pip install --upgrade pip
-   python -m pip install pipx
-   pipx ensurepath
-   pipx install .
-   ```
+3. Close and reopen your terminal, then test:
+    ```bash
+    dssldrf --help
+    ```
+
+> **What just happened?** The `pipx install .` command created the `dssldrf` command and made it available system-wide on your PATH (usually `~/.local/bin` on Linux/macOS or `%APPDATA%\Python\Scripts` on Windows). That's why you can now type `dssldrf` from any folder.
+
 
 4. Close and reopen your terminal (this is important!)
 
@@ -111,27 +75,49 @@ This installs the `dssldrf` command automatically using a tool called `pipx` (wh
 
 ## Setup (First Time)
 
-Before you can use `dssldrf`, you need to configure it and authenticate.
+Before you can use `dssldrf`, you need to configure it and set up authentication.
 
-### Option A: Using EntraID Login (Recommended)
-
-This is the easiest way - the CLI handles authentication for you.
-
-**1. Configure EntraID settings:**
-
-You'll need your Dusseldorf app registration details:
+### 1. Configure the API endpoint and domain:
 
 ```bash
-dssldrf config set --api-url https://your-dusseldorf-server/api --domain yourdomain.net --client-id <your-client-id> --tenant-id <your-tenant-id>
+dssldrf config set --api-url https://your-dusseldorf-server/api --domain yourdomain.net
 ```
 
 Replace:
 - `https://your-dusseldorf-server/api` with your Dusseldorf API URL
 - `yourdomain.net` with your backend domain (e.g., `dssldrf.net`)
-- `<your-client-id>` with your EntraID application (client) ID
-- `<your-tenant-id>` with your EntraID tenant ID
 
-> **Where to find these IDs:** See \"EntraID App Registration Setup\" section below or the detailed guide: [ENTRAID_SETUP.md](ENTRAID_SETUP.md)
+### 2. Set up authentication
+
+Dusseldorf CLI uses bearer token authentication. You can provide a token in two ways:
+
+#### Option A: Environment Variable (Recommended)
+
+Set the `DSSLDRF_AUTH_TOKEN` environment variable with your token:
+
+**Linux/WSL/macOS:**
+```bash
+export DSSLDRF_AUTH_TOKEN=<your-bearer-token>
+dssldrf zone
+```
+
+**Windows PowerShell:**
+```powershell
+$env:DSSLDRF_AUTH_TOKEN = "<your-bearer-token>"
+dssldrf zone
+```
+
+#### Option A.2: Using `dssldrf login` (Easiest with Azure CLI)
+
+If you have Azure CLI (`az`) installed and are logged in, you can fetch tokens automatically:
+
+**1. Configure your app ID:**
+
+```bash
+dssldrf config set --client-id <your-app-client-id>
+```
+
+Replace `<your-app-client-id>` with your Dusseldorf app registration's client ID. This is the same ID your web UI uses.
 
 **2. Login:**
 
@@ -139,14 +125,27 @@ Replace:
 dssldrf login
 ```
 
-This will:
-- Show you a URL and a code
-- Open that URL in your browser (or you can copy/paste it)
-- Enter the code when prompted
-- Sign in with your Microsoft account
-- Automatically save your authentication token
+This runs `az account get-access-token --resource <client-id>` and saves the token to your config. The token is fetched automatically using your existing Azure CLI login.
 
-**3. Verify it works:**
+**3. Verify:**
+
+```bash
+dssldrf zone
+```
+
+> **Requirements:** You must have Azure CLI installed (`az`) and be logged in. If you're not logged in, run `az login` first.
+
+#### Option B: Store in Config (Less Secure)
+
+Alternatively, store the token in your local config file:
+
+```bash
+dssldrf config set --token <your-bearer-token>
+```
+
+**Warning:** This stores your token in plain text at `~/.dssldrf/config.json`. The environment variable approach (Option A) is more secure.
+
+### 3. Verify it works:
 
 ```bash
 dssldrf zone
@@ -154,85 +153,11 @@ dssldrf zone
 
 You should see your zones listed (or "No zones found" if you haven't created any yet).
 
-### Option B: Using Manual Token
-
-If you prefer to get tokens manually:
-
-**1. Configure the CLI:**
-
-```bash
-dssldrf config set --api-url https://your-dusseldorf-server/api --domain yourdomain.net
-```
-
-**2. Get your authentication token:**
-
-You need an EntraID (Azure AD) token. Get it with this command:
-
-**Linux/WSL/macOS:**
-```bash
-export DSSLDRF_AUTH_TOKEN=$(az account get-access-token --resource <your-app-id> | jq -r .accessToken)
-```
-
-**Windows PowerShell:**
-```powershell
-$env:DSSLDRF_AUTH_TOKEN = (az account get-access-token --resource <your-app-id> | ConvertFrom-Json).accessToken
-```
-
-> **Note:** Replace `<your-app-id>` with your Dusseldorf application ID. The token expires after a while, so you may need to run this command again later if you get authentication errors.
+---
 
 ---
 
-## EntraID App Registration Setup
 
-To use `dssldrf login`, you need an Azure AD (EntraID) app registration. Here's what you need:
-
-## EntraID App Registration Setup
-
-To use `dssldrf login`, you need an Azure AD (EntraID) app registration. Here's what you need:
-
-### 1. Create App Registration (if you don't have one)
-
-1. Go to [Azure Portal](https://portal.azure.com) → **Azure Active Directory** → **App registrations**
-2. Click **New registration**
-3. Name: `Dusseldorf CLI` (or anything you prefer)
-4. Supported account types: Choose based on your needs
-5. Redirect URI: Leave blank (we're using device code flow)
-6. Click **Register**
-
-### 2. Configure as Public Client
-
-1. In your app registration, go to **Authentication**
-2. Scroll to **Advanced settings** → **Allow public client flows**
-3. Set to **Yes**
-4. Click **Save**
-
-### 3. Add API Permissions
-
-1. Go to **API permissions**
-2. Click **Add a permission**
-3. Select **APIs my organization uses**
-4. Find and select your Dusseldorf API app registration
-5. Select the appropriate permissions (typically `user_impersonation` or similar)
-6. Click **Add permissions**
-7. (Optional) Click **Grant admin consent** if you have admin rights
-
-### 4. Get Your IDs
-
-1. Go to **Overview** in your app registration
-2. Copy the **Application (client) ID** - this is your `--client-id`
-3. Copy the **Directory (tenant) ID** - this is your `--tenant-id`
-
-### 5. Configure CLI
-
-Now run:
-
-```bash
-dssldrf config set --client-id <paste-client-id> --tenant-id <paste-tenant-id>
-```
-
-Then you can use `dssldrf login` anytime!
-
----
 
 ## Common Tasks
 
@@ -346,7 +271,7 @@ You need to set `DSSLDRF_AUTH_TOKEN` or store a token in config.
 
 Quick fix:
 ```bash
-export DSSLDRF_AUTH_TOKEN=<your-bearer-token>
+export :q[BDSSLDRF_AUTH_TOKEN=<your-bearer-token>
 ```
 
 Or save it to config:

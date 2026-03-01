@@ -20,7 +20,6 @@ class CliConfig:
     domain: str = ""
     auth_token: str = ""
     client_id: str = ""
-    tenant_id: str = ""
 
 
 def load_config() -> CliConfig:
@@ -37,7 +36,6 @@ def load_config() -> CliConfig:
         domain=str(raw_data.get("domain", "")).strip().lower(),
         auth_token=str(raw_data.get("auth_token", "")).strip(),
         client_id=str(raw_data.get("client_id", "")).strip(),
-        tenant_id=str(raw_data.get("tenant_id", "")).strip(),
     )
 
 

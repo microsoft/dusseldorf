@@ -1,12 +1,11 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-# duSSeldoRF CLI - Main Application Logic
+# duSSeldoRF CLI
 
-# This module allows users to manage zones and view requests, as well as configure settings.
-#
-# Config is stored locally in a JSON file, and the CLI supports both direct token input and Entra ID device
-# code flow for authentication.
+# This module allows users to manage zones and view requests, configure settings.
+# Config is stored locally in a JSON file, and the CLI supports both direct token
+# input and through calling the az CLI.
 
 # For any help: aka.ms/dusseldorf or open an issue in the GitHub repo.
 
@@ -14,17 +13,17 @@ from __future__ import annotations
 
 import json
 import os
+import subprocess
 from datetime import datetime
 from typing import Optional
 
 import typer
-from msal import PublicClientApplication
 
 from .api_client import ApiClient
 from .config_store import CliConfig, load_config, save_config
 
 
-app = typer.Typer(help="Dusseldorf CLI", no_args_is_help=True, add_completion=True)
+app = typer.Typer(help="Dusseldorf CLI", no_args_is_help=True, add_completion=False)
 config_app = typer.Typer(help="Manage local CLI settings")
 app.add_typer(config_app, name="config")
 
@@ -34,14 +33,63 @@ def _effective_token(config: CliConfig) -> str:
     return env_token or config.auth_token
 
 
+def _config_exists() -> bool:
+    return os.path.exists(os.path.expanduser("~/.dssldrf/config.json"))
+
+
+def _require_config() -> None:
+    if not _config_exists():
+        raise typer.BadParameter("No config found. Run: dssldrf init")
+
+
 def _api_client() -> ApiClient:
+    _require_config()
     config = load_config()
     token = _effective_token(config)
     if not token:
         raise typer.BadParameter(
-            "Missing token. Set DSSLDRF_AUTH_TOKEN or run: dssldrf config set --token <token>"
+            "Missing token. Set DSSLDRF_AUTH_TOKEN or run: dssldrf login"
         )
     return ApiClient(api_url=config.api_url, token=token)
+
+
+def _handle_api_error(error: RuntimeError) -> None:
+    message = str(error)
+    if message.startswith("API 401"):
+        typer.echo(
+            "Authentication failed (401). Run: dssldrf login to refresh your token.",
+            err=True,
+        )
+    else:
+        typer.echo(message, err=True)
+    raise typer.Exit(1)
+
+
+def _first_env(*names: str) -> str:
+    for name in names:
+        value = os.getenv(name, "").strip()
+        if value:
+            return value
+    return ""
+
+
+def _prompt_required(label: str, default_value: str) -> str:
+    value = typer.prompt(label, default=default_value or "")
+    if not value.strip():
+        raise typer.BadParameter(f"Missing value for {label}.")
+    return value.strip()
+
+
+def _install_completion() -> None:
+    try:
+        from typer.main import install_completion
+    except Exception:
+        return
+
+    try:
+        install_completion(app)
+    except Exception:
+        return
 
 
 def _resolve_fqdn(zone: str, domain: str) -> str:
@@ -59,12 +107,12 @@ def _resolve_fqdn(zone: str, domain: str) -> str:
 
 @config_app.command("show")
 def config_show() -> None:
+    _require_config()
     config = load_config()
     safe_output = {
         "api_url": config.api_url,
         "domain": config.domain,
         "client_id": config.client_id if config.client_id else "",
-        "tenant_id": config.tenant_id if config.tenant_id else "",
         "auth_token": "***" if _effective_token(config) else "",
     }
     typer.echo(json.dumps(safe_output, indent=2))
@@ -83,10 +131,7 @@ def config_set(
         False, "--clear-token", help="Remove stored token"
     ),
     client_id: Optional[str] = typer.Option(
-        None, "--client-id", help="EntraID application client ID"
-    ),
-    tenant_id: Optional[str] = typer.Option(
-        None, "--tenant-id", help="EntraID tenant ID"
+        None, "--client-id", help="Azure application client ID"
     ),
 ) -> None:
     config = load_config()
@@ -100,10 +145,60 @@ def config_set(
         config.auth_token = ""
     if client_id is not None:
         config.client_id = client_id.strip()
-    if tenant_id is not None:
-        config.tenant_id = tenant_id.strip()
     save_config(config)
     typer.echo("Config updated")
+
+
+@app.command("init")
+def init_command() -> None:
+    """Initialize CLI config using env var defaults."""
+    if _config_exists():
+        typer.echo("Existing config found. Values will be updated if changed.")
+
+    current = load_config()
+    default_api_url = (
+        _first_env(
+            "DSSLDRF_API_URL",
+            "REACT_APP_API_HOST",
+            "DUSSLEDORF_API_URL",
+        )
+        or current.api_url
+    )
+    default_domain = (
+        _first_env(
+            "DSSLDRF_DOMAIN",
+            "REACT_APP_DOMAIN",
+        )
+        or current.domain
+    )
+    default_client_id = (
+        _first_env(
+            "DSSLDRF_CLIENT_ID",
+            "AZURE_CLIENT_ID",
+            "REACT_APP_CLIENT_ID",
+        )
+        or current.client_id
+    )
+
+    api_url = _prompt_required("Dusseldorf API URL", default_api_url)
+    domain = typer.prompt(
+        "Default domain (optional)",
+        default=default_domain or "",
+        show_default=bool(default_domain),
+    ).strip()
+    client_id = typer.prompt(
+        "Azure App Client ID (for login)",
+        default=default_client_id or "",
+        show_default=bool(default_client_id),
+    ).strip()
+
+    current.api_url = api_url.rstrip("/")
+    current.domain = domain.lower()
+    current.client_id = client_id
+    save_config(current)
+    typer.echo("Config initialized")
+    typer.echo("Next step: run dssldrf login")
+    _install_completion()
 
 
 @app.command("zone")
@@ -120,6 +215,7 @@ def zone_command(
     ),
     json_output: bool = typer.Option(False, "--json", help="Print raw JSON"),
 ) -> None:
+    _require_config()
     selected_actions = sum([bool(add), bool(delete), list_zones])
     # If no action specified, default to list
     if selected_actions == 0:
@@ -141,7 +237,10 @@ def zone_command(
                 "--add expects a zone label without dots, example: --add test"
             )
         payload = {"zone": zone_label, "domain": active_domain, "num": 1}
-        result = client.post("/zones", payload)
+        try:
+            result = client.post("/zones", payload)
+        except RuntimeError as exc:
+            _handle_api_error(exc)
         if json_output:
             typer.echo(json.dumps(result, indent=2))
             return
@@ -151,7 +250,10 @@ def zone_command(
 
     if delete:
         fqdn = _resolve_fqdn(delete, active_domain)
-        result = client.delete(f"/zones/{fqdn}")
+        try:
+            result = client.delete(f"/zones/{fqdn}")
+        except RuntimeError as exc:
+            _handle_api_error(exc)
         if json_output:
             typer.echo(json.dumps(result, indent=2))
             return
@@ -159,7 +261,10 @@ def zone_command(
         return
 
     params = {"domain": active_domain} if active_domain else None
-    result = client.get("/zones", params=params)
+    try:
+        result = client.get("/zones", params=params)
+    except RuntimeError as exc:
+        _handle_api_error(exc)
     if json_output:
         typer.echo(json.dumps(result, indent=2))
         return
@@ -172,43 +277,44 @@ def zone_command(
 
 @app.command("login")
 def login_command() -> None:
-    """Authenticate with EntraID using device code flow"""
+    """Fetch fresh auth token using az CLI and store it in config."""
+    _require_config()
     config = load_config()
 
-    if not config.client_id or not config.tenant_id:
-        typer.echo("Error: EntraID not configured.")
-        typer.echo("Run: dssldrf config set --client-id <id> --tenant-id <id>")
-        raise typer.Exit(1)
+    if not config.client_id:
+        raise typer.BadParameter(
+            "Missing client_id. Run: dssldrf config set --client-id <id>"
+        )
 
-    authority = f"https://login.microsoftonline.com/{config.tenant_id}"
-    app_client = PublicClientApplication(
-        client_id=config.client_id,
-        authority=authority,
-    )
-
-    # Use the client_id as the resource/scope for Dusseldorf
-    scopes = [f"{config.client_id}/.default"]
-
-    typer.echo("Starting device code authentication...")
-    flow = app_client.initiate_device_flow(scopes=scopes)
-
-    if "user_code" not in flow:
-        typer.echo("Error: Failed to initiate device flow")
-        raise typer.Exit(1)
-
-    typer.echo("\n" + flow["message"])
-    typer.echo("\nWaiting for authentication...")
-
-    result = app_client.acquire_token_by_device_flow(flow)
-
-    if "access_token" in result:
-        config.auth_token = result["access_token"]
+    # Run: az account get-access-token --resource <client_id>
+    typer.echo(f"Fetching token for resource {config.client_id}...")
+    try:
+        result = subprocess.run(
+            [
+                "az",
+                "account",
+                "get-access-token",
+                "--resource",
+                config.client_id,
+            ],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        token_data = json.loads(result.stdout)
+        token = token_data.get("accessToken")
+        if not token:
+            typer.echo("Error: No access token in response")
+            raise typer.Exit(1)
+        config.auth_token = token
         save_config(config)
-        typer.echo("\n✓ Authentication successful! Token saved.")
-        typer.echo("You can now use dssldrf commands.")
-    else:
-        error = result.get("error_description", result.get("error", "Unknown error"))
-        typer.echo(f"\n✗ Authentication failed: {error}")
+        typer.echo("Auth token fetched successfully")
+    except subprocess.CalledProcessError as e:
+        typer.echo(f"Error running az CLI: {e.stderr}", err=True)
+        typer.echo("Make sure you're logged in: az login")
+        raise typer.Exit(1)
+    except json.JSONDecodeError:
+        typer.echo("Error: Could not parse token response", err=True)
         raise typer.Exit(1)
 
 
@@ -229,6 +335,7 @@ def req_command(
     ),
     json_output: bool = typer.Option(False, "--json", help="Print raw JSON"),
 ) -> None:
+    _require_config()
     config = load_config()
     zone_fqdn = _resolve_fqdn(zone, config.domain)
     params: dict[str, str | int] = {"limit": limit, "skip": skip}
@@ -236,7 +343,10 @@ def req_command(
         params["protocols"] = protocols
 
     client = _api_client()
-    result = client.get(f"/requests/{zone_fqdn}", params=params)
+    try:
+        result = client.get(f"/requests/{zone_fqdn}", params=params)
+    except RuntimeError as exc:
+        _handle_api_error(exc)
     if json_output:
         typer.echo(json.dumps(result, indent=2))
         return
