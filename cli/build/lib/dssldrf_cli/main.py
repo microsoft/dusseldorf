@@ -1,19 +1,30 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+# duSSeldoRF CLI - Main Application Logic
+
+# This module allows users to manage zones and view requests, as well as configure settings.
+#
+# Config is stored locally in a JSON file, and the CLI supports both direct token input and Entra ID device
+# code flow for authentication.
+
+# For any help: aka.ms/dusseldorf or open an issue in the GitHub repo.
+
 from __future__ import annotations
 
 import json
 import os
+from datetime import datetime
 from typing import Optional
 
 import typer
+from msal import PublicClientApplication
 
 from .api_client import ApiClient
 from .config_store import CliConfig, load_config, save_config
 
 
-app = typer.Typer(help="duSSeldoRF CLI", no_args_is_help=True, add_completion=True)
+app = typer.Typer(help="Dusseldorf CLI", no_args_is_help=True, add_completion=True)
 config_app = typer.Typer(help="Manage local CLI settings")
 app.add_typer(config_app, name="config")
 
@@ -52,6 +63,8 @@ def config_show() -> None:
     safe_output = {
         "api_url": config.api_url,
         "domain": config.domain,
+        "client_id": config.client_id if config.client_id else "",
+        "tenant_id": config.tenant_id if config.tenant_id else "",
         "auth_token": "***" if _effective_token(config) else "",
     }
     typer.echo(json.dumps(safe_output, indent=2))
@@ -69,6 +82,12 @@ def config_set(
     clear_token: bool = typer.Option(
         False, "--clear-token", help="Remove stored token"
     ),
+    client_id: Optional[str] = typer.Option(
+        None, "--client-id", help="EntraID application client ID"
+    ),
+    tenant_id: Optional[str] = typer.Option(
+        None, "--tenant-id", help="EntraID tenant ID"
+    ),
 ) -> None:
     config = load_config()
     if api_url is not None:
@@ -79,23 +98,33 @@ def config_set(
         config.auth_token = token.strip()
     if clear_token:
         config.auth_token = ""
+    if client_id is not None:
+        config.client_id = client_id.strip()
+    if tenant_id is not None:
+        config.tenant_id = tenant_id.strip()
     save_config(config)
     typer.echo("Config updated")
 
 
 @app.command("zone")
 def zone_command(
-    add: Optional[str] = typer.Option(None, "--add", help="Create zone label"),
+    add: Optional[str] = typer.Option(None, "--add", "-a", help="Create zone label"),
     delete: Optional[str] = typer.Option(
-        None, "--delete", help="Delete zone (label or fqdn)"
+        None, "--delete", "-d", help="Delete zone (label or fqdn)"
     ),
-    list_zones: bool = typer.Option(False, "--list", help="List accessible zones"),
+    list_zones: bool = typer.Option(
+        False, "--list", "-l", help="List accessible zones"
+    ),
     domain: Optional[str] = typer.Option(
         None, "--domain", help="Domain override for this call"
     ),
     json_output: bool = typer.Option(False, "--json", help="Print raw JSON"),
 ) -> None:
     selected_actions = sum([bool(add), bool(delete), list_zones])
+    # If no action specified, default to list
+    if selected_actions == 0:
+        list_zones = True
+        selected_actions = 1
     if selected_actions != 1:
         raise typer.BadParameter(
             "Choose exactly one action: --add OR --delete OR --list"
@@ -141,18 +170,68 @@ def zone_command(
         typer.echo(item["fqdn"])
 
 
+@app.command("login")
+def login_command() -> None:
+    """Authenticate with EntraID using device code flow"""
+    config = load_config()
+
+    if not config.client_id or not config.tenant_id:
+        typer.echo("Error: EntraID not configured.")
+        typer.echo("Run: dssldrf config set --client-id <id> --tenant-id <id>")
+        raise typer.Exit(1)
+
+    authority = f"https://login.microsoftonline.com/{config.tenant_id}"
+    app_client = PublicClientApplication(
+        client_id=config.client_id,
+        authority=authority,
+    )
+
+    # Use the client_id as the resource/scope for Dusseldorf
+    scopes = [f"{config.client_id}/.default"]
+
+    typer.echo("Starting device code authentication...")
+    flow = app_client.initiate_device_flow(scopes=scopes)
+
+    if "user_code" not in flow:
+        typer.echo("Error: Failed to initiate device flow")
+        raise typer.Exit(1)
+
+    typer.echo("\n" + flow["message"])
+    typer.echo("\nWaiting for authentication...")
+
+    result = app_client.acquire_token_by_device_flow(flow)
+
+    if "access_token" in result:
+        config.auth_token = result["access_token"]
+        save_config(config)
+        typer.echo("\n✓ Authentication successful! Token saved.")
+        typer.echo("You can now use dssldrf commands.")
+    else:
+        error = result.get("error_description", result.get("error", "Unknown error"))
+        typer.echo(f"\n✗ Authentication failed: {error}")
+        raise typer.Exit(1)
+
+
 @app.command("req")
 def req_command(
     zone: str = typer.Argument(..., help="Zone label or fqdn"),
-    limit: int = typer.Option(20, "--limit", min=1, max=1000, help="Max request rows"),
+    limit: int = typer.Option(
+        20, "--limit", "-n", min=1, max=1000, help="Max request rows"
+    ),
+    skip: int = typer.Option(0, "--skip", "-s", min=0, help="Skip first N requests"),
     protocols: Optional[str] = typer.Option(
-        None, "--protocols", help="CSV protocol filter"
+        None, "--protocols", "-p", help="CSV protocol filter"
+    ),
+    human: bool = typer.Option(
+        False,
+        "--human",
+        help="Show timestamps in human-readable format (MM:DD hh:mm:ss)",
     ),
     json_output: bool = typer.Option(False, "--json", help="Print raw JSON"),
 ) -> None:
     config = load_config()
     zone_fqdn = _resolve_fqdn(zone, config.domain)
-    params: dict[str, str | int] = {"limit": limit}
+    params: dict[str, str | int] = {"limit": limit, "skip": skip}
     if protocols:
         params["protocols"] = protocols
 
@@ -169,7 +248,19 @@ def req_command(
         timestamp = item.get("time", "")
         protocol = item.get("protocol", "")
         client_ip = item.get("clientip", "")
-        typer.echo(f"{timestamp} {protocol} {client_ip}")
+
+        # Format timestamp if human-readable format is requested
+        if human and timestamp:
+            try:
+                # Assume timestamp is Unix timestamp (seconds since epoch)
+                dt = datetime.fromtimestamp(int(timestamp))
+                formatted_time = dt.strftime("%m:%d %H:%M:%S")
+            except (ValueError, TypeError):
+                formatted_time = str(timestamp)
+        else:
+            formatted_time = str(timestamp)
+
+        typer.echo(f"{formatted_time} {protocol} {client_ip}")
 
 
 def run() -> None:

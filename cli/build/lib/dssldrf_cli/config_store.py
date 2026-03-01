@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+# Project duSSeldoRF CLI
+
 from __future__ import annotations
 
 from dataclasses import dataclass, asdict
@@ -17,6 +19,8 @@ class CliConfig:
     api_url: str = "https://localhost:10443/api"
     domain: str = ""
     auth_token: str = ""
+    client_id: str = ""
+    tenant_id: str = ""
 
 
 def load_config() -> CliConfig:
@@ -32,6 +36,8 @@ def load_config() -> CliConfig:
         api_url=str(raw_data.get("api_url", CliConfig.api_url)).rstrip("/"),
         domain=str(raw_data.get("domain", "")).strip().lower(),
         auth_token=str(raw_data.get("auth_token", "")).strip(),
+        client_id=str(raw_data.get("client_id", "")).strip(),
+        tenant_id=str(raw_data.get("tenant_id", "")).strip(),
     )
 
 

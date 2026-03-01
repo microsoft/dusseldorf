@@ -1,5 +1,8 @@
 # Dusseldorf CLI Specification (MVP)
 
+This spec documents the functionality of a dusseldorf command line interface (cli) client tool
+to interact with a Dusseldorf API.
+
 ## Goals
 
 - Keep the CLI minimal and easy to install.
@@ -54,10 +57,12 @@ Fields:
 
 ### 3) Requests
 
-- `dssldrf req <label|fqdn> [--limit <n> / -n] [--protocols <csv> / -p]`
-  - Example: `dssldrf req test` or `dssldrf req test -n 50`
+- `dssldrf req <label|fqdn> [--limit <n> / -n] [--skip <n> / -s] [--protocols <csv> / -p] [--human]`
+  - Example: `dssldrf req test` or `dssldrf req test -n 50 -s 10`
   - Resolves to `test.dssldrf.net` if default domain is set.
-  - Calls `GET /requests/{zone}?limit=<n>&protocols=<csv>`
+  - Calls `GET /requests/{zone}?limit=<n>&skip=<n>&protocols=<csv>`
+  - `--skip` - Skip first N requests (useful for pagination)
+  - `--human` - Format timestamp as MM:DD hh:mm:ss instead of Unix timestamp
 
 ### 4) Authentication
 

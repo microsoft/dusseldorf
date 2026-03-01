@@ -6,14 +6,13 @@ Once installed, you'll have a `dssldrf` command you can run from anywhere.
 
 ## What you can do
 
-- `dssldrf login` - Authenticate with EntraID (browser/device code)
 - `dssldrf zone` - List all your zones (default)
 - `dssldrf zone --add test` or `dssldrf zone -a test` - Create a new zone
 - `dssldrf zone --delete test` or `dssldrf zone -d test` - Delete a zone
 - `dssldrf req test` - View recent requests for a zone
 - `dssldrf config set --api-url <url> --domain <domain>` - Configure settings
 
-> **Tip:** Most commands support short flags: `-a` for `--add`, `-d` for `--delete`, `-l` for `--list`, `-n` for `--limit`, `-h` for `--help`
+> **Tip:** Most commands support short flags: `-a` for `--add`, `-d` for `--delete`, `-l` for `--list`, `-n` for `--limit`, `-s` for `--skip`, `-p` for `--protocols`, `-h` for `--help`
 
 Full spec: [SPEC.md](SPEC.md)
 
@@ -279,6 +278,19 @@ dssldrf req mytest --limit 20
 dssldrf req mytest -n 20
 ```
 
+View requests with pagination (skip first 10):
+
+```bash
+dssldrf req mytest -n 20 -s 10
+```
+
+View requests with human-readable timestamps:
+
+```bash
+dssldrf req mytest --human
+# Shows timestamps as MM:DD hh:mm:ss instead of Unix timestamps
+```
+
 This shows the last 20 requests received by `mytest.yourdomain.net`.
 
 ### Delete a zone
@@ -326,11 +338,21 @@ The `dssldrf` command is not in your system PATH.
 
 ### Authentication errors
 
-Your token has probably expired. Run the token command again (see Setup step 1 above).
+Your token may have expired or be invalid. Make sure you're using a valid bearer token by setting `DSSLDRF_AUTH_TOKEN` environment variable or storing it with `dssldrf config set --token`.
 
 ### "Missing token" error
 
-You forgot to set `DSSLDRF_AUTH_TOKEN`. Run the command from Setup step 1.
+You need to set `DSSLDRF_AUTH_TOKEN` or store a token in config.
+
+Quick fix:
+```bash
+export DSSLDRF_AUTH_TOKEN=<your-bearer-token>
+```
+
+Or save it to config:
+```bash
+dssldrf config set --token <your-bearer-token>
+```
 
 ### "externally-managed-environment" error (Ubuntu/Debian/WSL)
 
