@@ -5,6 +5,7 @@
 export class UiHelper {
 
     static readonly KEYZONES = 'uihelper.hidden_zones';
+    static readonly KEYFAVORITEZONES = 'uihelper.favorite_zones';
     static readonly delim = ";";
 
     static GetPanelSettings = (key: string) => {
@@ -48,4 +49,35 @@ export class UiHelper {
     static IsZoneHidden = (key: string) =>
         UiHelper._hidden_zones.includes(key);
 
-}
+    // Favorite zones management
+    static _favorite_zones: string[] = localStorage.getItem(UiHelper.KEYFAVORITEZONES)?.split(UiHelper.delim).filter(x => x !== "") ?? [];
+
+    static ToggleFavoriteZone = (key: string) => {
+        if (key == "") return;
+        if (UiHelper._favorite_zones.includes(key)) {
+            // is favorited already, unfavorite it by removing it from the list
+            UiHelper._favorite_zones = UiHelper._favorite_zones.filter(x => x != key)
+        }
+        else {
+            // add the zone to favorites
+            UiHelper._favorite_zones.push(key);
+        }
+
+        // set local storage too 
+        localStorage.setItem(UiHelper.KEYFAVORITEZONES, UiHelper._favorite_zones.join(UiHelper.delim))
+    }
+
+    /**
+     * Whether a zone is favorited
+     * @param key : the zone name
+     * @returns : true if it's favorited
+     */
+    static IsFavoriteZone = (key: string) =>
+        UiHelper._favorite_zones.includes(key);
+
+    /**
+     * Get list of all favorited zone FQDNs
+     * @returns : array of favorable zone FQDNs
+     */
+    static GetFavoritedZones = () =>
+        UiHelper._favorite_zones;
