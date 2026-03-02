@@ -7,6 +7,11 @@
 import os
 import uvicorn
 
+from logging_config import setup_logging
+
+# Configure structured JSON logging
+setup_logging()
+
 # Azure Monitor OpenTelemetry
 from azure.monitor.opentelemetry import configure_azure_monitor
 if os.environ.get("APPLICATIONINSIGHTS_CONNECTION_STRING"):
@@ -16,6 +21,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
+
+from middleware.correlation import correlation_middleware
 
 from controllers.default_controller import router as default_router
 from controllers.authz_controller import router as authz_router
@@ -57,6 +64,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Add correlation ID middleware for request tracing
+app.middleware("http")(correlation_middleware)
 
 # Include routers
 app.include_router(authz_router)

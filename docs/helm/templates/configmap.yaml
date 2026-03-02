@@ -8,8 +8,8 @@ data:
   LOG_LEVEL: "{{ .Values.global.dusseldorfLogLevel }}"
   MAX_CONNECTIONS: "{{ .Values.global.dusseldorfMaxConnections }}"
   DSSLDRF_DOMAINS: "{{ .Values.global.dusseldorfDomain }}"
-  DSSLDRF_IPV4: "{{ .Values.global.loadBalancerIPV4List }}"
-  DSSLDRF_IPV6: "{{ .Values.global.loadBalancerIPV6List }}"
+  DSSLDRF_IPV4: "{{ .Values.global.dusseldorfIPV4list }}"
+  DSSLDRF_IPV6: "{{ .Values.global.dusseldorfIPV6list }}"
 
   # API Settings
   AZURE_API_CLIENT_ID: "{{ .Values.global.identityClientIdAPI }}"
