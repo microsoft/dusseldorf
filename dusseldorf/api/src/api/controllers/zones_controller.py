@@ -6,12 +6,12 @@
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from motor.motor_asyncio import AsyncIOMotorClient
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 import logging
 
 from models.zone import Zone, ZoneCreate
 from models.auth import Permission
-from dependencies import get_current_user, get_db
+from dependencies import get_current_user, get_db, get_log_context
 from helpers.dns_helper import DnsHelper
 from services.permissions import PermissionService
 
@@ -33,7 +33,7 @@ async def get_zones(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
     db: AsyncIOMotorClient = Depends(get_db),
-    current_user: str = Depends(get_current_user),
+    current_user: Dict[str, Any] = Depends(get_current_user),
     permission_service: PermissionService = Depends()
 ):
     """Get all zones with optional domain filter"""
@@ -48,10 +48,20 @@ async def get_zones(
 
     # Confirm user has at least RO perms on this zone
     confirmed_zones = []
+    correlation_id = current_user.get("correlation_id", "unknown")
     for zone_check in user_accessible_zones:
-        if await permission_service.has_at_least_permissions_on_zone(zone_check["fqdn"], current_user["preferred_username"], Permission.READONLY):
+        if await permission_service.has_at_least_permissions_on_zone(
+            zone_check["fqdn"], 
+            current_user["preferred_username"], 
+            Permission.READONLY,
+            correlation_id
+        ):
             confirmed_zones.append(zone_check)
-
+    
+    logger.info(
+        "list_zones_success",
+        extra=get_log_context(current_user, operation="list_zones", count=len(confirmed_zones), domain=domain)
+    )
     return [Zone(**zone) for zone in confirmed_zones]
 
 # GET /zones/{fqdn}
@@ -60,7 +70,7 @@ async def get_zones(
 async def get_zone(
     fqdn: str,
     db: AsyncIOMotorClient = Depends(get_db),
-    current_user: str = Depends(get_current_user),
+    current_user: Dict[str, Any] = Depends(get_current_user),
     permission_service: PermissionService = Depends()
 ):
     """Get a specific zone by ID"""
@@ -69,19 +79,28 @@ async def get_zone(
 
     zone_result = await db.zones.find_one({"fqdn": fqdn})
     if not zone_result:
+        logger.info(
+            "zone_not_found",
+            extra=get_log_context(current_user, zone=fqdn, operation="get_zone")
+        )
         raise HTTPException(status_code=404, detail="Zone not found")
 
     # zone exists, check if user has any permissions on it 
     can_read:bool =  await permission_service.has_at_least_permissions_on_zone(
                                 fqdn, 
                                 current_user["preferred_username"], 
-                                Permission.READONLY)
+                                Permission.READONLY,
+                                current_user.get("correlation_id", "unknown"))
     
     if not can_read:
-        logger.warning(f"User {current_user['preferred_username']} attempted to access zone {fqdn}")
+        # Permission denied already logged by PermissionService
         raise HTTPException(status_code=403, detail="Unauthorized")
 
     # zone exists, and we have permissions
+    logger.info(
+        "zone_retrieved",
+        extra=get_log_context(current_user, zone=fqdn, operation="get_zone")
+    )
     return Zone(**zone_result)
 
 
@@ -91,7 +110,7 @@ async def get_zone(
 async def create_zone(
     req: ZoneCreate,
     db: AsyncIOMotorClient = Depends(get_db),
-    current_user: str = Depends(get_current_user),
+    current_user: Dict[str, Any] = Depends(get_current_user),
     permission_service: PermissionService = Depends()
 ):
     # Set initial domain to "public" fqdn
@@ -103,7 +122,10 @@ async def create_zone(
     # request has speficied a domain name, see if we're allowed to create zones in it
     if req.domain:
         if not await permission_service.validate_user_domain(user_id, req.domain):
-            logger.warning(f"403: User {user_id} attempted to create zone({req.zone}) on domain({req.domain})")
+            logger.warning(
+                "domain_access_denied",
+                extra=get_log_context(current_user, zone=req.zone, operation="create_zone", domain=req.domain)
+            )
             raise HTTPException(status_code=403, detail="Unauthorized")
         domain = req.domain
 
@@ -136,8 +158,10 @@ async def create_zone(
         }
         result = await db.zones.insert_one(zone_request_dict)
         if result.inserted_id:
-            logger.info(f"User {user_id} created zone({new_zone_fqdn})")
-            logger.error(result)
+            logger.info(
+                "zone_created",
+                extra=get_log_context(current_user, zone=new_zone_fqdn, operation="create_zone", domain=domain)
+            )
             return [Zone(**zone_request_dict)]
 
     if req.num > 0 and req.num <= MAX_ZONES:
@@ -167,9 +191,12 @@ async def create_zone(
             }
             result = await db.zones.insert_one(zone_request_dict)
             if result.inserted_id:
-                logger.warning(f"User {current_user['preferred_username']} created domain {domain} zone {new_zone_name}")
                 insert_results.append(zone_request_dict)
-
+        
+        logger.info(
+            "zones_bulk_created",
+            extra=get_log_context(current_user, operation="create_zones_bulk", count=len(insert_results), domain=domain)
+        )
         return[Zone(**result) for result in insert_results]
 
     # if we're here, we failed to create a zone
@@ -183,12 +210,17 @@ async def create_zone(
 async def delete_zone(
     fqdn: str,
     db: AsyncIOMotorClient = Depends(get_db),
-    current_user: str = Depends(get_current_user),
+    current_user: Dict[str, Any] = Depends(get_current_user),
     permission_service: PermissionService = Depends()
 ):
-    is_owner = await permission_service.has_at_least_permissions_on_zone(fqdn, current_user["preferred_username"], Permission.OWNER)
+    correlation_id = current_user.get("correlation_id", "unknown")
+    is_owner = await permission_service.has_at_least_permissions_on_zone(
+        fqdn,
+        current_user["preferred_username"],
+        Permission.OWNER,
+        correlation_id
+    )
     if not is_owner:
-        logger.warning(f"User {current_user['preferred_username']} attempted to delete zone {fqdn}")
         raise HTTPException(status_code=403, detail="Unauthorized")
 
     # Check for existing rules
@@ -201,5 +233,8 @@ async def delete_zone(
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Zone not found")
     
-    logger.warning(f"User {current_user['preferred_username']} deleted zone {fqdn}")
+    logger.info(
+        "zone_deleted",
+        extra=get_log_context(current_user, zone=fqdn, operation="delete_zone")
+    )
     return {"status": "success"}

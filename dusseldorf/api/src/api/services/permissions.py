@@ -23,16 +23,48 @@ class PermissionService:
         self,
         zone: str,
         user_id: str,
-        min_permission: IntEnum = Permission.READONLY
+        min_permission: IntEnum = Permission.READONLY,
+        correlation_id: str = "unknown"
     ) -> bool:
         """Check if user has at least the specified permission level on zone"""
-        logger.error(f"has_at_least_permissions_on_zone({zone}, {user_id}, {min_permission})")
-
+        
         perm_check = await self.db.zones.find_one(
             {"fqdn": zone, "authz.alias": user_id},
             {"_id": 0, "authz": {"$elemMatch": {"alias": user_id, "authzlevel": { "$gte": min_permission }}}}
         )
-        return len(perm_check)
+        
+        allowed = bool(perm_check and len(perm_check.get("authz", [])) > 0)
+        actual_level = None
+        
+        if allowed and "authz" in perm_check and len(perm_check["authz"]) > 0:
+            actual_level = perm_check["authz"][0].get("authzlevel")
+        
+        # Audit log every permission check
+        logger.info(
+            "permission_check",
+            extra={
+                "zone": zone,
+                "user": user_id,
+                "required_level": int(min_permission),
+                "required_level_name": min_permission.name if hasattr(min_permission, 'name') else str(min_permission),
+                "actual_level": actual_level,
+                "allowed": allowed,
+                "correlation_id": correlation_id
+            }
+        )
+        
+        if not allowed:
+            logger.warning(
+                "permission_denied",
+                extra={
+                    "zone": zone,
+                    "user": user_id,
+                    "required_level": int(min_permission),
+                    "correlation_id": correlation_id
+                }
+            )
+        
+        return allowed
 
     async def get_user_zones(self, user_id: str) -> List[str]:
         """Get all zones where user has any permission"""

@@ -6,8 +6,11 @@
 
 import time
 from fastapi import APIRouter, Response, Depends
-from typing import Dict
-from dependencies import get_current_user, get_db
+from typing import Dict, Any
+import logging
+from dependencies import get_current_user, get_db, get_log_context
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["Default"])
 
