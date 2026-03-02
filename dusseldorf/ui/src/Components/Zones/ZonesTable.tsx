@@ -131,7 +131,6 @@ export const ZonesTable = ({ refreshZones, zones }: ZonesTableProps) => {
                 icon={isFavorite ? <PinFilled /> : <PinRegular />}
                 onClick={() => {
                   UiHelper.ToggleFavoriteZone(zone.fqdn);
-                  refreshZones();
                 }}
                 style={{
                   opacity: isFavorite ? 1 : 0.5,
