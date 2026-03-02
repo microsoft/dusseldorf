@@ -58,7 +58,7 @@ export const AllZonesScreen = () => {
     }
 
     // Sort: favorites on top, rest alphabetically
-    filtered = filtered.sort((a, b) => {
+    filtered = [...filtered].sort((a, b) => {
       const aIsFavorite = UiHelper.IsFavoriteZone(a.fqdn);
       const bIsFavorite = UiHelper.IsFavoriteZone(b.fqdn);
 
