@@ -14,7 +14,9 @@ global:
   loadBalancerIP: "{loadBalancerIP}"  
   loadBalancerIP2: "{loadBalancerIP2}"  
   loadBalancerIPApi: "{loadBalancerIPApi}" 
-  loadBalancerIPApi2: "{loadBalancerIPApi2}" 
+  loadBalancerIPApi2: "{loadBalancerIPApi2}"
+  loadBalancerIPMcp: "{loadBalancerIPMcp}"
+  resourceGroup: "{resourceGroup}" 
 
 listeners:
   listenerDNS:
@@ -52,3 +54,10 @@ secrets:
   certSecretName: "{certSecretName}"
   keyVaultSecretName: "{keyVaultSecretName}"  
   apiCertName: "{apiCertName}"
+
+mcpServer:
+  name: dusseldorf-mcp
+  image: dusseldorf-mcp
+  acrRepo: <acr-name>/dusseldorf-mcp:latest # Update your ACR name here
+  port: 8443
+  certPath: "/mnt/secrets-store"

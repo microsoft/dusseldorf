@@ -86,12 +86,18 @@ class AzureADService:
             if kid not in signing_keys:
                 raise ValueError("Unknown key ID")
 
+            # Accept both raw client ID and api:// format for audience  
+            valid_audiences = [
+                self.settings.AZURE_CLIENT_ID,
+                f"api://{self.settings.AZURE_CLIENT_ID}"
+            ]
+            
             # Decode and validate token
             claims = jwt.decode(
                 token,
                 key=signing_keys[kid],
                 algorithms=[alg],
-                audience=self.settings.AZURE_CLIENT_ID
+                audience=valid_audiences
             )
             
             # Verify tenant ID
@@ -104,17 +110,24 @@ class AzureADService:
             if not oid:
                 raise ValueError("No object ID in token")
 
+            # Accept both v1.0 (sts.windows.net) and v2.0 (login.microsoftonline.com) issuers
             iss = claims.get("iss")
-            if iss != f"https://login.microsoftonline.com/{self.settings.AZURE_TENANT_ID}/v2.0":
+            valid_issuers = [
+                f"https://login.microsoftonline.com/{self.settings.AZURE_TENANT_ID}/v2.0",
+                f"https://sts.windows.net/{self.settings.AZURE_TENANT_ID}/"
+            ]
+            if iss not in valid_issuers:
                 raise ValueError("Invalid issuer")
                 
             # Return normalized user info (only what's needed)
+            # Handle both v1.0 (upn) and v2.0 (preferred_username) token formats  
+            preferred_username = claims.get("preferred_username") or claims.get("upn")
             return {
                 "id": oid,  # Object ID (unique user identifier)
                 "tid": tid,  # Tenant ID
-                "preferred_username": claims.get("preferred_username"),  # User Principal Name
+                "preferred_username": preferred_username,  # User Principal Name
                 "name": claims.get("name"),
-                "email": claims.get("email") or claims.get("preferred_username"),
+                "email": claims.get("email") or preferred_username,
                 "roles": claims.get("roles", [])
             }
             

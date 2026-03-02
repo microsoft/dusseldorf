@@ -1,0 +1,73 @@
+# MCP Server Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ .Values.mcpServer.name }}-deployment"
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.mcpServer.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.mcpServer.name }}
+    spec:
+      containers:
+      - name: {{ .Values.mcpServer.name }}
+        image: {{ .Values.mcpServer.acrRepo }}
+        imagePullPolicy: Always
+        ports:
+        - containerPort: {{ .Values.mcpServer.port }}
+        env:
+        - name: DUSSELDORF_API_URL
+          value: "https://{{ .Values.global.dusseldorfDomain }}"
+        - name: DUSSELDORF_CLIENT_ID
+          valueFrom:
+            configMapKeyRef:
+              name: dusseldorf-config
+              key: AZURE_API_CLIENT_ID
+        - name: MCP_TLS_KEY_FILE
+          valueFrom:
+            configMapKeyRef:
+              name: dusseldorf-config
+              key: MCP_TLS_KEY_FILE
+        - name: MCP_TLS_CRT_FILE
+          valueFrom:
+            configMapKeyRef:
+              name: dusseldorf-config
+              key: MCP_TLS_CRT_FILE
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: dusseldorf-config
+              key: LOG_LEVEL
+        volumeMounts:
+        - name: mcp-volume
+          mountPath: {{ .Values.mcpServer.certPath }}
+      volumes:
+      - name: mcp-volume
+        csi:
+          driver: secrets-store.csi.k8s.io
+          readOnly: true
+          volumeAttributes:
+            secretProviderClass: "azure-kv-csi-api"
+---
+# MCP Server Service (LoadBalancer)
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ .Values.mcpServer.name }}-service"
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    service.beta.kubernetes.io/azure-load-balancer-resource-group: {{ .Values.global.resourceGroup }}
+spec:
+  type: LoadBalancer
+  loadBalancerIP: {{ .Values.global.loadBalancerIPMcp }}
+  selector:
+    app: {{ .Values.mcpServer.name }}
+  ports:
+  - protocol: TCP
+    port: {{ .Values.mcpServer.port }}
+    targetPort: {{ .Values.mcpServer.port }}

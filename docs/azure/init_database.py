@@ -38,6 +38,7 @@ async def create_indexes(db):
     await db.zones.create_index([("fqdn", 1), ("alias", 1)])
     await db.requests.create_index([("_id", 1), ("time", 1)])
     await db.requests.create_index([("zone", 1), ("time", 1)])
+    await db.requests.create_index("time")  # Required for CosmosDB order-by
     await db.rules.create_index([("zone", 1), ("priority", 1), ("networkprotocol", 1)], unique=True)
     await db.rules.create_index("name")
     #await db.templates.create_index("name", unique=True)
