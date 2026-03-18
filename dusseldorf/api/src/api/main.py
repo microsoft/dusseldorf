@@ -14,6 +14,7 @@ setup_logging()
 
 # Azure Monitor OpenTelemetry
 from azure.monitor.opentelemetry import configure_azure_monitor
+
 if os.environ.get("APPLICATIONINSIGHTS_CONNECTION_STRING"):
     configure_azure_monitor()
 
@@ -27,6 +28,7 @@ from middleware.correlation import correlation_middleware
 from controllers.default_controller import router as default_router
 from controllers.authz_controller import router as authz_router
 from controllers.domains_controller import router as domains_router
+
 # from controllers.health_controller import router as health_router
 from controllers.requests_controller import router as requests_router
 from controllers.rules_controller import router as rules_router
@@ -40,19 +42,18 @@ if os.environ.get("ENVIRONMENT") != "development":
 
 dusseldorf = FastAPI()
 
+
 @dusseldorf.get("/")
 async def ui_redirect():
     # Redirect to /ui
     return RedirectResponse(url="/ui", status_code=302)
 
+
 app = FastAPI(
     title="Dusseldorf API",
     description="Dusseldorf Management API",
-    
-    version="2025.3.2",
-    swagger_ui_parameters={
-        "defaultModelsExpandDepth": -1
-    },
+    version="2026.2.26",  # yyyy.mm.dd
+    swagger_ui_parameters={"defaultModelsExpandDepth": -1},
     root_path="/api",
 )
 
@@ -83,4 +84,10 @@ dusseldorf.mount("/ui", StaticFiles(directory="./ui", html=True), name="ui")
 if os.environ.get("ENVIRONMENT") == "development":
     uvicorn.run(dusseldorf, host="0.0.0.0", port=int(os.environ.get("API_PORT", 10443)))
 else:
-    uvicorn.run(dusseldorf, host="0.0.0.0", port=int(os.environ.get("API_PORT", 10443)), ssl_keyfile=os.environ.get("API_TLS_KEY_FILE"), ssl_certfile=os.environ.get("API_TLS_CRT_FILE"))
+    uvicorn.run(
+        dusseldorf,
+        host="0.0.0.0",
+        port=int(os.environ.get("API_PORT", 10443)),
+        ssl_keyfile=os.environ.get("API_TLS_KEY_FILE"),
+        ssl_certfile=os.environ.get("API_TLS_CRT_FILE"),
+    )
