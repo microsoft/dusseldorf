@@ -1,4 +1,4 @@
-# Dusseldorf CLI Specification (MVP)
+# Dusseldorf CLI Specification
 
 This spec documents the functionality of a dusseldorf command line interface (cli) client tool
 to interact with a Dusseldorf API.
@@ -26,7 +26,7 @@ to interact with a Dusseldorf API.
 - Packaging: Python package with console entrypoint `dssldrf`
 - Optional binary packaging: PyInstaller or Nuitka (per-OS build)
 
-Rationale: Python + Typer is a small codebase, cross-platform, supports shell completion, and is easy to ship as both script and binary. Using `az` CLI avoids complexity of MSAL and works around policy restrictions on device code flow.
+Rationale: Python3 + Typer is a small codebase, cross-platform, supports shell completion, and is easy to ship as both script and binary. Using `az` CLI avoids complexity of MSAL and works around policy restrictions on device code flow.
 
 ## CLI Command Contract (MVP)
 
