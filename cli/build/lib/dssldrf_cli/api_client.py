@@ -49,6 +49,36 @@ class ApiClient:
             return {"status": "success"}
         return response.json()
 
+    def list_rules(self, zone: str) -> list[dict[str, Any]]:
+        result = self.get(f"/rules/{zone}")
+        if isinstance(result, list):
+            return result
+        return []
+
+    def create_rule(self, payload: dict[str, Any]) -> dict[str, Any]:
+        result = self.post("/rules", payload)
+        if isinstance(result, dict):
+            return result
+        raise RuntimeError("Unexpected response for create_rule")
+
+    def delete_rule(self, zone: str, rule_id: str) -> dict[str, Any]:
+        result = self.delete(f"/rules/{zone}/{rule_id}")
+        if isinstance(result, dict):
+            return result
+        return {"status": "success"}
+
+    def add_rule_component(self, zone: str, rule_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+        result = self.post(f"/rules/{zone}/{rule_id}/components", payload)
+        if isinstance(result, dict):
+            return result
+        raise RuntimeError("Unexpected response for add_rule_component")
+
+    def delete_rule_component(self, zone: str, rule_id: str, component_id: str) -> dict[str, Any]:
+        result = self.delete(f"/rules/{zone}/{rule_id}/components/{component_id}")
+        if isinstance(result, dict):
+            return result
+        return {"status": "success"}
+
     @staticmethod
     def _raise_on_error(response: httpx.Response) -> None:
         if response.status_code < 400:
