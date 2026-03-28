@@ -8,7 +8,6 @@ import {
   TargetRegular,
   WindowBulletListRegular,
   WindowEditRegular,
-  PinRegular,
 } from "@fluentui/react-icons";
 import {
   Hamburger,
@@ -84,36 +83,33 @@ export const LeftNav = ({ refreshToken }: ILeftNavProps) => {
             return a.fqdn.localeCompare(b.fqdn);
           });
 
-        setZoneLinks(
-          visibleZones
-            .slice(0, 13)
-            .map((zone) => {
-              const isFavorite = UiHelper.IsFavoriteZone(zone.fqdn);
-              return (
-                <NavSubItem key={zone.fqdn} value={zone.fqdn}>
-                  <Text
-                    truncate
-                    wrap={false}
-                    style={{
-                      overflow: "hidden",
-                      width: 200,
-                      display: "block",
-                    }}
-                  >
-                    {isFavorite && (
-                      <PinRegular fontSize={12} style={{ marginRight: 4 }} />
-                    )}
-                    {zone.fqdn}
-                  </Text>
-                </NavSubItem>
-              );
-            })
-            .concat(
-              <NavSubItem key={" "} value=" ">
-                ...
-              </NavSubItem>,
-            ),
-        );
+        const items = visibleZones.slice(0, 13).map((zone) => {
+          return (
+            <NavSubItem key={zone.fqdn} value={zone.fqdn}>
+              <Text
+                truncate
+                wrap={false}
+                style={{
+                  overflow: "hidden",
+                  width: 200,
+                  display: "block",
+                }}
+              >
+                {zone.fqdn}
+              </Text>
+            </NavSubItem>
+          );
+        });
+
+        if (visibleZones.length > 13) {
+          items.push(
+            <NavSubItem key={" "} value=" ">
+              ...
+            </NavSubItem>,
+          );
+        }
+
+        setZoneLinks(items);
       })
       .catch((err) => {
         Logger.Error(err);

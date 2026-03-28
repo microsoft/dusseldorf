@@ -1,8 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { Divider, makeStyles, Title2, Toolbar, ToolbarButton, ToolbarDivider } from "@fluentui/react-components";
-import { ListRegular, TaskListLtrRegular } from "@fluentui/react-icons";
+import { Button, Divider, makeStyles, Title2, Toolbar, ToolbarButton, ToolbarDivider, Tooltip } from "@fluentui/react-components";
+import { ListRegular, StarFilled, StarRegular, TaskListLtrRegular } from "@fluentui/react-icons";
+import { useEffect, useState } from "react";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 
 import { RequestsScreen } from "./RequestsScreen";
@@ -12,6 +13,7 @@ import { DeleteZoneDialog } from "../Components/ZoneDetails/DeleteZoneDialog";
 import { QRCodeDialog } from "../Components/ZoneDetails/QRCodeDialog";
 import { OpenInNewTabButton } from "../Components/OpenInNewTabButton";
 import { CopyButton } from "../Components/CopyButton";
+import { UiHelper } from "../Helpers/UIHelper";
 
 const useStyles = makeStyles({
     root: {
@@ -42,11 +44,16 @@ export const ZoneDetailsScreen = ({ showRules = false }: ZoneDetailsScreenProps)
 
     const navigate = useNavigate();
     const styles = useStyles();
+    const [isFavorite, setIsFavorite] = useState<boolean>(false);
 
     // TODO: We should never be routed here without a zone, but need to check zone is valid
     if (!zone) {
         return <Navigate to="/zones" />;
     }
+
+    useEffect(() => {
+        setIsFavorite(UiHelper.IsFavoriteZone(zone));
+    }, [zone]);
 
     return (
         <div className={styles.root}>
@@ -62,6 +69,20 @@ export const ZoneDetailsScreen = ({ showRules = false }: ZoneDetailsScreenProps)
                 <CopyButton text={zone} />
 
                 <OpenInNewTabButton url={zone} />
+
+                <Tooltip
+                    content={isFavorite ? "Unfavorite zone" : "Favorite zone"}
+                    relationship="label"
+                >
+                    <Button
+                        appearance="subtle"
+                        icon={isFavorite ? <StarFilled color="#f0b429" /> : <StarRegular />}
+                        onClick={() => {
+                            UiHelper.ToggleFavoriteZone(zone);
+                            setIsFavorite(UiHelper.IsFavoriteZone(zone));
+                        }}
+                    />
+                </Tooltip>
 
                 <Toolbar>
                     <ToolbarButton
