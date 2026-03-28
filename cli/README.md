@@ -1,77 +1,64 @@
-# Dusseldorf CLI
+# Dusseldorf: Command Line Interface
 
-A simple command line tool for managing Dusseldorf zones and viewing requests. Works on Windows, macOS, Linux, and WSL.
+A simple command line tool for managing your Dusseldorf zones, viewing requests and adding and editing rules. This works on Windows/wsl2, macOS, Linux.
 
 Once installed, you'll have a `dssldrf` command you can run from anywhere.
 
-## What you can do
+## Examples:
 
 - `dssldrf zone` - List all your zones (default)
-- `dssldrf zone --add test` or `dssldrf zone -a test` - Create a new zone
-- `dssldrf zone --delete test` or `dssldrf zone -d test` - Delete a zone
-- `dssldrf req test` - View recent requests for a zone
-- `dssldrf config set --api-url <url> --domain <domain>` - Configure settings
-- `dssldrf rule create ...` - Create a rule (single command)
-- `dssldrf rule apply -f rules.yaml` - Apply one or more rules from YAML
+- `dssldrf zone --add foo` or `dssldrf zone -a foo` - Create a new zone
+- `dssldrf req foo` - View recent requests for a zone
+- `dssldrf rule apply -f mock_api.yaml` - Apply one or more rules from YAML
 
-> **Tip:** Most commands support short flags: `-a` for `--add`, `-d` for `--delete`, `-l` for `--list`, `-n` for `--limit`, `-s` for `--skip`, `-p` for `--protocols`, `-h` for `--help`
-
-Full spec: [SPEC.md](SPEC.md)
+The full spec can be found here: [SPEC.md](SPEC.md)
 
 ---
 
 ## Installation
 
-### Quick Start (Recommended)
+The instlalation has two main parts:
 
-**If you have Python 3.10 or newer installed:**
+1. Install `pipx` and basic prerequisites.
+2. Download the repo and install the CLI from `cli/`.
 
-This installs the `dssldrf` command automatically using a tool called `pipx` (which keeps it isolated from your other Python packages).
+### 1. Install `pipx` and prerequisites
 
-1. Open your terminal and navigate to the `cli/` folder in this repository
+**on Ubuntu/Debian/WSL:**
 
-2. Run these commands for your platform:
+```bash
+sudo apt update
+sudo apt install -y git python3 python3-pip pipx
+python3 -m pipx ensurepath
+```
 
-    **Ubuntu/Debian/WSL:**
-    ```bash
-    sudo apt update
-    sudo apt install pipx
-    pipx ensurepath
-    pipx install .
-    ```
+**Other Linux/macOS:**
 
-    **Other Linux/macOS:**
-    ```bash
-    python3 -m pip install --upgrade pip
-    python3 -m pip install pipx
-    pipx ensurepath
-    pipx install .
-    ```
+```bash
+python3 -m pip install --upgrade pip
+python3 -m pip install pipx
+python3 -m pipx ensurepath
+```
 
-    **Windows PowerShell (as Administrator):**
-    ```powershell
-    python -m pip install --upgrade pip
-    python -m pip install pipx
-    pipx ensurepath
-    pipx install .
-    ```
+### 2. Install dusseldorf CLI
 
-3. Close and reopen your terminal, then test:
-    ```bash
-    dssldrf --help
-    ```
+These commands can be copied and pasted in your terminal:
 
-> **What just happened?** The `pipx install .` command created the `dssldrf` command and made it available system-wide on your PATH (usually `~/.local/bin` on Linux/macOS or `%APPDATA%\Python\Scripts` on Windows). That's why you can now type `dssldrf` from any folder.
+```bash
+git clone https://github.com/microsoft/dusseldorf.git
+cd dusseldorf/cli
+python3 -m pipx install .
+dssldrf --help
+```
 
 
-4. Close and reopen your terminal (this is important!)
+If `dssldrf` is not found immediately after installation, close and reopen your terminal once and run:
 
-5. Test that `dssldrf` is now available:
-   ```bash
-   dssldrf --help
-   ```
+```bash
+dssldrf --help
+```
 
-> **What just happened?** The `pipx install .` command created the `dssldrf` command and put it in a folder that's on your system PATH (usually `~/.local/bin` on Linux/macOS or `%APPDATA%\Python\Scripts` on Windows). That's why you can now type `dssldrf` from any folder.
+`pipx` installs the CLI in an isolated environment and places the `dssldrf` command on your PATH.
 
 ---
 
@@ -86,12 +73,12 @@ dssldrf config set --api-url https://your-dusseldorf-server/api --domain yourdom
 ```
 
 Replace:
-- `https://your-dusseldorf-server/api` with your Dusseldorf API URL
-- `yourdomain.net` with your backend domain (e.g., `dssldrf.net`)
+- `https://your-dusseldorf-server/api` with your Dusseldorf API URL (control plane)
+- `yourdomain.net` with your backend domain (data plane)
 
 ### 2. Set up authentication
 
-Dusseldorf CLI uses bearer token authentication. You can provide a token in two ways:
+Dusseldorf CLI uses EntraID Bearer token authentication. You can provide a token in two ways:
 
 #### Option A: Environment Variable (Recommended)
 
@@ -100,12 +87,6 @@ Set the `DSSLDRF_AUTH_TOKEN` environment variable with your token:
 **Linux/WSL/macOS:**
 ```bash
 export DSSLDRF_AUTH_TOKEN=<your-bearer-token>
-dssldrf zone
-```
-
-**Windows PowerShell:**
-```powershell
-$env:DSSLDRF_AUTH_TOKEN = "<your-bearer-token>"
 dssldrf zone
 ```
 
@@ -183,8 +164,6 @@ dssldrf zone -l
 
 ```bash
 dssldrf zone --add mytest
-# Or short version:
-dssldrf zone -a mytest
 ```
 
 This creates `mytest.yourdomain.net` (using the domain you configured).
@@ -197,14 +176,16 @@ See "List zones" above - just run:
 dssldrf zone
 ```
 
+> **Tip:** Most commands support short flags: `-a` for `--add`, `-d` for `--delete`, `-l` for `--list`, `-n` for `--limit`, `-s` for `--skip`, `-p` for `--protocols`, `-h` for `--help`
+
+
+
 ### View requests for a zone
 
 #### Compact list (default)
 
 ```bash
 dssldrf req mytest --limit 20
-# Or short version:
-dssldrf req mytest -n 20
 ```
 
 Shows timestamp, protocol, and client IP for each request (e.g., `1738034859 HTTP 174.181.87.109`)
@@ -260,6 +241,7 @@ This shows the last 20 requests received by `mytest.yourdomain.net`.
 dssldrf zone --delete mytest
 # Or short version:
 dssldrf zone -d mytest
+```
 
 ### Create a rule from CLI flags
 
@@ -280,7 +262,6 @@ Useful options:
 - `--confirm` applies without interactive prompt.
 - `--predicate action=value` and `--result action=value` let you use all API-supported actions.
 - `--interactive-values` helps build JSON-valued actions interactively.
-- Protocol-prefixed options are preferred (`--http-*`, `--dns-*`); legacy aliases are still accepted.
 
 ### Apply rules from YAML
 
@@ -310,7 +291,6 @@ List all currently supported predicate/result names:
 
 ```bash
 dssldrf rule list-actions
-```
 ```
 
 ---
@@ -346,7 +326,6 @@ The `dssldrf` command is not in your system PATH.
   ```
   Then run `source ~/.bashrc`
 - On macOS: Add the same line to `~/.zshrc` instead
-- On Windows: The installer should have added it automatically, but you may need to restart PowerShell
 
 ### Authentication errors
 
@@ -358,7 +337,7 @@ You need to set `DSSLDRF_AUTH_TOKEN` or store a token in config.
 
 Quick fix:
 ```bash
-export :q[BDSSLDRF_AUTH_TOKEN=<your-bearer-token>
+export DSSLDRF_AUTH_TOKEN=<your-bearer-token>
 ```
 
 Or save it to config:
