@@ -18,14 +18,29 @@ from datetime import datetime
 from typing import Optional
 
 import typer
+import yaml
 
 from .api_client import ApiClient
 from .config_store import CliConfig, load_config, save_config
+from .rule_builder import (
+    ALLOWED_PREDICATES,
+    ALLOWED_RESULTS,
+    component,
+    ensure_json_text,
+    infer_protocol,
+    next_available_priority,
+    parse_action_assignment,
+    preview_rule,
+    short_rule_name,
+)
+from .rule_service import create_rule_with_components
 
 
 app = typer.Typer(help="Dusseldorf CLI", no_args_is_help=True, add_completion=False)
 config_app = typer.Typer(help="Manage local CLI settings")
+rule_app = typer.Typer(help="Create and manage rules")
 app.add_typer(config_app, name="config")
+app.add_typer(rule_app, name="rule")
 
 
 def _effective_token(config: CliConfig) -> str:
@@ -220,6 +235,202 @@ def _resolve_fqdn(zone: str, domain: str) -> str:
             "Zone label provided but no default domain configured. Use: dssldrf config set --domain <domain>"
         )
     return f"{normalized_zone}.{normalized_domain}"
+
+
+def _prompt_json_map(label: str) -> str:
+    typer.echo(f"Enter {label} entries as key=value. Leave blank to finish.")
+    items: dict[str, str] = {}
+    while True:
+        line = typer.prompt("entry", default="", show_default=False).strip()
+        if not line:
+            break
+        if "=" not in line:
+            typer.echo("Expected key=value", err=True)
+            continue
+        key, value = line.split("=", 1)
+        key = key.strip()
+        if not key:
+            typer.echo("Key cannot be empty", err=True)
+            continue
+        items[key] = value.strip()
+    return json.dumps(items)
+
+
+def _normalize_bool_string(value: str) -> str:
+    lowered = value.strip().lower()
+    if lowered in {"true", "1", "yes", "y"}:
+        return "true"
+    if lowered in {"false", "0", "no", "n"}:
+        return "false"
+    raise typer.BadParameter("Expected boolean value: true|false")
+
+
+def _build_rule_components(
+    method: Optional[str],
+    tls: Optional[bool],
+    path: Optional[str],
+    body_regex: Optional[str],
+    header: list[str],
+    header_keys: list[str],
+    header_values_json: Optional[str],
+    header_regexes_json: Optional[str],
+    dns_types: list[str],
+    response_code: Optional[int],
+    response_body: Optional[str],
+    response_header: list[str],
+    response_headers_json: Optional[str],
+    dns_data_json: Optional[str],
+    passthru_url: Optional[str],
+    var_rewrite: list[str],
+    extra_predicate: list[str],
+    extra_result: list[str],
+    interactive_values: bool,
+) -> tuple[list[dict], list[dict], list[str]]:
+    predicates: list[dict] = []
+    results: list[dict] = []
+    action_names: list[str] = []
+
+    if method:
+        action_names.append("http.method")
+        predicates.append(component("http.method", method.strip().upper(), True))
+
+    if tls is not None:
+        action_names.append("http.tls")
+        predicates.append(component("http.tls", "true" if tls else "false", True))
+
+    if path:
+        action_names.append("http.path")
+        predicates.append(component("http.path", path, True))
+
+    if body_regex:
+        action_names.append("http.body")
+        predicates.append(component("http.body", body_regex, True))
+
+    for item in header:
+        action_names.append("http.header")
+        predicates.append(component("http.header", item.strip(), True))
+
+    if header_keys:
+        action_names.append("http.headers.keys")
+        predicates.append(component("http.headers.keys", ",".join(header_keys), True))
+
+    if interactive_values and not header_values_json:
+        if typer.confirm("Build http.headers.values JSON interactively?", default=False):
+            header_values_json = _prompt_json_map("http.headers.values")
+
+    if interactive_values and not header_regexes_json:
+        if typer.confirm("Build http.headers.regexes JSON interactively?", default=False):
+            header_regexes_json = _prompt_json_map("http.headers.regexes")
+
+    if header_values_json:
+        action_names.append("http.headers.values")
+        predicates.append(
+            component(
+                "http.headers.values",
+                ensure_json_text(header_values_json, "--header-values-json"),
+                True,
+            )
+        )
+
+    if header_regexes_json:
+        action_names.append("http.headers.regexes")
+        predicates.append(
+            component(
+                "http.headers.regexes",
+                ensure_json_text(header_regexes_json, "--header-regexes-json"),
+                True,
+            )
+        )
+
+    if dns_types:
+        action_names.append("dns.type")
+        predicates.append(component("dns.type", ",".join(dns_types), True))
+
+    if response_code is not None:
+        action_names.append("http.code")
+        results.append(component("http.code", str(response_code), False))
+
+    if response_body is not None:
+        action_names.append("http.body")
+        results.append(component("http.body", response_body, False))
+
+    for item in response_header:
+        if ":" not in item:
+            raise typer.BadParameter("--response-header expects name:value")
+        action_names.append("http.header")
+        results.append(component("http.header", item, False))
+
+    if interactive_values and not response_headers_json:
+        if typer.confirm("Build http.headers JSON interactively?", default=False):
+            response_headers_json = _prompt_json_map("http.headers")
+
+    if response_headers_json:
+        action_names.append("http.headers")
+        results.append(
+            component(
+                "http.headers",
+                ensure_json_text(response_headers_json, "--response-headers-json"),
+                False,
+            )
+        )
+
+    if interactive_values and not dns_data_json:
+        if typer.confirm("Provide dns.data JSON now?", default=False):
+            dns_data_json = typer.prompt("dns.data JSON", default="{}").strip()
+
+    if dns_data_json:
+        action_names.append("dns.data")
+        results.append(
+            component("dns.data", ensure_json_text(dns_data_json, "--dns-data-json"), False)
+        )
+
+    if passthru_url:
+        action_names.append("http.passthru")
+        results.append(component("http.passthru", passthru_url.strip(), False))
+
+    for value in var_rewrite:
+        action_names.append("var")
+        results.append(component("var", value, False))
+
+    for assignment in extra_predicate:
+        action_name, action_value = parse_action_assignment(assignment)
+        action_names.append(action_name)
+        if action_name == "http.tls":
+            action_value = _normalize_bool_string(action_value)
+        predicates.append(component(action_name, action_value, True))
+
+    for assignment in extra_result:
+        action_name, action_value = parse_action_assignment(assignment)
+        action_names.append(action_name)
+        results.append(component(action_name, action_value, False))
+
+    if not results:
+        raise typer.BadParameter("At least one result action is required")
+
+    return predicates, results, action_names
+
+
+def _yaml_components(items: list, is_predicate: bool) -> list[dict]:
+    built: list[dict] = []
+    for item in items:
+        if isinstance(item, str):
+            action_name, action_value = parse_action_assignment(item)
+        elif isinstance(item, dict):
+            action_name = str(item.get("action", "")).strip().lower()
+            if not action_name:
+                raise ValueError("YAML component object must include action")
+            if "value" not in item:
+                raise ValueError(f"YAML component {action_name} must include value")
+            raw_value = item["value"]
+            if isinstance(raw_value, (dict, list)):
+                action_value = json.dumps(raw_value)
+            else:
+                action_value = str(raw_value)
+        else:
+            raise ValueError("YAML component entries must be strings or objects")
+
+        built.append(component(action_name, action_value, is_predicate))
+    return built
 
 
 @config_app.command("show")
@@ -511,6 +722,342 @@ def req_command(
             client_ip = item.get("clientip", "")
             formatted_time = _format_timestamp(timestamp, human)
             typer.echo(f"{formatted_time} {protocol} {client_ip}")
+
+
+@rule_app.command("list-actions")
+def rule_list_actions() -> None:
+    typer.echo("Supported predicates:")
+    for action_name in sorted(ALLOWED_PREDICATES):
+        typer.echo(f"  - {action_name}")
+    typer.echo("\nSupported results:")
+    for action_name in sorted(ALLOWED_RESULTS):
+        typer.echo(f"  - {action_name}")
+
+
+@rule_app.command("create")
+def rule_create_command(
+    zone: str = typer.Option(..., "--zone", help="Zone label or fqdn"),
+    protocol: Optional[str] = typer.Option(None, "--protocol", help="HTTP or DNS"),
+    name: Optional[str] = typer.Option(None, "--name", help="Rule name"),
+    priority: Optional[int] = typer.Option(
+        None, "--priority", min=1, max=1000, help="Rule priority (1..1000)"
+    ),
+    method: Optional[str] = typer.Option(
+        None,
+        "--http-req-method",
+        "--method",
+        help="HTTP request method predicate",
+    ),
+    tls: Optional[bool] = typer.Option(
+        None,
+        "--http-req-tls",
+        "--tls",
+        help="HTTP request TLS predicate",
+    ),
+    path: Optional[str] = typer.Option(
+        None,
+        "--http-req-path-regex",
+        "--path",
+        help="HTTP request path regex predicate",
+    ),
+    body_regex: Optional[str] = typer.Option(
+        None,
+        "--http-req-body",
+        "--http-req-body-regex",
+        "--body-regex",
+        help="HTTP request body regex predicate",
+    ),
+    header: list[str] = typer.Option(
+        [],
+        "--http-req-header",
+        "--header",
+        help="HTTP request header present predicate",
+    ),
+    header_keys: list[str] = typer.Option(
+        [],
+        "--http-req-header-key",
+        "--header-key",
+        help="Required HTTP request header key",
+    ),
+    header_values_json: Optional[str] = typer.Option(
+        None,
+        "--http-req-header-values-json",
+        "--header-values-json",
+        help="JSON object for http.headers.values predicate",
+    ),
+    header_regexes_json: Optional[str] = typer.Option(
+        None,
+        "--http-req-header-regexes-json",
+        "--header-regexes-json",
+        help="JSON object for http.headers.regexes predicate",
+    ),
+    dns_types: list[str] = typer.Option(
+        [],
+        "--dns-req-type",
+        "--dns-type",
+        help="DNS request type",
+    ),
+    response_code: Optional[int] = typer.Option(
+        None,
+        "--http-resp-code",
+        "--response-code",
+        help="HTTP response status code result",
+    ),
+    response_body: Optional[str] = typer.Option(
+        None,
+        "--http-resp-body",
+        "--response-body",
+        help="HTTP response body result",
+    ),
+    response_header: list[str] = typer.Option(
+        [],
+        "--http-resp-header",
+        "--response-header",
+        help="HTTP response header result in name:value format",
+    ),
+    response_headers_json: Optional[str] = typer.Option(
+        None,
+        "--http-resp-headers-json",
+        "--response-headers-json",
+        help="JSON object for http.headers result",
+    ),
+    passthru_url: Optional[str] = typer.Option(
+        None,
+        "--http-resp-passthru-url",
+        "--passthru-url",
+        help="http.passthru target URL",
+    ),
+    dns_data_json: Optional[str] = typer.Option(
+        None,
+        "--dns-resp-data-json",
+        "--dns-data-json",
+        help="JSON value for dns.data result",
+    ),
+    var_rewrite: list[str] = typer.Option([], "--var", help="var rewrite result, format from:to"),
+    predicate: list[str] = typer.Option([], "--predicate", help="Extra predicate action=value"),
+    result: list[str] = typer.Option([], "--result", help="Extra result action=value"),
+    interactive_values: bool = typer.Option(
+        False,
+        "--interactive-values",
+        help="Prompt for JSON-valued fields when omitted",
+    ),
+    preview: bool = typer.Option(False, "--preview", help="Show resolved rule before apply"),
+    confirm: bool = typer.Option(False, "--confirm", help="Apply without interactive confirmation"),
+    json_output: bool = typer.Option(False, "--json", help="Print API response as JSON"),
+) -> None:
+    _require_config()
+    config = load_config()
+    zone_fqdn = _resolve_fqdn(zone, config.domain)
+    client = _api_client()
+
+    try:
+        predicates, results, action_names = _build_rule_components(
+            method=method,
+            tls=tls,
+            path=path,
+            body_regex=body_regex,
+            header=header,
+            header_keys=header_keys,
+            header_values_json=header_values_json,
+            header_regexes_json=header_regexes_json,
+            dns_types=dns_types,
+            response_code=response_code,
+            response_body=response_body,
+            response_header=response_header,
+            response_headers_json=response_headers_json,
+            dns_data_json=dns_data_json,
+            passthru_url=passthru_url,
+            var_rewrite=var_rewrite,
+            extra_predicate=predicate,
+            extra_result=result,
+            interactive_values=interactive_values,
+        )
+
+        resolved_protocol = infer_protocol(action_names, protocol)
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc))
+
+    try:
+        existing_rules = client.list_rules(zone_fqdn)
+        resolved_priority = priority or next_available_priority(existing_rules, resolved_protocol)
+    except RuntimeError as exc:
+        _handle_api_error(exc)
+        return
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc))
+
+    auto_hint = method or (dns_types[0] if dns_types else "rule")
+    resolved_name = (name or "").strip() or short_rule_name(resolved_protocol, auto_hint)
+
+    preview_text = preview_rule(
+        zone=zone_fqdn,
+        protocol=resolved_protocol,
+        name=resolved_name,
+        priority=resolved_priority,
+        predicates=predicates,
+        results=results,
+    )
+    typer.echo(preview_text)
+
+    if preview and not confirm:
+        return
+
+    if not confirm:
+        if not typer.confirm("Apply this rule?", default=True):
+            typer.echo("Cancelled")
+            return
+
+    try:
+        result_data = create_rule_with_components(
+            client=client,
+            zone=zone_fqdn,
+            protocol=resolved_protocol,
+            name=resolved_name,
+            priority=resolved_priority,
+            predicates=predicates,
+            results=results,
+        )
+    except RuntimeError as exc:
+        _handle_api_error(exc)
+        return
+
+    if json_output:
+        typer.echo(json.dumps(result_data, indent=2))
+        return
+
+    created_rule = result_data.get("rule", {})
+    typer.echo(
+        f"Created rule {created_rule.get('ruleid', '')} with {result_data.get('components_created', 0)} components"
+    )
+
+
+@rule_app.command("apply")
+def rule_apply_command(
+    file: str = typer.Option(..., "--file", "-f", help="YAML file with one or more rules"),
+    confirm: bool = typer.Option(False, "--confirm", help="Apply without interactive confirmation"),
+    continue_on_error: bool = typer.Option(
+        False,
+        "--continue-on-error",
+        help="Keep applying subsequent rules after an error",
+    ),
+    preview: bool = typer.Option(False, "--preview", help="Preview rules and exit"),
+    json_output: bool = typer.Option(False, "--json", help="Print full result JSON"),
+) -> None:
+    _require_config()
+    config = load_config()
+    client = _api_client()
+
+    try:
+        with open(file, "r", encoding="utf-8") as handle:
+            payload = yaml.safe_load(handle) or {}
+    except OSError as exc:
+        raise typer.BadParameter(f"Could not read file: {exc}")
+    except yaml.YAMLError as exc:
+        raise typer.BadParameter(f"Invalid YAML: {exc}")
+
+    raw_rules = payload.get("rules") if isinstance(payload, dict) else None
+    if not isinstance(raw_rules, list) or not raw_rules:
+        raise typer.BadParameter("YAML must contain a non-empty 'rules' list")
+
+    outcomes: list[dict] = []
+
+    for index, raw_rule in enumerate(raw_rules, start=1):
+        if not isinstance(raw_rule, dict):
+            message = f"rules[{index}] must be an object"
+            outcomes.append({"index": index, "status": "error", "error": message})
+            if not continue_on_error:
+                break
+            continue
+
+        try:
+            zone_value = str(raw_rule.get("zone", "")).strip()
+            if not zone_value:
+                raise ValueError("Missing zone")
+            zone_fqdn = _resolve_fqdn(zone_value, config.domain)
+
+            predicates = _yaml_components(raw_rule.get("predicates", []), True)
+            results = _yaml_components(raw_rule.get("results", []), False)
+            if not results:
+                raise ValueError("Each rule must include at least one result")
+
+            action_names = [c["actionname"] for c in predicates + results]
+            resolved_protocol = infer_protocol(action_names, raw_rule.get("protocol"))
+            existing_rules = client.list_rules(zone_fqdn)
+
+            parsed_priority = raw_rule.get("priority")
+            if parsed_priority is None:
+                resolved_priority = next_available_priority(existing_rules, resolved_protocol)
+            else:
+                resolved_priority = int(parsed_priority)
+                if resolved_priority < 1 or resolved_priority > 1000:
+                    raise ValueError("priority must be in range 1..1000")
+
+            name_hint = raw_rule.get("name_hint")
+            if not name_hint and predicates:
+                name_hint = predicates[0]["actionname"].split(".")[-1]
+            resolved_name = str(raw_rule.get("name", "")).strip() or short_rule_name(
+                resolved_protocol,
+                str(name_hint or "rule"),
+            )
+
+            typer.echo(
+                preview_rule(
+                    zone=zone_fqdn,
+                    protocol=resolved_protocol,
+                    name=resolved_name,
+                    priority=resolved_priority,
+                    predicates=predicates,
+                    results=results,
+                )
+            )
+
+            if preview:
+                outcomes.append({"index": index, "status": "preview"})
+                continue
+
+            if not confirm:
+                if not typer.confirm(f"Apply rule {index}?", default=True):
+                    outcomes.append({"index": index, "status": "skipped"})
+                    continue
+
+            created = create_rule_with_components(
+                client=client,
+                zone=zone_fqdn,
+                protocol=resolved_protocol,
+                name=resolved_name,
+                priority=resolved_priority,
+                predicates=predicates,
+                results=results,
+            )
+            outcomes.append(
+                {
+                    "index": index,
+                    "status": "created",
+                    "ruleid": created.get("rule", {}).get("ruleid"),
+                    "components_created": created.get("components_created", 0),
+                }
+            )
+        except (RuntimeError, ValueError) as exc:
+            outcomes.append({"index": index, "status": "error", "error": str(exc)})
+            if not continue_on_error:
+                break
+
+    if json_output:
+        typer.echo(json.dumps(outcomes, indent=2))
+        return
+
+    for outcome in outcomes:
+        status = outcome.get("status")
+        if status == "created":
+            typer.echo(
+                f"Rule {outcome['index']} created: {outcome.get('ruleid', '')} ({outcome.get('components_created', 0)} components)"
+            )
+        elif status == "preview":
+            typer.echo(f"Rule {outcome['index']} previewed")
+        elif status == "skipped":
+            typer.echo(f"Rule {outcome['index']} skipped")
+        else:
+            typer.echo(f"Rule {outcome['index']} failed: {outcome.get('error', '')}", err=True)
 
 
 def run() -> None:

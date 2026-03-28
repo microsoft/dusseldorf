@@ -11,6 +11,8 @@ Once installed, you'll have a `dssldrf` command you can run from anywhere.
 - `dssldrf zone --delete test` or `dssldrf zone -d test` - Delete a zone
 - `dssldrf req test` - View recent requests for a zone
 - `dssldrf config set --api-url <url> --domain <domain>` - Configure settings
+- `dssldrf rule create ...` - Create a rule (single command)
+- `dssldrf rule apply -f rules.yaml` - Apply one or more rules from YAML
 
 > **Tip:** Most commands support short flags: `-a` for `--add`, `-d` for `--delete`, `-l` for `--list`, `-n` for `--limit`, `-s` for `--skip`, `-p` for `--protocols`, `-h` for `--help`
 
@@ -258,6 +260,57 @@ This shows the last 20 requests received by `mytest.yourdomain.net`.
 dssldrf zone --delete mytest
 # Or short version:
 dssldrf zone -d mytest
+
+### Create a rule from CLI flags
+
+Block POST requests that contain Authorization header and return a fixed response:
+
+```bash
+dssldrf rule create \
+  --zone mytest \
+  --http-req-method POST \
+  --http-req-header Authorization \
+  --http-resp-code 403 \
+  --http-resp-body "blocked by policy"
+```
+
+Useful options:
+
+- `--preview` shows the resolved rule and exits.
+- `--confirm` applies without interactive prompt.
+- `--predicate action=value` and `--result action=value` let you use all API-supported actions.
+- `--interactive-values` helps build JSON-valued actions interactively.
+- Protocol-prefixed options are preferred (`--http-*`, `--dns-*`); legacy aliases are still accepted.
+
+### Apply rules from YAML
+
+```bash
+dssldrf rule apply -f rules.yaml
+```
+
+Example YAML:
+
+```yaml
+rules:
+  - zone: mytest
+    protocol: HTTP
+    predicates:
+      - action: http.method
+        value: POST
+      - action: http.header
+        value: Authorization
+    results:
+      - action: http.code
+        value: "403"
+      - action: http.body
+        value: blocked by policy
+```
+
+List all currently supported predicate/result names:
+
+```bash
+dssldrf rule list-actions
+```
 ```
 
 ---
