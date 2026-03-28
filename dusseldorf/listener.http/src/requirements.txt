@@ -10,7 +10,7 @@ certifi==2025.1.31
 cffi==1.17.1
 charset-normalizer==3.4.1
 colorama==0.4.6
-cryptography==46.0.5
+cryptography==46.0.6
 Deprecated==1.2.18
 dnslib==0.9.25
 dnspython==2.7.0
