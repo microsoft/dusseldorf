@@ -424,6 +424,9 @@ def _yaml_components(items: list, is_predicate: bool) -> list[dict]:
             raw_value = item["value"]
             if isinstance(raw_value, (dict, list)):
                 action_value = json.dumps(raw_value)
+            elif isinstance(raw_value, bool):
+                # Normalize YAML booleans to lowercase strings to match CLI conventions.
+                action_value = "true" if raw_value else "false"
             else:
                 action_value = str(raw_value)
         else:
