@@ -12,13 +12,11 @@ import {
     DataGridHeaderCell,
     DataGridProps,
     DataGridRow,
-    Dropdown,
     Menu,
     MenuItem,
     MenuList,
     MenuPopover,
     MenuTrigger,
-    Option,
     Select,
     TableCellLayout,
     TableColumnDefinition,
@@ -30,8 +28,6 @@ import { ChevronLeftRegular, ChevronRightRegular } from "@fluentui/react-icons";
 import { useEffect, useRef, useState } from "react";
 
 import { ColumnConfig } from "../ColumnManager";
-import { DusseldorfAPI } from "../../DusseldorfApi";
-import { Logger } from "../../Helpers/Logger";
 import { DssldrfRequest } from "../../Types/DssldrfRequest";
 
 /**
@@ -143,115 +139,78 @@ const columnSizingOptions = {
 
 interface RequestTableProps {
     zone: string;
+    requests: DssldrfRequest[];
+    loaded: boolean;
     request: DssldrfRequest | undefined;
     setRequest: (request: DssldrfRequest | undefined) => void;
-    nudge: boolean;
     columnConfig: ColumnConfig[];
 }
 
-export const RequestTable = ({ zone, request, setRequest, nudge, columnConfig }: RequestTableProps) => {
-    // Control what is shown: nothing, text that there is no reqeust, or requests
-    const [loaded, setLoaded] = useState<boolean>(false);
-    const [requests, setRequests] = useState<DssldrfRequest[]>([]);
-
-    // Column management - use prop instead of local state
+export const RequestTable = ({ zone, requests, loaded, request, setRequest, columnConfig }: RequestTableProps) => {
+    // Column management — derived from prop
     const [visibleColumns, setVisibleColumns] = useState<TableColumnDefinition<DssldrfRequest>[]>([]);
 
-    // Update visible columns when column config changes
     useEffect(() => {
-        const visible = allColumns.filter(col => 
+        const visible = allColumns.filter(col =>
             columnConfig.find(config => config.id === col.columnId && config.visible)
         );
         setVisibleColumns(visible);
     }, [columnConfig]);
 
-    // Control what is selected - should always match request.id
+    // Client-side pagination
+    const [num, setNum] = useState<number>(20);
+    const [page, setPage] = useState<number>(0);
+
+    const pagedRequests = requests.slice(page * num, (page + 1) * num);
+
+    // Selection — keyed to JSON representation for DataGrid compatibility
     const [selectedRows, setSelectedRows] = useState(new Set<TableRowId>(request ? [JSON.stringify(request)] : []));
+
     const onSelectionChange: DataGridProps["onSelectionChange"] = (_, data) => {
         if (data.selectedItems.size > 0) {
             setSelectedRows(data.selectedItems);
-
-            // could be undefined, check for that.
             const next_req = data.selectedItems.values().next().value;
-
             if (next_req) {
                 try {
                     setRequest(JSON.parse(next_req as string) as DssldrfRequest);
                 } catch {
-                    // swallowed since eslint was throwing
-                    // issues
+                    // swallowed
                 }
             }
         }
     };
 
-    // Control paging
-    const [num, setNum] = useState<number>(20);
-    const [protocols, setProtocols] = useState<string[]>(["dns", "http"]);
-    const [skip, setSkip] = useState<number>(0);
-
-    // refMap and Menu section of DataGrid used for accessibility reasons
+    // refMap used for keyboard column resizing accessibility
     const refMap = useRef<Record<string, HTMLElement | null>>({});
 
-    /**
-     * Most of the time, we are setting request, so we do not want to refresh
-     * requests and request every single time request changes. Instead, the
-     * parent will change nudge when we should care about external changes to
-     * the requests or request.
-     */
-    useEffect(() => {
-        // Don't both contacting the API if nothing will match
-        if (protocols.length == 0) {
-            setProtocols(["http", "dns"]);
-            return;
-        }
-
-        // Hide old requests
-        setLoaded(false);
-        // Refresh requests
-        DusseldorfAPI.GetRequests(zone, num, skip * num, protocols.join(","))
-            .then((newRequests) => {
-                setRequests(newRequests);
-            })
-            .catch((err) => {
-                Logger.Error(err);
-                setRequests([]);
-            })
-            .finally(() => {
-                // Show new requests
-                setLoaded(true);
-            });
-    }, [zone, num, skip, protocols, nudge]);
-
-    // While loading requests from the API, show nothing
+    // While data is loading, show that it's loading instead of an empty table
     if (!loaded) {
-        return <div />;
+        return <div>Loading...</div>;
     }
 
-    // If there are no requests, say that
+    // No requests for this zone/protocol
     if (requests.length === 0) {
         return (
             <Text
                 wrap
                 style={{ wordWrap: "break-word" }}
             >
-                No requests were found for <b>{zone}</b> When new network traffic is detected for <b>{zone}</b>, it will
-                appear here.
+                &nbsp;<br/>
+                No requests were found for <b>{zone}</b>. When network traffic is detected, it appears here.
             </Text>
         );
     }
 
-    // If there are requests, show them
     return (
         <div>
             <DataGrid
-                items={requests}
+                items={pagedRequests}
                 columns={visibleColumns}
                 selectionMode="single"
                 selectedItems={selectedRows}
                 onSelectionChange={onSelectionChange}
                 sortable
-                getRowId={(request) => JSON.stringify(request)}
+                getRowId={(req) => JSON.stringify(req)}
                 resizableColumns
                 columnSizingOptions={columnSizingOptions}
                 subtleSelection
@@ -278,9 +237,9 @@ export const RequestTable = ({ zone, request, setRequest, nudge, columnConfig }:
                         )}
                     </DataGridRow>
                 </DataGridHeader>
-                <DataGridBody<Request>>
+                <DataGridBody<DssldrfRequest>>
                     {({ item, rowId }) => (
-                        <DataGridRow<Request>
+                        <DataGridRow<DssldrfRequest>
                             key={rowId}
                             selectionCell={null}
                         >
@@ -298,23 +257,11 @@ export const RequestTable = ({ zone, request, setRequest, nudge, columnConfig }:
                 className="stack hstack-gap"
                 style={{ paddingTop: 20 }}
             >
-                <Dropdown
-                    style={{ minWidth: "unset" }}
-                    multiselect
-                    value={protocols.join(", ")}
-                    selectedOptions={protocols}
-                    onOptionSelect={(_, data) => {
-                        setProtocols(data.selectedOptions);
-                    }}
-                >
-                    <Option key="dns">dns</Option>
-                    <Option key="http">http</Option>
-                </Dropdown>
-
                 <Select
                     value={num}
                     onChange={(_, data) => {
                         setNum(parseInt(data.value));
+                        setPage(0);
                     }}
                 >
                     <option>10</option>
@@ -329,10 +276,8 @@ export const RequestTable = ({ zone, request, setRequest, nudge, columnConfig }:
                 >
                     <Button
                         appearance="subtle"
-                        disabled={skip < 1}
-                        onClick={() => {
-                            setSkip(skip - 1);
-                        }}
+                        disabled={page < 1}
+                        onClick={() => setPage(page - 1)}
                         icon={<ChevronLeftRegular />}
                     />
                 </Tooltip>
@@ -343,10 +288,8 @@ export const RequestTable = ({ zone, request, setRequest, nudge, columnConfig }:
                 >
                     <Button
                         appearance="subtle"
-                        disabled={requests.length < num}
-                        onClick={() => {
-                            setSkip(skip + 1);
-                        }}
+                        disabled={(page + 1) * num >= requests.length}
+                        onClick={() => setPage(page + 1)}
                         icon={<ChevronRightRegular />}
                     />
                 </Tooltip>

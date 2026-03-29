@@ -29,6 +29,7 @@ async def get_requests(
     protocols: Optional[str] = None,
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
+    since: Optional[int] = None,
     db: AsyncIOMotorClient = Depends(get_db),
     current_user: Dict[str, Any] = Depends(get_current_user),
     permission_service: PermissionService = Depends()
@@ -51,7 +52,10 @@ async def get_requests(
         conv_protocols = [protocol.upper() for protocol in protocols.split(",")]
         query["protocol"] = {"$in": conv_protocols}
 
-    requests = await db.requests.find(query).sort({"time": -1}).skip(skip).limit(limit).to_list(None)
+    if since is not None:
+        query["time"] = {"$gt": since}
+
+    requests = await db.requests.find(query).sort([("time", -1)]).skip(skip).limit(limit).to_list(None)
     if not requests:
         logger.info(
             "requests_not_found",
