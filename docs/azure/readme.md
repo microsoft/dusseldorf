@@ -1,6 +1,6 @@
-# Düsseldorf Deployment Guide (Azure + Local Helm Charts)
+# Dusseldorf Deployment Guide for Azure
 
-This guide provides step-by-step instructions to deploy Düsseldorf on **Azure**, initialize **CosmosDB**, and deploy Helm charts using **local Helm files**.
+This guide explains how to deploy Dusseldorf on Azure, initialize Cosmos DB (Mongo API), and deploy Helm charts.
 
 ---
 
@@ -18,7 +18,7 @@ Ensure you have the following installed before proceeding:
 
 ## Deployment Steps
 
-### 1. **Run the Azure Deployment Script**
+### 1. Run the Azure Deployment Script
 
 ```bash
 ./deploy-azure.sh -p <prefix> -r <region> -g <resource-group> -s <subscription-id> -d <domain-name> --acr-name <acr-name>
@@ -34,14 +34,14 @@ Ensure you have the following installed before proceeding:
 
 - Deploy an **AKS Cluster with Azure RBAC**.
 - Assign **public IPs for AKS and API**.
-- Set up **CosmosDB with MongoDB API**.
-- Store **CosmosDB connection string in Key Vault (`msrv-connstr-jz`)**.
+- Set up **Cosmos DB with MongoDB API**.
+- Store **Cosmos DB connection string in Key Vault (`msrv-connstr-jz`)**.
 - Assign **"Certificate User" and "Secrets User" roles to AKV for AKS**.
 - Generate a **values.yaml file** for Helm deployment.
 
 ---
 
-### 2. **Initialize CosmosDB (If Needed Manually)**
+### 2. Initialize Cosmos DB (If Needed Manually)
 
 If the deployment script does not run this automatically, run the following:
 
@@ -53,7 +53,7 @@ python3 init_database.py --domain "<domain-name>" --ips "<AKS-IP>,<API-IP>"
 
 ---
 
-### 3. **Run Helm Commands to Deploy the Application (Using Local Charts)**
+### 3. Deploy with Helm Charts
 
 Ensure your values file is populated as required prior to running this command
 
@@ -67,22 +67,22 @@ helm upgrade --install dusseldorf ./dusseldorf-chart -f kubernetes/values.yaml
 
 ---
 
-## **Managing the Deployment**
+## Managing the Deployment
 
-### **Upgrade Deployment**
+### Upgrade Deployment
 
 ```bash
 helm upgrade dusseldorf ./dusseldorf-chart -f kubernetes/values.yaml
 ```
 
-### **Check Deployment Status**
+### Check Deployment Status
 
 ```bash
 helm list
 kubectl get pods -n default
 ```
 
-### **Uninstall the Application**
+### Uninstall the Application
 
 ```bash
 helm uninstall dusseldorf
@@ -90,29 +90,29 @@ helm uninstall dusseldorf
 
 ---
 
-## **Debugging Issues**
+## Debugging Issues
 
 If you encounter any errors:
 
-1️⃣ **Check Deployment Logs**
+1. Check Deployment Logs
 
 ```bash
 kubectl logs -l app=dusseldorf
 ```
 
-2️⃣ **Check Helm Release Status**
+2. Check Helm Release Status
 
 ```bash
 helm status dusseldorf
 ```
 
-3️⃣ **Verify Key Vault Secrets**
+3. Verify Key Vault Secrets
 
 ```bash
 az keyvault secret show --name "<conn-str-name>" --vault-name "<keyvault-name>"
 ```
 
-4️⃣ **Check CosmosDB Connection**
+4. Check Cosmos DB Connection
 
 ```bash
 python3 init_database.py --domain "<domain-name>" --ips "<AKS-IP>,<API-IP>"

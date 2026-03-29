@@ -1,15 +1,20 @@
-# **Dusseldorf Local Deployment Guide**
+# Dusseldorf Local Deployment Guide
 
 > [!WARNING]
 > These local deployment instructions are not actively maintained and do not reflect the current structure of
 > the repository. It is recommended that you instead follow the devenv setup instructions from the `dusseldorf/`
 > directory [here](https://github.com/microsoft/dusseldorf/tree/main/dusseldorf).
 
-This guide provides instructions for deploying the Dusseldorf system locally using Docker Compose.
+This guide provides instructions for deploying Dusseldorf locally using Docker Compose.
+
+The local environment is useful for two audiences:
+
+- Security researchers who need a private sandbox to validate OAST scenarios.
+- Developers who need a fast inner loop to extend listeners, rules, and API behavior.
 
 ---
 
-## **Prerequisites**
+## Prerequisites
 Ensure you have the following installed:
 
 - **Docker Desktop** (for Windows/macOS) or **Docker Engine** (for Linux)
@@ -22,25 +27,25 @@ For Windows users, **PowerShell 7+** is recommended.
 
 ---
 
-## **Deployment Instructions**
+## Deployment Instructions
 
-### **1. Clone the Repository**
+### 1. Clone the Repository
 ```sh
 # Clone the repository and navigate into it
 git clone <repo-url>
 cd <repo-directory>
 ```
 
-### **2. Generate Credentials & Certificates**
+### 2. Generate Credentials and Certificates
 
 This step ensures that MongoDB credentials and SSL certificates are set up.
 
-#### **Linux/macOS**:
+#### Linux/macOS
 ```sh
 ./generate_credentials.sh --override  # Use --override to force regen
 ```
 
-#### **Windows (PowerShell)**:
+#### Windows (PowerShell)
 ```powershell
 ./generate_credentials.ps1 -Override  # Use -Override to force regen
 ```
@@ -59,28 +64,29 @@ To specify a custom path:
 
 ---
 
-### **3. Deploy Services**
+### 3. Deploy Services
 
 This will start all required services using Docker Compose.
 
-#### **Linux/macOS**:
+#### Linux/macOS
 ```sh
 ./deploy.sh
 ```
 
-#### **Windows (PowerShell)**:
+#### Windows (PowerShell)
 ```powershell
 ./deploy.ps1
 ```
 
 This will:
-✅ Check if required environment variables are set.
-✅ Generate missing MongoDB credentials if needed.
-✅ Generate SSL certificates if missing.
-✅ Authenticate with Azure ACR if needed.
-✅ Pull the latest Docker images.
-✅ Start all services using `docker-compose`.
-✅ Run database initialization.
+
+- Check if required environment variables are set.
+- Generate missing MongoDB credentials if needed.
+- Generate TLS certificates if missing.
+- Authenticate with Azure ACR if needed.
+- Pull the latest Docker images.
+- Start all services using `docker-compose`.
+- Run database initialization.
 
 To specify a custom SSL certificate path:
 ```sh
@@ -92,7 +98,7 @@ To specify a custom SSL certificate path:
 
 ---
 
-### **4. Verify Running Containers**
+### 4. Verify Running Containers
 Check if all containers are running:
 ```sh
 docker ps
@@ -121,40 +127,40 @@ docker-compose build
 
 ---
 
-## **Debugging & Troubleshooting**
+## Debugging and Troubleshooting
 
-### **Common Issues & Fixes**
+### Common Issues and Fixes
 
-**1️⃣ Issue:** `command not found: az`
-- ✅ **Fix:** Install Azure CLI from [here](https://aka.ms/installazurecli).
+1. Issue: `command not found: az`
+- Fix: Install Azure CLI from [here](https://aka.ms/installazurecli).
 
-**2️⃣ Issue:** `MongoDB authentication error`
-- ✅ **Fix:** Ensure `MONGO_USERNAME` and `MONGO_PASSWORD` are correctly set in `.env`.
+2. Issue: `MongoDB authentication error`
+- Fix: Ensure `MONGO_USERNAME` and `MONGO_PASSWORD` are correctly set in `.env`.
 
-**3️⃣ Issue:** `invalid mount config for type "bind"`
-- ✅ **Fix:** Ensure **absolute paths** are used for SSL certificates in `.env`.
+3. Issue: `invalid mount config for type "bind"`
+- Fix: Ensure absolute paths are used for TLS certificates in `.env`.
 
-**4️⃣ Issue:** `Azure login prompts repeatedly`
-- ✅ **Fix:** Run `az acr show --name <ACR_NAME>` to check if already logged in.
+4. Issue: `Azure login prompts repeatedly`
+- Fix: Run `az acr show --name <ACR_NAME>` to check if already logged in.
 
 ---
 
-## **Additional Commands**
+## Additional Commands
 
-### **Manually Running MongoDB Initialization**
+### Manually Running MongoDB Initialization
 If the database is not initialized correctly, you can run the script manually:
 ```sh
 python3 init_database.py --domain "example.com" --ips "127.0.0.1"
 ```
 
-### **Logging into Azure ACR (Manually)**
+### Logging into Azure ACR (Manually)
 If needed, authenticate manually:
 ```sh
 az login
 az acr login --name <ACR_NAME>
 ```
 
-### **Force Rebuild Containers**
+### Force Rebuild Containers
 If something is not working correctly:
 ```sh
 docker-compose down -v

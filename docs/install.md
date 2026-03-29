@@ -1,125 +1,63 @@
-# **Dusseldorf Deployment Guide**
+# Dusseldorf Deployment Guide
 
-This guide provides instructions for installing and deploying Dusseldorf either locally 
-using Docker Compose or on Azure using Helm charts.  
+This guide is the entry point for deploying and operating Dusseldorf as a private, customizable OAST platform.
 
-This guide assumes you have a basic understanding of Linux commands.
+## Who This Is For
 
----
+- Security researchers and operators who want to deploy and run a private OAST environment.
+- Developers and platform engineers who want to extend listeners, API behavior, and deployment workflows.
 
-## **Prerequisites**
+## Private and Customizable by Design
+
+- Dusseldorf is intended for private deployment in your own environment.
+- You control identity integration, infrastructure footprint, domains, and runtime policies.
+- You can customize request handling and response behavior through rules and service-level changes.
+
+## Prerequisites
 
 Ensure you have the following installed:
 
-- **Docker Desktop** (for Windows/macOS) or **Docker Engine** (for Linux)
-- **Docker Compose**
-- **Azure CLI** (`az` command-line tool)
-- **OpenSSL** (for generating SSL certificates)
-- **Python 3.x** with `pip`
-- **jq** (`sudo apt-get install jq` or `brew install jq`)
-- **Helm** (`https://helm.sh/docs/intro/install/`)
+- Docker Desktop (Windows/macOS) or Docker Engine (Linux)
+- Docker Compose
+- Azure CLI (`az`)
+- OpenSSL (for TLS certificate generation)
+- Python 3 with `pip`
+- jq (`sudo apt-get install jq` or `brew install jq`)
+- Helm (`https://helm.sh/docs/intro/install/`)
 
----
+## Deployment Paths
 
-## **Deployment Options**
+### Local Development and Validation
 
-### **1. Local Deployment**
+Use this path for private lab setups, fast local validation, and developer iteration.
 
-> [!WARNING]
-> These local deployment instructions are not actively maintained and do not reflect the current structure of
-> the repository. It is recommended that you instead follow the devenv setup instructions from the `dusseldorf/`
-> directory [here](https://github.com/microsoft/dusseldorf/tree/main/dusseldorf).
+- Start here: [docs/local/readme.md](local/readme.md)
+- Includes credential generation, certificate setup, and local compose workflows
 
-For detailed local deployment instructions, navigate to the `docs/local` directory and refer to the `Readme.md` file.
+### Azure Deployment
 
-#### **Step 1: Clone the Repository**
-```sh
-# Clone the repository and navigate into it
-git clone <repo-url>
-cd <repo-directory>
-```
+Use this path for private cloud deployment using Azure resources and Helm.
 
-#### **Step 2: Build and Push Docker Images**
+- Start here: [docs/azure/readme.md](azure/readme.md)
+- Includes infrastructure provisioning and database initialization
 
-Before deploying locally, you need to build Docker images for each listener and API present in the `dusseldorf/` directory and push them to your Azure Container Registry (ACR).
+## End-User Operations
 
-```sh
-# Build Docker images
-docker build -t <acr-name>.azurecr.io/dusseldorf-listener-http:latest src/listener-http
-docker build -t <acr-name>.azurecr.io/dusseldorf-listener-https:latest src/listener-https
-docker build -t <acr-name>.azurecr.io/dusseldorf-api:latest src/api
+After deployment, use the platform through UI and API workflows:
 
-# Push Docker images to ACR
-az acr login --name <acr-name>
-docker push <acr-name>.azurecr.io/dusseldorf-listener-http:latest
-docker push <acr-name>.azurecr.io/dusseldorf-listener-https:latest
-docker push <acr-name>.azurecr.io/dusseldorf-api:latest
-```
+- Usage guide: [docs/using.md](using.md)
+- CLI workflows: [cli/README.md](../cli/README.md)
 
-#### **Step 3: Follow Local Deployment Instructions**
+## Developer Extensibility
 
-Navigate to the `docs/local` directory and follow the instructions in the `Readme.md` file to complete the local deployment.
+For contributors extending the system:
 
----
+- Service architecture and runtime composition: [dusseldorf/README.md](../dusseldorf/README.md)
+- CLI implementation and usage: [cli/README.md](../cli/README.md)
+- Local component stack for rapid testing: [dusseldorf/compose.yml](../dusseldorf/compose.yml)
 
-### **2. Azure Deployment**
+## Troubleshooting
 
-For detailed Azure deployment instructions, navigate to the `docs/azure` directory and refer to the `readme.md` file.
-
-#### **Step 1: Clone the Repository**
-```sh
-# Clone the repository and navigate into it
-git clone <repo-url>
-cd <repo-directory>
-```
-
-#### **Step 2: Build and Push Docker Images**
-
-Before deploying to Azure, you need to build Docker images for each listener and API present in the `src/` directory and push them to your Azure Container Registry (ACR).
-
-```sh
-# Build Docker images
-docker build -t <acr-name>.azurecr.io/dusseldorf-listener-http:latest src/listener-http
-docker build -t <acr-name>.azurecr.io/dusseldorf-listener-https:latest src/listener-https
-docker build -t <acr-name>.azurecr.io/dusseldorf-api:latest src/api
-
-# Push Docker images to ACR
-az acr login --name <acr-name>
-docker push <acr-name>.azurecr.io/dusseldorf-listener-http:latest
-docker push <acr-name>.azurecr.io/dusseldorf-listener-https:latest
-docker push <acr-name>.azurecr.io/dusseldorf-api:latest
-```
-
-#### **Step 3: Follow Azure Deployment Instructions**
-
-Navigate to the `docs/azure` directory and follow the instructions in the `readme.md` file to complete the Azure deployment.
-
----
-
-## **Debugging & Troubleshooting**
-
-For common issues and fixes, refer to the `Debugging & Troubleshooting` section in the respective deployment guide (`docs/local/Readme.md` for local deployment and `docs/azure/readme.md` for Azure deployment).
-
----
-
-## **Additional Commands**
-
-### **Manually Running MongoDB Initialization**
-If the database is not initialized correctly, you can run the script manually:
-```sh
-python3 init_database.py --domain "example.com" --ips "127.0.0.1"
-```
-
-### **Logging into Azure ACR (Manually)**
-If needed, authenticate manually:
-```sh
-az login
-az acr login --name <ACR_NAME>
-```
-
-### **Force Rebuild Containers**
-If something is not working correctly:
-```sh
-docker-compose down -v
-./deploy.sh  # or ./deploy.ps1 for Windows
-```
+- Local deployment issues: [docs/local/readme.md](local/readme.md)
+- Azure deployment issues: [docs/azure/readme.md](azure/readme.md)
+- Auth and CLI token setup: [cli/ENTRAID_SETUP.md](../cli/ENTRAID_SETUP.md)
