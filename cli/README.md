@@ -72,7 +72,7 @@ This installs the `dssldrf` command automatically using a tool called `pipx` (wh
 
 Before you can use `dssldrf`, you need to configure it and set up authentication.
 
-### 1. Configure the API endpoint and domain:
+### 1. Configure the API endpoint and domain
 
 ```bash
 dssldrf config set --api-url https://your-dusseldorf-server/api --domain yourdomain.net
@@ -140,7 +140,7 @@ dssldrf config set --token <your-bearer-token>
 
 **Warning:** This stores your token in plain text at `~/.dssldrf/config.json`. The environment variable approach (Option A) is more secure.
 
-### 3. Verify it works:
+### 3. Verify it works
 
 ```bash
 dssldrf zone
@@ -149,10 +149,6 @@ dssldrf zone
 You should see your zones listed (or "No zones found" if you haven't created any yet).
 
 ---
-
----
-
-
 
 ## Common Tasks
 
