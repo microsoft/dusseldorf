@@ -198,13 +198,22 @@ dssldrf req mytest --details
 
 Shows method/path, first 3 headers, response status code, and a preview of the request body (truncated to 100 chars). Useful for quickly inspecting what was in a request.
 
-#### Full details for a specific request
+#### Full details for a request or timestamp group
 
 ```bash
 dssldrf req mytest --id 1738034859
 ```
 
 Shows complete REQUEST and RESPONSE sections with all headers, full body, HTTP method, path, TLS flag, etc. You can pass either a timestamp (Unix) or MongoDB `_id`.
+
+When you pass a timestamp, the CLI shows every request captured at that exact timestamp. This is useful when DNS and HTTP requests land in the same second.
+
+```bash
+dssldrf req mytest 1738034859
+dssldrf req mytest --id 1738034859 --json
+```
+
+With `--json`, selector-based output is always an array. A timestamp returns all matching requests; an exact `_id` returns a one-element array.
 
 #### Human-readable timestamps
 
@@ -214,6 +223,7 @@ dssldrf req mytest --human
 
 dssldrf req mytest --details --human
 dssldrf req mytest --id 1738034859 --human
+dssldrf req mytest 1738034859 --human
 ```
 
 Works with all view modes.
@@ -231,9 +241,14 @@ dssldrf req mytest -n 20 -s 10
 ```bash
 dssldrf req mytest --protocols HTTP,DNS
 dssldrf req mytest --protocols HTTP  # HTTP only
+dssldrf req mytest --http
+dssldrf req mytest --dns
+dssldrf req mytest 1738034859 --http --json
 ```
 
 This shows the last 20 requests received by `mytest.yourdomain.net`.
+
+`--http` and `--dns` are convenience filters. If either is present, only those protocol families are requested and shown.
 
 ### Delete a zone
 

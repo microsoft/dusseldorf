@@ -14,26 +14,11 @@ from __future__ import annotations
 import json
 import os
 import subprocess
-import sys
 from datetime import datetime
 from typing import Optional
 
 import typer
 import yaml
-
-try:
-    from colorama import Fore
-except Exception:
-    class _ForeFallback:
-        RED = ""
-        LIGHTRED_EX = ""
-        YELLOW = ""
-        LIGHTYELLOW_EX = ""
-        LIGHTWHITE_EX = ""
-        WHITE = ""
-        RESET = ""
-
-    Fore = _ForeFallback()
 
 from .api_client import ApiClient
 from .config_store import CliConfig, load_config, save_config
@@ -56,18 +41,6 @@ config_app = typer.Typer(help="Manage local CLI settings")
 rule_app = typer.Typer(help="Create and manage rules")
 app.add_typer(config_app, name="config")
 app.add_typer(rule_app, name="rule")
-
-
-def _print_banner() -> None:
-    typer.echo(f"             {Fore.RED}(   (                   (   (     ")
-    typer.echo(f"    (        )\\ ))\\ )     (  (       )\\ ))\\ )  ")
-    typer.echo(f"    )\\ )   ( ({Fore.LIGHTRED_EX}()/(()/(  {Fore.RED}( )\\ )\\ )   ({Fore.LIGHTRED_EX}()/(()/{Fore.RED}(")
-    typer.echo(f"   ({Fore.LIGHTRED_EX}()/( ))\\ /(_))(_)) {Fore.RED}){Fore.LIGHTRED_EX})((_|()/( (  /{Fore.YELLOW}(_){Fore.LIGHTRED_EX})(_){Fore.RED})")
-    typer.echo(f"{Fore.LIGHTRED_EX}    ({Fore.YELLOW}(_))((_|_))(_))  /( (_) ((_)))\\(_))(_)){Fore.LIGHTRED_EX}_|")
-    typer.echo(f"{Fore.YELLOW}    _| {Fore.LIGHTYELLOW_EX}(_))(/ __/ __|(_))| | _| |((_) _ \\ {Fore.YELLOW} _|")
-    typer.echo(f"{Fore.LIGHTYELLOW_EX}  / {Fore.LIGHTWHITE_EX}_` | || \\__ \\__ \\/ -_) / _` / _ \\   / _{Fore.LIGHTYELLOW_EX}_|")
-    typer.echo(f"{Fore.LIGHTWHITE_EX}  \\__,_|\\_,_|___/___/\\___|_\\__,_\\___/_|_\\_|")
-    typer.echo(f"    {Fore.WHITE}microsoft security | aka.ms/dusseldorf{Fore.RESET}")
 
 
 def _effective_token(config: CliConfig) -> str:
@@ -187,68 +160,101 @@ def _format_request_summary(item: dict, human: bool) -> None:
 def _format_request_detail(item: dict, human: bool) -> None:
     """Display full details for a single request."""
     timestamp = item.get("time", "")
-    protocol = item.get("protocol", "").upper()
+    protocol = str(item.get("protocol", "")).lower()
     client_ip = item.get("clientip", "")
     zone = item.get("zone", "")
     fqdn = item.get("fqdn", "")
     formatted_time = _format_timestamp(timestamp, human)
 
-    typer.echo(f"\n{'='*60}")
-    typer.echo(f"Request: {formatted_time}")
-    typer.echo(f"Zone: {zone or fqdn}")
-    typer.echo(f"Protocol: {protocol}")
-    typer.echo(f"Client IP: {client_ip}")
-    typer.echo(f"{'='*60}\n")
+    typer.echo(f"id: {formatted_time}")
+    typer.echo(f"zone: {zone or fqdn}")
+    typer.echo(f"protocol: {protocol}")
+    typer.echo(f"client ip: {client_ip}")
+    typer.echo()
 
     # Request details
     request_data = item.get("request", {})
     if isinstance(request_data, dict):
-        typer.echo("REQUEST:")
-        if protocol == "HTTP":
+        typer.echo("request:")
+        if protocol == "http":
             method = request_data.get("method", "N/A")
             path = request_data.get("path", "N/A")
             tls = request_data.get("tls", False)
-            typer.echo(f"  Method: {method}")
-            typer.echo(f"  Path: {path}")
+            typer.echo(f"  method: {method}")
+            typer.echo(f"  path: {path}")
             if tls:
-                typer.echo(f"  TLS: Yes")
+                typer.echo("  tls: yes")
             headers = request_data.get("headers", {})
             if headers:
-                typer.echo(f"  Headers:")
+                typer.echo("  headers:")
                 for key, val in headers.items():
                     typer.echo(f"    {key}: {val}")
             body = request_data.get("body", "")
             if body:
-                typer.echo(f"  Body: {body}")
-        elif protocol == "DNS":
+                typer.echo(f"  body: {body}")
+        elif protocol == "dns":
             query = request_data.get("query", "N/A")
             qtype = request_data.get("type", "N/A")
-            typer.echo(f"  Query: {query}")
-            typer.echo(f"  Type: {qtype}")
+            typer.echo(f"  query: {query}")
+            typer.echo(f"  type: {qtype}")
 
     # Response details
     response_data = item.get("response", {})
     if isinstance(response_data, dict) and response_data:
-        typer.echo("\nRESPONSE:")
-        if protocol == "HTTP":
-            status = response_data.get("status", "N/A")
-            typer.echo(f"  Status: {status}")
+        typer.echo("\nresponse:")
+        if protocol == "http":
+            status = response_data.get("code", "N/A")
+            typer.echo(f"  status: {status}")
             headers = response_data.get("headers", {})
             if headers:
-                typer.echo(f"  Headers:")
+                typer.echo("  headers:")
                 for key, val in headers.items():
                     typer.echo(f"    {key}: {val}")
             body = response_data.get("body", "")
             if body:
-                typer.echo(f"  Body: {body}")
-        elif protocol == "DNS":
+                typer.echo(f"  body: {body}")
+        elif protocol == "dns":
             data = response_data.get("data", [])
             if isinstance(data, list):
                 for answer in data:
                     typer.echo(f"  {answer}")
             else:
-                typer.echo(f"  Data: {data}")
+                typer.echo(f"  data: {data}")
     typer.echo(f"\n{'='*60}\n")
+
+
+def _resolve_request_matches(items: list[dict], selector: str) -> list[dict]:
+    normalized_selector = selector.strip()
+
+    # Exact request IDs should win over timestamp matching.
+    for item in items:
+        if str(item.get("_id", "")) == normalized_selector:
+            return [item]
+
+    timestamp_matches = [
+        item for item in items if str(item.get("time", "")) == normalized_selector
+    ]
+    if not timestamp_matches:
+        raise typer.BadParameter(
+            f"Request not found with ID/timestamp: {normalized_selector}"
+        )
+    return timestamp_matches
+
+
+def _merge_protocol_filters(
+    protocols: Optional[str],
+    http_only: bool,
+    dns_only: bool,
+) -> Optional[str]:
+    if http_only or dns_only:
+        selected_protocols: list[str] = []
+        if http_only:
+            selected_protocols.append("HTTP")
+        if dns_only:
+            selected_protocols.append("DNS")
+        return ",".join(selected_protocols)
+
+    return protocols
 
 
 def _resolve_fqdn(zone: str, domain: str) -> str:
@@ -679,12 +685,26 @@ def login_command() -> None:
 @app.command("req")
 def req_command(
     zone: str = typer.Argument(..., help="Zone label or fqdn"),
+    request_ref: Optional[str] = typer.Argument(
+        None,
+        help="Optional request ID or timestamp; timestamps return all requests captured at that instant",
+    ),
     limit: int = typer.Option(
         20, "--limit", "-n", min=1, max=1000, help="Max request rows"
     ),
     skip: int = typer.Option(0, "--skip", "-s", min=0, help="Skip first N requests"),
     protocols: Optional[str] = typer.Option(
         None, "--protocols", "-p", help="CSV protocol filter"
+    ),
+    http_only: bool = typer.Option(
+        False,
+        "--http",
+        help="Only include HTTP requests",
+    ),
+    dns_only: bool = typer.Option(
+        False,
+        "--dns",
+        help="Only include DNS requests",
     ),
     human: bool = typer.Option(
         False,
@@ -699,16 +719,20 @@ def req_command(
     show_id: Optional[str] = typer.Option(
         None,
         "--id",
-        help="Show full details of a specific request by ID (timestamp or _id)",
+        help="Show full details for a request ID or all requests at a timestamp",
     ),
     json_output: bool = typer.Option(False, "--json", help="Print raw JSON"),
 ) -> None:
     _require_config()
+    if request_ref and show_id:
+        raise typer.BadParameter("Provide a request selector either positionally or with --id, not both")
+
     config = load_config()
     zone_fqdn = _resolve_fqdn(zone, config.domain)
     params: dict[str, str | int] = {"limit": limit, "skip": skip}
-    if protocols:
-        params["protocols"] = protocols
+    effective_protocols = _merge_protocol_filters(protocols, http_only, dns_only)
+    if effective_protocols:
+        params["protocols"] = effective_protocols
 
     client = _api_client()
     try:
@@ -716,28 +740,22 @@ def req_command(
     except RuntimeError as exc:
         _handle_api_error(exc)
 
-    if json_output:
-        typer.echo(json.dumps(result, indent=2))
-        return
-
     if not result:
         typer.echo("No requests found")
         return
 
-    # Show full details of a specific request
-    if show_id:
-        found = None
-        for item in result:
-            item_id = item.get("_id", "")
-            item_time = str(item.get("time", ""))
-            if item_id == show_id or item_time == show_id:
-                found = item
-                break
-        if found:
-            _format_request_detail(found, human)
-        else:
-            typer.echo(f"Request not found with ID/timestamp: {show_id}", err=True)
-            raise typer.Exit(1)
+    resolved_selector = show_id or request_ref
+    if resolved_selector:
+        selected_requests = _resolve_request_matches(result, resolved_selector)
+        if json_output:
+            typer.echo(json.dumps(selected_requests, indent=2))
+            return
+        for item in selected_requests:
+            _format_request_detail(item, human)
+        return
+
+    if json_output:
+        typer.echo(json.dumps(result, indent=2))
         return
 
     # List with optional summary details
@@ -1076,8 +1094,6 @@ def rule_apply_command(
 
 
 def run() -> None:
-    if len(sys.argv) == 1 or any(flag in sys.argv[1:] for flag in ("-h", "--help")):
-        _print_banner()
     app()
 
 
