@@ -4,6 +4,8 @@
 import { Tooltip, Body1Stronger, Text } from "@fluentui/react-components";
 import {
   HomeRegular,
+  StarFilled,
+  StarRegular,
   TargetEditRegular,
   TargetRegular,
   WindowBulletListRegular,
@@ -84,19 +86,41 @@ export const LeftNav = ({ refreshToken }: ILeftNavProps) => {
           });
 
         const items = visibleZones.slice(0, 13).map((zone) => {
+          const isFavorite = UiHelper.IsFavoriteZone(zone.fqdn);
           return (
             <NavSubItem key={zone.fqdn} value={zone.fqdn}>
-              <Text
-                truncate
-                wrap={false}
+              <div
                 style={{
-                  overflow: "hidden",
-                  width: 200,
-                  display: "block",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 8,
+                  width: 180,
                 }}
               >
-                {zone.fqdn}
-              </Text>
+                <Text
+                  truncate
+                  wrap={false}
+                  style={{
+                    overflow: "hidden",
+                    flex: 1,
+                    display: "block",
+                  }}
+                >
+                  {zone.fqdn}
+                </Text>
+                {isFavorite && (
+                  <span
+                    aria-label="Favorited zone"
+                    style={{
+                      display: "inline-flex",
+                      color: "#7a7a7a",
+                    }}
+                  >
+                    <StarFilled fontSize={12} />
+                  </span>
+                )}
+              </div>
             </NavSubItem>
           );
         });
