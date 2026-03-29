@@ -128,12 +128,25 @@ interface RequestTableProps {
     zone: string;
     requests: DssldrfRequest[];
     loaded: boolean;
+    hasMoreOlder: boolean;
+    loadingOlder: boolean;
+    onLoadOlderPage: (pageSize: number) => Promise<boolean>;
     request: DssldrfRequest | undefined;
     setRequest: (request: DssldrfRequest | undefined) => void;
     columnConfig: ColumnConfig[];
 }
 
-export const RequestTable = ({ zone, requests, loaded, request, setRequest, columnConfig }: RequestTableProps) => {
+export const RequestTable = ({
+    zone,
+    requests,
+    loaded,
+    hasMoreOlder,
+    loadingOlder,
+    onLoadOlderPage,
+    request,
+    setRequest,
+    columnConfig
+}: RequestTableProps) => {
     // Column management — derived from prop
     const [visibleColumns, setVisibleColumns] = useState<TableColumnDefinition<DssldrfRequest>[]>([]);
 
@@ -147,8 +160,21 @@ export const RequestTable = ({ zone, requests, loaded, request, setRequest, colu
     // Client-side pagination
     const [num, setNum] = useState<number>(20);
     const [page, setPage] = useState<number>(0);
+    const lastPage = Math.max(0, Math.ceil(requests.length / num) - 1);
+    const pendingNavigation = useRef<"next" | null>(null);
 
     const pagedRequests = requests.slice(page * num, (page + 1) * num);
+
+    useEffect(() => {
+        setPage((currentPage) => Math.min(currentPage, lastPage));
+    }, [lastPage]);
+
+    useEffect(() => {
+        if (pendingNavigation.current === "next") {
+            setPage((currentPage) => Math.min(currentPage + 1, lastPage));
+            pendingNavigation.current = null;
+        }
+    }, [lastPage, requests.length]);
 
     // Selection — keyed to JSON representation for DataGrid compatibility
     const [selectedRows, setSelectedRows] = useState(new Set<TableRowId>(request ? [JSON.stringify(request)] : []));
@@ -258,6 +284,19 @@ export const RequestTable = ({ zone, requests, loaded, request, setRequest, colu
                 </Select>
 
                 <Tooltip
+                    content="Jump to most recent requests"
+                    relationship="label"
+                >
+                    <Button
+                        appearance="subtle"
+                        disabled={page === 0}
+                        onClick={() => setPage(0)}
+                    >
+                        |&lt;
+                    </Button>
+                </Tooltip>
+
+                <Tooltip
                     content={`Previous ${num} requests`}
                     relationship="label"
                 >
@@ -275,8 +314,19 @@ export const RequestTable = ({ zone, requests, loaded, request, setRequest, colu
                 >
                     <Button
                         appearance="subtle"
-                        disabled={(page + 1) * num >= requests.length}
-                        onClick={() => setPage(page + 1)}
+                        disabled={loadingOlder || (!hasMoreOlder && page >= lastPage)}
+                        onClick={async () => {
+                            if (page < lastPage) {
+                                setPage(page + 1);
+                                return;
+                            }
+
+                            pendingNavigation.current = "next";
+                            const loadedOlder = await onLoadOlderPage(num);
+                            if (!loadedOlder) {
+                                pendingNavigation.current = null;
+                            }
+                        }}
                         icon={<ChevronRightRegular />}
                     />
                 </Tooltip>

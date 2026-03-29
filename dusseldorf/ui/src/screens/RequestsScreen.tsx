@@ -47,8 +47,26 @@ const defaultColumnConfig: ColumnConfig[] = [
 
 type Protocol = "dns" | "http";
 
+const REQUESTS_PROTOCOL_STORAGE_KEY = "requests.activeProtocol";
+
+const getStoredProtocolPreference = (): Protocol => {
+    if (typeof window === "undefined") {
+        return "dns";
+    }
+
+    const storedProtocol = window.localStorage.getItem(REQUESTS_PROTOCOL_STORAGE_KEY);
+    return storedProtocol === "http" ? "http" : "dns";
+};
+
+const getRequestKey = (request: DssldrfRequest): string => {
+    return `${request.id}:${request.time}`;
+};
+
 /** How many requests to preload per tab on initial load */
 const PRELOAD_LIMIT = 100;
+
+/** How many requests to fetch when paging backward into older traffic */
+const OLDER_FETCH_LIMIT = 100;
 
 /** How many new requests to fetch per poll */
 const POLL_LIMIT = 50;
@@ -62,6 +80,7 @@ interface IRequestsScreenProps {
 
 export const RequestsScreen = ({ zone }: IRequestsScreenProps) => {
     const styles = useStyles();
+    const initialProtocol = getStoredProtocolPreference();
 
     // Selected request shown in detail panel
     const [request, setRequest] = useState<DssldrfRequest | undefined>();
@@ -70,14 +89,18 @@ export const RequestsScreen = ({ zone }: IRequestsScreenProps) => {
     const [columnConfig, setColumnConfig] = useState<ColumnConfig[]>(defaultColumnConfig);
 
     // Active protocol tab
-    const [activeTab, setActiveTab] = useState<Protocol>("dns");
-    const activeTabRef = useRef<Protocol>("dns");
+    const [activeTab, setActiveTab] = useState<Protocol>(initialProtocol);
+    const activeTabRef = useRef<Protocol>(initialProtocol);
 
     // Per-protocol request lists and loaded flags
     const [dnsRequests, setDnsRequests] = useState<DssldrfRequest[]>([]);
     const [httpRequests, setHttpRequests] = useState<DssldrfRequest[]>([]);
     const [dnsLoaded, setDnsLoaded] = useState<boolean>(false);
     const [httpLoaded, setHttpLoaded] = useState<boolean>(false);
+    const [dnsHasMoreOlder, setDnsHasMoreOlder] = useState<boolean>(true);
+    const [httpHasMoreOlder, setHttpHasMoreOlder] = useState<boolean>(true);
+    const [dnsLoadingOlder, setDnsLoadingOlder] = useState<boolean>(false);
+    const [httpLoadingOlder, setHttpLoadingOlder] = useState<boolean>(false);
 
     // Unread indicators (bold tab label when new requests arrive on inactive tab)
     const [dnsUnread, setDnsUnread] = useState<boolean>(false);
@@ -88,23 +111,42 @@ export const RequestsScreen = ({ zone }: IRequestsScreenProps) => {
     // 0 = initial load not yet complete; skip polling until set.
     const dnsLastTimestamp = useRef<number>(0);
     const httpLastTimestamp = useRef<number>(0);
+    const dnsRequestsRef = useRef<DssldrfRequest[]>([]);
+    const httpRequestsRef = useRef<DssldrfRequest[]>([]);
 
     // Increment to trigger a forced full reload
     const [refreshKey, setRefreshKey] = useState<number>(0);
 
+    useEffect(() => {
+        activeTabRef.current = activeTab;
+        window.localStorage.setItem(REQUESTS_PROTOCOL_STORAGE_KEY, activeTab);
+    }, [activeTab]);
+
+    useEffect(() => {
+        dnsRequestsRef.current = dnsRequests;
+    }, [dnsRequests]);
+
+    useEffect(() => {
+        httpRequestsRef.current = httpRequests;
+    }, [httpRequests]);
+
     // ── Reset on zone change ──────────────────────────────────────────────
     useEffect(() => {
         setRequest(undefined);
-        setActiveTab("dns");
-        activeTabRef.current = "dns";
         setDnsRequests([]);
         setHttpRequests([]);
         setDnsLoaded(false);
         setHttpLoaded(false);
+        setDnsHasMoreOlder(true);
+        setHttpHasMoreOlder(true);
+        setDnsLoadingOlder(false);
+        setHttpLoadingOlder(false);
         setDnsUnread(false);
         setHttpUnread(false);
         dnsLastTimestamp.current = 0;
         httpLastTimestamp.current = 0;
+        dnsRequestsRef.current = [];
+        httpRequestsRef.current = [];
     }, [zone]);
 
     // ── Initial / forced preload — both tabs in parallel ─────────────────
@@ -115,6 +157,8 @@ export const RequestsScreen = ({ zone }: IRequestsScreenProps) => {
         DusseldorfAPI.GetRequests(zone, PRELOAD_LIMIT, 0, "dns")
             .then((reqs) => {
                 setDnsRequests(reqs);
+                dnsRequestsRef.current = reqs;
+                setDnsHasMoreOlder(reqs.length === PRELOAD_LIMIT);
                 dnsLastTimestamp.current =
                     reqs.length > 0
                         ? parseInt(String(reqs[0].time))
@@ -123,6 +167,8 @@ export const RequestsScreen = ({ zone }: IRequestsScreenProps) => {
             .catch((err) => {
                 Logger.Error(err);
                 setDnsRequests([]);
+                dnsRequestsRef.current = [];
+                setDnsHasMoreOlder(false);
                 dnsLastTimestamp.current = Math.floor(Date.now() / 1000);
             })
             .finally(() => setDnsLoaded(true));
@@ -130,6 +176,8 @@ export const RequestsScreen = ({ zone }: IRequestsScreenProps) => {
         DusseldorfAPI.GetRequests(zone, PRELOAD_LIMIT, 0, "http")
             .then((reqs) => {
                 setHttpRequests(reqs);
+                httpRequestsRef.current = reqs;
+                setHttpHasMoreOlder(reqs.length === PRELOAD_LIMIT);
                 httpLastTimestamp.current =
                     reqs.length > 0
                         ? parseInt(String(reqs[0].time))
@@ -138,10 +186,64 @@ export const RequestsScreen = ({ zone }: IRequestsScreenProps) => {
             .catch((err) => {
                 Logger.Error(err);
                 setHttpRequests([]);
+                httpRequestsRef.current = [];
+                setHttpHasMoreOlder(false);
                 httpLastTimestamp.current = Math.floor(Date.now() / 1000);
             })
             .finally(() => setHttpLoaded(true));
     }, [zone, refreshKey]);
+
+    const loadOlderRequests = async (protocol: Protocol, pageSize: number): Promise<boolean> => {
+        const isDns = protocol === "dns";
+        const currentRequestsRef = isDns ? dnsRequestsRef : httpRequestsRef;
+        const hasMoreOlder = isDns ? dnsHasMoreOlder : httpHasMoreOlder;
+        const isLoadingOlder = isDns ? dnsLoadingOlder : httpLoadingOlder;
+        const setRequests = isDns ? setDnsRequests : setHttpRequests;
+        const setHasMoreOlder = isDns ? setDnsHasMoreOlder : setHttpHasMoreOlder;
+        const setLoadingOlder = isDns ? setDnsLoadingOlder : setHttpLoadingOlder;
+
+        if (!hasMoreOlder || isLoadingOlder) {
+            return false;
+        }
+
+        setLoadingOlder(true);
+        let loadedAny = false;
+        const requestLimit = Math.max(pageSize, OLDER_FETCH_LIMIT);
+
+        try {
+            const skip = currentRequestsRef.current.length;
+            const olderRequests = await DusseldorfAPI.GetRequests(zone, requestLimit, skip, protocol);
+
+            if (olderRequests.length === 0) {
+                setHasMoreOlder(false);
+                return false;
+            }
+
+            const existingKeys = new Set(currentRequestsRef.current.map(getRequestKey));
+            const uniqueOlderRequests = olderRequests.filter((olderRequest) => !existingKeys.has(getRequestKey(olderRequest)));
+
+            if (uniqueOlderRequests.length > 0) {
+                loadedAny = true;
+                setRequests((prev) => {
+                    const prevKeys = new Set(prev.map(getRequestKey));
+                    const uniqueRequests = uniqueOlderRequests.filter((olderRequest) => !prevKeys.has(getRequestKey(olderRequest)));
+                    const nextRequests = uniqueRequests.length > 0 ? [...prev, ...uniqueRequests] : prev;
+                    currentRequestsRef.current = nextRequests;
+                    return nextRequests;
+                });
+            }
+
+            if (olderRequests.length < requestLimit || uniqueOlderRequests.length === 0) {
+                setHasMoreOlder(false);
+            }
+        } catch (err) {
+            Logger.Error(err);
+        } finally {
+            setLoadingOlder(false);
+        }
+
+        return loadedAny;
+    };
 
     // ── Polling — every POLL_INTERVAL_MS, fetch new requests per protocol ─
     // Uses refs for timestamps and activeTab so the interval never needs to
@@ -153,11 +255,20 @@ export const RequestsScreen = ({ zone }: IRequestsScreenProps) => {
                 DusseldorfAPI.GetRequests(zone, POLL_LIMIT, 0, "dns", dnsSince)
                     .then((newReqs) => {
                         if (newReqs.length > 0) {
-                            dnsLastTimestamp.current = parseInt(String(newReqs[0].time));
-                            setDnsRequests((prev) => [...newReqs, ...prev]);
-                            if (activeTabRef.current !== "dns") {
-                                setDnsUnread(true);
-                            }
+                            dnsLastTimestamp.current = Math.max(
+                                dnsLastTimestamp.current,
+                                ...newReqs.map((request) => parseInt(String(request.time)))
+                            );
+                            setDnsRequests((prev) => {
+                                const existingKeys = new Set(prev.map(getRequestKey));
+                                const uniqueRequests = newReqs.filter((request) => !existingKeys.has(getRequestKey(request)));
+
+                                if (uniqueRequests.length > 0 && activeTabRef.current !== "dns") {
+                                    setDnsUnread(true);
+                                }
+
+                                return uniqueRequests.length > 0 ? [...uniqueRequests, ...prev] : prev;
+                            });
                         }
                     })
                     .catch(() => { /* silently ignore poll errors */ });
@@ -168,11 +279,20 @@ export const RequestsScreen = ({ zone }: IRequestsScreenProps) => {
                 DusseldorfAPI.GetRequests(zone, POLL_LIMIT, 0, "http", httpSince)
                     .then((newReqs) => {
                         if (newReqs.length > 0) {
-                            httpLastTimestamp.current = parseInt(String(newReqs[0].time));
-                            setHttpRequests((prev) => [...newReqs, ...prev]);
-                            if (activeTabRef.current !== "http") {
-                                setHttpUnread(true);
-                            }
+                            httpLastTimestamp.current = Math.max(
+                                httpLastTimestamp.current,
+                                ...newReqs.map((request) => parseInt(String(request.time)))
+                            );
+                            setHttpRequests((prev) => {
+                                const existingKeys = new Set(prev.map(getRequestKey));
+                                const uniqueRequests = newReqs.filter((request) => !existingKeys.has(getRequestKey(request)));
+
+                                if (uniqueRequests.length > 0 && activeTabRef.current !== "http") {
+                                    setHttpUnread(true);
+                                }
+
+                                return uniqueRequests.length > 0 ? [...uniqueRequests, ...prev] : prev;
+                            });
                         }
                     })
                     .catch(() => { /* silently ignore poll errors */ });
@@ -185,7 +305,6 @@ export const RequestsScreen = ({ zone }: IRequestsScreenProps) => {
     // ── Tab switch handler ────────────────────────────────────────────────
     const handleTabSelect = (tab: Protocol) => {
         setActiveTab(tab);
-        activeTabRef.current = tab;
         if (tab === "dns") setDnsUnread(false);
         if (tab === "http") setHttpUnread(false);
         // Reset selected request when switching protocols
@@ -237,6 +356,9 @@ export const RequestsScreen = ({ zone }: IRequestsScreenProps) => {
                         zone={zone}
                         requests={activeTab === "dns" ? dnsRequests : httpRequests}
                         loaded={activeTab === "dns" ? dnsLoaded : httpLoaded}
+                        hasMoreOlder={activeTab === "dns" ? dnsHasMoreOlder : httpHasMoreOlder}
+                        loadingOlder={activeTab === "dns" ? dnsLoadingOlder : httpLoadingOlder}
+                        onLoadOlderPage={(pageSize) => loadOlderRequests(activeTab, pageSize)}
                         request={request}
                         setRequest={setRequest}
                         columnConfig={columnConfig}
