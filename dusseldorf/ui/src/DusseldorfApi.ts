@@ -252,6 +252,26 @@ export class DusseldorfAPI {
     };
 
     /**
+     * Edit a rule's name.
+     */
+    static UpdateRuleName = async (rule: Rule, name: string): Promise<Rule> => {
+        Logger.Info(`API.UpdateRuleName(${rule.zone}, ${rule.ruleid})`);
+
+        if (!rule.zone || !rule.ruleid) {
+            throw Error(`API.UpdateRuleName(${rule.zone}, ${rule.ruleid}) bad arguments`);
+        }
+
+        return this.put(`rules/${rule.zone}/${rule.ruleid}`, { name: name }).then((resp) => {
+            if (resp.ok) {
+                rule.name = name;
+                return rule;
+            } else {
+                throw Error(`API.UpdateRuleName(${rule.zone}, ${rule.ruleid}) failed`);
+            }
+        });
+    };
+
+    /**
      * Delete a rule.
      */
     static DeleteRule = async (rule: Rule): Promise<void> => {

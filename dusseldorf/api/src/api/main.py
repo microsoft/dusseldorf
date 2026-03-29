@@ -52,7 +52,7 @@ async def ui_redirect():
 app = FastAPI(
     title="Dusseldorf API",
     description="Dusseldorf Management API",
-    version="2026.2.26",  # yyyy.mm.dd
+    version="2026.03.28",  # yyyy.mm.dd
     swagger_ui_parameters={"defaultModelsExpandDepth": -1},
     root_path="/api",
 )

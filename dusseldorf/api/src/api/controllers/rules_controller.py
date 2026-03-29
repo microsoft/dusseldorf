@@ -11,7 +11,7 @@ from datetime import datetime
 from uuid import UUID, uuid4
 import logging
 
-from models.rule import Rule, RuleCreate, RulePriority, RuleComponent, ComponentCreate, ComponentAction
+from models.rule import Rule, RuleCreate, RulePriority, RuleUpdate, RuleComponent, ComponentCreate, ComponentAction
 from models.auth import Permission
 from dependencies import get_current_user, get_db, get_log_context
 from helpers.validation import Validator
@@ -204,12 +204,12 @@ async def create_rule(
 
 
 # PUT /rules/{zone}/{rule_id}
-# updates a rule's priority
+# updates a rule's priority and/or name
 @router.put("/{zone}/{rule_id}")
-async def update_rule_priority(
+async def update_rule(
     zone: str,
     rule_id: str,
-    priority: RulePriority,
+    update: RuleUpdate,
     db: AsyncIOMotorClient = Depends(get_db),
     current_user: Dict[str, Any] = Depends(get_current_user),
     permission_service: PermissionService = Depends()
@@ -226,33 +226,46 @@ async def update_rule_priority(
     if can_read_write == False:
         raise HTTPException(status_code=403, detail="Forbidden")
 
-    # Validate priority 
-    if priority.priority <= 0 or priority.priority > MAX_PRIORITY:
-        raise HTTPException(status_code=400, detail="Invalid priority")
+    update_fields: Dict[str, Any] = {}
 
-    update_result = await db.rules.update_one({"zone": zone, "ruleid": UUID(rule_id)}, {"$set": {"priority": priority.priority}})
+    if update.priority is not None:
+        if update.priority <= 0 or update.priority > MAX_PRIORITY:
+            raise HTTPException(status_code=400, detail="Invalid priority")
+        update_fields["priority"] = update.priority
+
+    if update.name is not None:
+        # make sure the name doesn't already exist for another rule in the same zone and protocol
+        existing_rule = await db.rules.find_one({"zone": zone, "name": update.name, "ruleid": {"$ne": UUID(rule_id)}})
+        if existing_rule:
+            raise HTTPException(status_code=400, detail="Rule name already exists in this zone")
+        update_fields["name"] = update.name
+
+    if not update_fields:
+        raise HTTPException(status_code=400, detail="No valid fields to update")
+
+    update_result = await db.rules.update_one({"zone": zone, "ruleid": UUID(rule_id)}, {"$set": update_fields})
     if update_result.modified_count != 1:
         logger.error(
             "rule_priority_update_failed",
             extra=get_log_context(
                 current_user,
                 zone=zone,
-                operation="update_rule_priority",
+                operation="update_rule",
                 rule_id=rule_id,
-                priority=priority.priority,
+                updates=update_fields,
                 modified_count=update_result.modified_count
             )
         )
         raise HTTPException(status_code=400, detail="Rule update failed")
-    
+
     logger.info(
-        "rule_priority_updated",
+        "rule_updated",
         extra=get_log_context(
             current_user,
             zone=zone,
-            operation="update_rule_priority",
+            operation="update_rule",
             rule_id=rule_id,
-            priority=priority.priority
+            updates=update_fields
         )
     )
     return {"status": "success"}

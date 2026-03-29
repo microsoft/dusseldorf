@@ -31,5 +31,5 @@ async def pong(
     return {
         "pong": pong,
         "user": preferred_username,
-        "build": "2026.2.26",  # yyyy.mm.dd
+        "build": "2026.03.28",  # yyyy.mm.dd
     }

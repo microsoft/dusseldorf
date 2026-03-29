@@ -29,6 +29,10 @@ class RuleBase(BaseModel):
 class RulePriority(RuleBase):
     pass
 
+class RuleUpdate(BaseModel):
+    priority: Optional[int] = None
+    name: Optional[str] = None
+
 class RuleCreate(RuleBase):
     zone: str
     name: str

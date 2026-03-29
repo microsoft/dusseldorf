@@ -42,6 +42,10 @@ interface IRuleDetailsProps {
 export const RuleDetails = ({ rule, updateSelectedRule }: IRuleDetailsProps) => {
     const styles = useStyles();
 
+    // Control name field
+    const [name, setName] = useState<string>(rule?.name || "");
+    const [showNameError, setShowNameError] = useState<boolean>(false);
+
     // Control priority field
     const [priority, setPriority] = useState<number | undefined>(rule?.priority);
     const [showPriorityError, setShowPriorityError] = useState<boolean>(false);
@@ -56,6 +60,8 @@ export const RuleDetails = ({ rule, updateSelectedRule }: IRuleDetailsProps) => 
 
     // When rule changes, update priority
     useEffect(() => {
+        setName(rule?.name || "");
+        setShowNameError(false);
         setPriority(rule?.priority);
         setShowPriorityError(false);
     }, [rule]);
@@ -71,6 +77,41 @@ export const RuleDetails = ({ rule, updateSelectedRule }: IRuleDetailsProps) => 
             {/* Header */}
             <div className="stack vstack-gap">
                 <Subtitle1>Rule Details</Subtitle1>
+
+                <div className="stack hstack">
+                    <Field label="Name">
+                        <Input
+                            value={name}
+                            onChange={(_, data) => {
+                                setName(data.value);
+                                setShowNameError(false);
+                            }}
+                        />
+                    </Field>
+
+                    <Tooltip
+                        content="Save rule name"
+                        relationship="label"
+                    >
+                        <Button
+                            appearance="subtle"
+                            icon={<SaveRegular />}
+                            disabled={name === rule.name || showNameError}
+                            onClick={() => {
+                                DusseldorfAPI.UpdateRuleName(rule, name)
+                                    .then((newRule) => {
+                                        updateSelectedRule(newRule);
+                                    })
+                                    .catch((err) => {
+                                        Logger.Error(err);
+                                        setShowNameError(true);
+                                    });
+                            }}
+                        />
+                    </Tooltip>
+                </div>
+
+                {showNameError && <MessageBar intent="error">Failed to update rule name.</MessageBar>}
 
                 <div className="stack hstack">
                     <Field
