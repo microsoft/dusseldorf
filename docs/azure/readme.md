@@ -1,10 +1,10 @@
-# 🚀 Düsseldorf Deployment Guide (Azure + Local Helm Charts)
+# Düsseldorf Deployment Guide (Azure + Local Helm Charts)
 
 This guide provides step-by-step instructions to deploy Düsseldorf on **Azure**, initialize **CosmosDB**, and deploy Helm charts using **local Helm files**.
 
 ---
 
-## 📌 Prerequisites
+## Prerequisites
 
 Ensure you have the following installed before proceeding:
 
@@ -16,9 +16,9 @@ Ensure you have the following installed before proceeding:
 
 ---
 
-## 🛠️ Deployment Steps
+## Deployment Steps
 
-### 1️⃣ **Run the Azure Deployment Script**
+### 1. **Run the Azure Deployment Script**
 
 ```bash
 ./deploy-azure.sh -p <prefix> -r <region> -g <resource-group> -s <subscription-id> -d <domain-name> --acr-name <acr-name>
@@ -41,7 +41,7 @@ Ensure you have the following installed before proceeding:
 
 ---
 
-### 2️⃣ **Initialize CosmosDB (If Needed Manually)**
+### 2. **Initialize CosmosDB (If Needed Manually)**
 
 If the deployment script does not run this automatically, run the following:
 
@@ -53,7 +53,7 @@ python3 init_database.py --domain "<domain-name>" --ips "<AKS-IP>,<API-IP>"
 
 ---
 
-### 3️⃣ **Run Helm Commands to Deploy the Application (Using Local Charts)**
+### 3. **Run Helm Commands to Deploy the Application (Using Local Charts)**
 
 Ensure your values file is populated as required prior to running this command
 
@@ -67,22 +67,22 @@ helm upgrade --install dusseldorf ./dusseldorf-chart -f kubernetes/values.yaml
 
 ---
 
-## 🔄 **Managing the Deployment**
+## **Managing the Deployment**
 
-### 🚀 **Upgrade Deployment**
+### **Upgrade Deployment**
 
 ```bash
 helm upgrade dusseldorf ./dusseldorf-chart -f kubernetes/values.yaml
 ```
 
-### 📜 **Check Deployment Status**
+### **Check Deployment Status**
 
 ```bash
 helm list
 kubectl get pods -n default
 ```
 
-### 🛑 **Uninstall the Application**
+### **Uninstall the Application**
 
 ```bash
 helm uninstall dusseldorf
@@ -90,7 +90,7 @@ helm uninstall dusseldorf
 
 ---
 
-## 🛠️ **Debugging Issues**
+## **Debugging Issues**
 
 If you encounter any errors:
 

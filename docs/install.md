@@ -21,9 +21,9 @@ Ensure you have the following installed:
 
 ---
 
-## **🚀 Deployment Options**
+## **Deployment Options**
 
-### **1️⃣ Local Deployment**
+### **1. Local Deployment**
 
 > [!WARNING]
 > These local deployment instructions are not actively maintained and do not reflect the current structure of
@@ -62,7 +62,7 @@ Navigate to the `docs/local` directory and follow the instructions in the `Readm
 
 ---
 
-### **2️⃣ Azure Deployment**
+### **2. Azure Deployment**
 
 For detailed Azure deployment instructions, navigate to the `docs/azure` directory and refer to the `readme.md` file.
 
@@ -96,13 +96,13 @@ Navigate to the `docs/azure` directory and follow the instructions in the `readm
 
 ---
 
-## **🛠 Debugging & Troubleshooting**
+## **Debugging & Troubleshooting**
 
 For common issues and fixes, refer to the `Debugging & Troubleshooting` section in the respective deployment guide (`docs/local/Readme.md` for local deployment and `docs/azure/readme.md` for Azure deployment).
 
 ---
 
-## **📖 Additional Commands**
+## **Additional Commands**
 
 ### **Manually Running MongoDB Initialization**
 If the database is not initialized correctly, you can run the script manually:

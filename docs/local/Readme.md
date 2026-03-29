@@ -9,7 +9,7 @@ This guide provides instructions for deploying the Dusseldorf system locally usi
 
 ---
 
-## **📌 Prerequisites**
+## **Prerequisites**
 Ensure you have the following installed:
 
 - **Docker Desktop** (for Windows/macOS) or **Docker Engine** (for Linux)
@@ -22,16 +22,16 @@ For Windows users, **PowerShell 7+** is recommended.
 
 ---
 
-## **🚀 Deployment Instructions**
+## **Deployment Instructions**
 
-### **1️⃣ Clone the Repository**
+### **1. Clone the Repository**
 ```sh
 # Clone the repository and navigate into it
 git clone <repo-url>
 cd <repo-directory>
 ```
 
-### **2️⃣ Generate Credentials & Certificates**
+### **2. Generate Credentials & Certificates**
 
 This step ensures that MongoDB credentials and SSL certificates are set up.
 
@@ -59,7 +59,7 @@ To specify a custom path:
 
 ---
 
-### **3️⃣ Deploy Services**
+### **3. Deploy Services**
 
 This will start all required services using Docker Compose.
 
@@ -92,7 +92,7 @@ To specify a custom SSL certificate path:
 
 ---
 
-### **4️⃣ Verify Running Containers**
+### **4. Verify Running Containers**
 Check if all containers are running:
 ```sh
 docker ps
@@ -121,7 +121,7 @@ docker-compose build
 
 ---
 
-## **🛠 Debugging & Troubleshooting**
+## **Debugging & Troubleshooting**
 
 ### **Common Issues & Fixes**
 
@@ -139,7 +139,7 @@ docker-compose build
 
 ---
 
-## **📖 Additional Commands**
+## **Additional Commands**
 
 ### **Manually Running MongoDB Initialization**
 If the database is not initialized correctly, you can run the script manually:
