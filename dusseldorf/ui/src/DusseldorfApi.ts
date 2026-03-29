@@ -241,12 +241,37 @@ export class DusseldorfAPI {
             throw Error(`API.UpdateRule(${rule.zone}, ${rule.ruleid}) bad arguments`);
         }
 
-        return this.put(`rules/${rule.zone}/${rule.ruleid}`, priority).then((resp) => {
+        return this.put(`rules/${rule.zone}/${rule.ruleid}`, { priority: priority }).then((resp) => {
             if (resp.ok) {
                 rule.priority = priority;
                 return rule;
             } else {
                 throw Error(`API.UpdateRule(${rule.zone}, ${rule.ruleid}) failed`);
+            }
+        });
+    };
+
+    /**
+     * Edit multiple mutable rule fields in one request.
+     */
+    static UpdateRuleDetails = async (rule: Rule, updates: { name?: string; priority?: number }): Promise<Rule> => {
+        Logger.Info(`API.UpdateRuleDetails(${rule.zone}, ${rule.ruleid})`);
+
+        if (!rule.zone || !rule.ruleid) {
+            throw Error(`API.UpdateRuleDetails(${rule.zone}, ${rule.ruleid}) bad arguments`);
+        }
+
+        return this.put(`rules/${rule.zone}/${rule.ruleid}`, updates).then((resp) => {
+            if (resp.ok) {
+                if (updates.name !== undefined) {
+                    rule.name = updates.name;
+                }
+                if (updates.priority !== undefined) {
+                    rule.priority = updates.priority;
+                }
+                return rule;
+            } else {
+                throw Error(`API.UpdateRuleDetails(${rule.zone}, ${rule.ruleid}) failed`);
             }
         });
     };
