@@ -50,7 +50,19 @@ class ApiClient:
         return response.json()
 
     def list_rules(self, zone: str) -> list[dict[str, Any]]:
-        result = self.get(f"/rules/{zone}")
+        # Directly perform the request so we can treat 404 ("no rules") as an empty list
+        with httpx.Client(timeout=20.0, verify=False) as client:
+            response = client.get(
+                f"{self.api_url}/rules/{zone}",
+                headers=self._headers(),
+            )
+
+        if response.status_code == 404:
+            # The API returns 404 when a zone has no rules; treat this as an empty list
+            return []
+
+        self._raise_on_error(response)
+        result = response.json()
         if isinstance(result, list):
             return result
         return []
