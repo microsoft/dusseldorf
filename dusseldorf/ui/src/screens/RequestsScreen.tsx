@@ -119,7 +119,9 @@ export const RequestsScreen = ({ zone }: IRequestsScreenProps) => {
 
     useEffect(() => {
         activeTabRef.current = activeTab;
-        window.localStorage.setItem(REQUESTS_PROTOCOL_STORAGE_KEY, activeTab);
+        if (typeof window !== "undefined" && window.localStorage) {
+            window.localStorage.setItem(REQUESTS_PROTOCOL_STORAGE_KEY, activeTab);
+        }
     }, [activeTab]);
 
     useEffect(() => {
