@@ -1,6 +1,6 @@
 # Dusseldorf CLI
 
-A simple command line tool for managing Dusseldorf zones and viewing requests. Works on Windows, macOS, Linux, and WSL.
+A command line tool for managing Dusseldorf zones and viewing captured requests in private deployments. Works on Windows, macOS, Linux, and WSL.
 
 Once installed, you'll have a `dssldrf` command you can run from anywhere.
 
@@ -15,6 +15,11 @@ Once installed, you'll have a `dssldrf` command you can run from anywhere.
 > **Tip:** Most commands support short flags: `-a` for `--add`, `-d` for `--delete`, `-l` for `--list`, `-n` for `--limit`, `-s` for `--skip`, `-p` for `--protocols`, `-h` for `--help`
 
 Full spec: [SPEC.md](SPEC.md)
+
+## Who This Is For
+
+- Security researchers and operators automating private OAST workflows.
+- Developers integrating Dusseldorf into scripts, CI checks, and custom tooling.
 
 ---
 
@@ -59,17 +64,7 @@ This installs the `dssldrf` command automatically using a tool called `pipx` (wh
     dssldrf --help
     ```
 
-> **What just happened?** The `pipx install .` command created the `dssldrf` command and made it available system-wide on your PATH (usually `~/.local/bin` on Linux/macOS or `%APPDATA%\Python\Scripts` on Windows). That's why you can now type `dssldrf` from any folder.
-
-
-4. Close and reopen your terminal (this is important!)
-
-5. Test that `dssldrf` is now available:
-   ```bash
-   dssldrf --help
-   ```
-
-> **What just happened?** The `pipx install .` command created the `dssldrf` command and put it in a folder that's on your system PATH (usually `~/.local/bin` on Linux/macOS or `%APPDATA%\Python\Scripts` on Windows). That's why you can now type `dssldrf` from any folder.
+> **What just happened?** The `pipx install .` command created the `dssldrf` command and made it available on your PATH (usually `~/.local/bin` on Linux/macOS or `%APPDATA%\Python\Scripts` on Windows). That's why you can now type `dssldrf` from any folder.
 
 ---
 
@@ -305,7 +300,7 @@ You need to set `DSSLDRF_AUTH_TOKEN` or store a token in config.
 
 Quick fix:
 ```bash
-export :q[BDSSLDRF_AUTH_TOKEN=<your-bearer-token>
+export DSSLDRF_AUTH_TOKEN=<your-bearer-token>
 ```
 
 Or save it to config:
@@ -385,6 +380,6 @@ To publish new binaries:
 2. Create a GitHub Release for that tag
 3. The `cli-release.yml` workflow runs automatically and attaches binaries to the release
 
-This CLI talks to the API directly using your EntraID token
+This CLI talks to the API directly using your Entra ID token.
 
 
