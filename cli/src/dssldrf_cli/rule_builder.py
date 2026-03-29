@@ -136,14 +136,14 @@ def next_available_priority(
     if not priorities:
         return 1
 
-    next_priority = max(priorities) + 1
-    if next_priority > max_priority:
-        raise ValueError(
-            f"No available priority under {max_priority} for protocol {normalized}"
-        )
-    return next_priority
+    used_priorities = set(priorities)
+    for candidate in range(1, max_priority + 1):
+        if candidate not in used_priorities:
+            return candidate
 
-
+    raise ValueError(
+        f"No available priority under {max_priority} for protocol {normalized}"
+    )
 def ensure_json_text(raw_value: str, field_name: str) -> str:
     try:
         json.loads(raw_value)
