@@ -179,6 +179,13 @@ export const RequestTable = ({
     // Selection — keyed to JSON representation for DataGrid compatibility
     const [selectedRows, setSelectedRows] = useState(new Set<TableRowId>(request ? [JSON.stringify(request)] : []));
 
+    useEffect(() => {
+        if (request) {
+            setSelectedRows(new Set<TableRowId>([JSON.stringify(request)]));
+        } else {
+            setSelectedRows(new Set<TableRowId>());
+        }
+    }, [request]);
     const onSelectionChange: DataGridProps["onSelectionChange"] = (_, data) => {
         if (data.selectedItems.size > 0) {
             setSelectedRows(data.selectedItems);
