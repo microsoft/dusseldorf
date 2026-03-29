@@ -99,7 +99,20 @@ dssldrf req test --http
 dssldrf req test --dns
 ```
 
-### 4) Authentication
+### 4) Rules
+
+- `dssldrf rule` - Lists rules across all accessible zones, grouped by zone
+- `dssldrf rule <label|fqdn>` - Lists rules for one zone
+  - Example: `dssldrf rule`, `dssldrf rule test`, or `dssldrf rule --json test`
+  - Resolves `test` to `test.dssldrf.net` if default domain is set.
+  - Calls `GET /rules` for the all-zones view.
+  - Calls `GET /rules/{zone}` for the single-zone view.
+  - `--json` - Print raw rule objects instead of the grouped text view
+- `dssldrf rule list-actions` - Lists predicate and result action names supported by the CLI
+- `dssldrf rule create ...` - Creates a rule from CLI flags
+- `dssldrf rule apply -f <file>` - Applies one or more rules from YAML
+
+### 5) Authentication
 
 - `dssldrf login`
   - Shells out to `az account get-access-token --resource <client-id>`
@@ -107,7 +120,7 @@ dssldrf req test --dns
   - Stores token in config after successful fetch
   - Requires `client_id` configured first via `dssldrf config set --client-id <id>`
 
-### 5) Output
+### 6) Output
 
 - Default: human-readable lines.
 - `--json` option for machine-readable output.

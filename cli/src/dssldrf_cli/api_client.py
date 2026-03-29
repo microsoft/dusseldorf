@@ -67,6 +67,22 @@ class ApiClient:
             return result
         return []
 
+    def list_all_rules(self) -> list[dict[str, Any]]:
+        with httpx.Client(timeout=20.0, verify=False) as client:
+            response = client.get(
+                f"{self.api_url}/rules",
+                headers=self._headers(),
+            )
+
+        if response.status_code == 404:
+            return []
+
+        self._raise_on_error(response)
+        result = response.json()
+        if isinstance(result, list):
+            return result
+        return []
+
     def create_rule(self, payload: dict[str, Any]) -> dict[str, Any]:
         result = self.post("/rules", payload)
         if isinstance(result, dict):

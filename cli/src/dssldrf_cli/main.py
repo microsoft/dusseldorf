@@ -19,6 +19,8 @@ from typing import Optional
 
 import typer
 import yaml
+from click.core import Context
+from typer.core import TyperGroup
 
 from .api_client import ApiClient
 from .config_store import CliConfig, load_config, save_config
@@ -36,9 +38,26 @@ from .rule_builder import (
 from .rule_service import create_rule_with_components
 
 
+class _RuleGroup(TyperGroup):
+    def parse_args(self, ctx: Context, args: list[str]) -> list[str]:
+        remaining = super().parse_args(ctx, args)
+        if ctx._protected_args:
+            candidate = ctx._protected_args[0]
+            if self.get_command(ctx, candidate) is None:
+                ctx.args = [*ctx._protected_args, *ctx.args]
+                ctx._protected_args = []
+                return ctx.args
+        return remaining
+
+
 app = typer.Typer(help="Dusseldorf CLI", no_args_is_help=True, add_completion=False)
 config_app = typer.Typer(help="Manage local CLI settings")
-rule_app = typer.Typer(help="Create and manage rules")
+rule_app = typer.Typer(
+    help="Create and manage rules",
+    cls=_RuleGroup,
+    invoke_without_command=True,
+    context_settings={"allow_extra_args": True, "ignore_unknown_options": False},
+)
 app.add_typer(config_app, name="config")
 app.add_typer(rule_app, name="rule")
 
@@ -203,7 +222,7 @@ def _format_request_detail(item: dict, human: bool) -> None:
     if isinstance(response_data, dict) and response_data:
         typer.echo("\nresponse:")
         if protocol == "http":
-            status = response_data.get("code", "N/A")
+            status = response_data.get("status", response_data.get("code", "N/A"))
             typer.echo(f"  status: {status}")
             headers = response_data.get("headers", {})
             if headers:
@@ -255,6 +274,47 @@ def _merge_protocol_filters(
         return ",".join(selected_protocols)
 
     return protocols
+
+
+def _format_rule_entry(rule: dict) -> str:
+    protocol = str(rule.get("networkprotocol", "")).lower() or "unknown"
+    priority = rule.get("priority", "?")
+    name = str(rule.get("name", "")).strip() or "unnamed"
+    rule_id = rule.get("ruleid", "")
+    component_count = len(rule.get("rulecomponents", []))
+    return (
+        f"  [{protocol}] priority {priority} {name} "
+        f"({rule_id}, {component_count} components)"
+    )
+
+
+def _render_rule_listing(rules: list[dict], selected_zone: Optional[str] = None) -> None:
+    if not rules:
+        if selected_zone:
+            typer.echo(f"No rules found for zone: {selected_zone}")
+        else:
+            typer.echo("No rules found")
+        return
+
+    grouped_rules: dict[str, list[dict]] = {}
+    for rule in rules:
+        zone = str(rule.get("zone", "")).strip() or "unknown"
+        grouped_rules.setdefault(zone, []).append(rule)
+
+    for index, zone in enumerate(sorted(grouped_rules)):
+        if index:
+            typer.echo()
+        typer.echo(f"zone: {zone}")
+        zone_rules = sorted(
+            grouped_rules[zone],
+            key=lambda item: (
+                int(item.get("priority", 0)) if str(item.get("priority", "")).isdigit() else 0,
+                str(item.get("networkprotocol", "")),
+                str(item.get("name", "")),
+            ),
+        )
+        for rule in zone_rules:
+            typer.echo(_format_rule_entry(rule))
 
 
 def _resolve_fqdn(zone: str, domain: str) -> str:
@@ -780,6 +840,44 @@ def rule_list_actions() -> None:
     typer.echo("\nSupported results:")
     for action_name in sorted(ALLOWED_RESULTS):
         typer.echo(f"  - {action_name}")
+
+
+@rule_app.callback()
+def rule_command(
+    ctx: typer.Context,
+    json_output: bool = typer.Option(False, "--json", help="Print raw JSON"),
+) -> None:
+    if ctx.invoked_subcommand is not None:
+        return
+
+    if len(ctx.args) > 1:
+        raise typer.BadParameter("Provide at most one zone: dssldrf rule [zone]")
+
+    zone = ctx.args[0] if ctx.args else None
+
+    _require_config()
+    config = load_config()
+    client = _api_client()
+
+    try:
+        if zone:
+            zone_fqdn = _resolve_fqdn(zone, config.domain)
+            result = client.list_rules(zone_fqdn)
+            if json_output:
+                typer.echo(json.dumps(result, indent=2))
+                return
+            _render_rule_listing(result, zone_fqdn)
+            return
+
+        result = client.list_all_rules()
+    except RuntimeError as exc:
+        _handle_api_error(exc)
+        return
+
+    if json_output:
+        typer.echo(json.dumps(result, indent=2))
+        return
+    _render_rule_listing(result)
 
 
 @rule_app.command("create")

@@ -9,6 +9,8 @@ Once installed, you'll have a `dssldrf` command you can run from anywhere.
 - `dssldrf zone` - List all your zones (default)
 - `dssldrf zone --add foo` or `dssldrf zone -a foo` - Create a new zone
 - `dssldrf req foo` - View recent requests for a zone
+- `dssldrf rule` - List rules across all your accessible zones
+- `dssldrf rule foo` - List rules for one zone
 - `dssldrf rule apply -f mock_api.yaml` - Apply one or more rules from YAML
 
 The full spec can be found here: [SPEC.md](SPEC.md)
@@ -256,6 +258,27 @@ This shows the last 20 requests received by `mytest.yourdomain.net`.
 dssldrf zone --delete mytest
 # Or short version:
 dssldrf zone -d mytest
+```
+
+### List rules
+
+```bash
+dssldrf rule
+```
+
+Lists rules across all accessible zones, grouped by zone.
+
+To narrow that down to one zone:
+
+```bash
+dssldrf rule mytest
+```
+
+If you want machine-readable output, put the group option before the zone selector:
+
+```bash
+dssldrf rule --json
+dssldrf rule --json mytest
 ```
 
 ### Create a rule from CLI flags
