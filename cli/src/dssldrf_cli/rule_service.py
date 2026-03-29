@@ -66,4 +66,4 @@ def create_rule_with_components(
         if rollback_messages:
             rollback_suffix = " | rollback errors: " + " ; ".join(rollback_messages)
 
-        raise RuntimeError(f"Rule creation failed: {create_error}{rollback_suffix}")
+        raise RuntimeError(f"Rule creation failed: {create_error}{rollback_suffix}") from create_error
