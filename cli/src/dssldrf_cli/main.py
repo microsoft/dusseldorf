@@ -14,11 +14,26 @@ from __future__ import annotations
 import json
 import os
 import subprocess
+import sys
 from datetime import datetime
 from typing import Optional
 
 import typer
 import yaml
+
+try:
+    from colorama import Fore
+except Exception:
+    class _ForeFallback:
+        RED = ""
+        LIGHTRED_EX = ""
+        YELLOW = ""
+        LIGHTYELLOW_EX = ""
+        LIGHTWHITE_EX = ""
+        WHITE = ""
+        RESET = ""
+
+    Fore = _ForeFallback()
 
 from .api_client import ApiClient
 from .config_store import CliConfig, load_config, save_config
@@ -41,6 +56,18 @@ config_app = typer.Typer(help="Manage local CLI settings")
 rule_app = typer.Typer(help="Create and manage rules")
 app.add_typer(config_app, name="config")
 app.add_typer(rule_app, name="rule")
+
+
+def _print_banner() -> None:
+    typer.echo(f"             {Fore.RED}(   (                   (   (     ")
+    typer.echo(f"    (        )\\ ))\\ )     (  (       )\\ ))\\ )  ")
+    typer.echo(f"    )\\ )   ( ({Fore.LIGHTRED_EX}()/(()/(  {Fore.RED}( )\\ )\\ )   ({Fore.LIGHTRED_EX}()/(()/{Fore.RED}(")
+    typer.echo(f"   ({Fore.LIGHTRED_EX}()/( ))\\ /(_))(_)) {Fore.RED}){Fore.LIGHTRED_EX})((_|()/( (  /{Fore.YELLOW}(_){Fore.LIGHTRED_EX})(_){Fore.RED})")
+    typer.echo(f"{Fore.LIGHTRED_EX}    ({Fore.YELLOW}(_))((_|_))(_))  /( (_) ((_)))\\(_))(_)){Fore.LIGHTRED_EX}_|")
+    typer.echo(f"{Fore.YELLOW}    _| {Fore.LIGHTYELLOW_EX}(_))(/ __/ __|(_))| | _| |((_) _ \\ {Fore.YELLOW} _|")
+    typer.echo(f"{Fore.LIGHTYELLOW_EX}  / {Fore.LIGHTWHITE_EX}_` | || \\__ \\__ \\/ -_) / _` / _ \\   / _{Fore.LIGHTYELLOW_EX}_|")
+    typer.echo(f"{Fore.LIGHTWHITE_EX}  \\__,_|\\_,_|___/___/\\___|_\\__,_\\___/_|_\\_|")
+    typer.echo(f"    {Fore.WHITE}microsoft security | aka.ms/dusseldorf{Fore.RESET}")
 
 
 def _effective_token(config: CliConfig) -> str:
@@ -1049,6 +1076,8 @@ def rule_apply_command(
 
 
 def run() -> None:
+    if len(sys.argv) == 1 or any(flag in sys.argv[1:] for flag in ("-h", "--help")):
+        _print_banner()
     app()
 
 
