@@ -66,15 +66,6 @@ const formatTimestamp = (timestamp: string | number): string => {
  */
 const allColumns: TableColumnDefinition<DssldrfRequest>[] = [
     createTableColumn<DssldrfRequest>({
-        columnId: "protocol",
-        renderHeaderCell: () => {
-            return "Protocol";
-        },
-        renderCell: (request) => {
-            return request.protocol.toLowerCase();
-        }
-    }),
-    createTableColumn<DssldrfRequest>({
         columnId: "clientip",
         renderHeaderCell: () => {
             return "Client IP";
@@ -115,10 +106,6 @@ const allColumns: TableColumnDefinition<DssldrfRequest>[] = [
 // Removed unused `defaultColumnConfig` constant.
 
 const columnSizingOptions = {
-    protocol: {
-        minWidth: 30,
-        idealWidth: 54
-    },
     clientip: {
         minWidth: 30,
         idealWidth: 100

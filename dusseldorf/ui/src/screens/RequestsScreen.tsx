@@ -39,7 +39,6 @@ const useStyles = makeStyles({
  * Default column configuration
  */
 const defaultColumnConfig: ColumnConfig[] = [
-    { id: "protocol", label: "Protocol", visible: true },
     { id: "clientip", label: "Client IP", visible: true },
     { id: "timestamp", label: "Timestamp", visible: true, required: true },
     { id: "request", label: "Request", visible: true, required: true },
