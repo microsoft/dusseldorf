@@ -126,6 +126,7 @@ async def get_request(
     )
     return Request(**results)
 
+
 # DELETE /requests/{zone}
 # deletes all requests for a given zone (requires READWRITE permission)
 @router.delete("/{zone}")
