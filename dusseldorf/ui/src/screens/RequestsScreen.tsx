@@ -461,6 +461,10 @@ export const RequestsScreen = ({ zone }: IRequestsScreenProps) => {
                 <RequestDetails
                     zone={zone}
                     request={request}
+                    onDelete={() => {
+                        setRequest(undefined);
+                        setNudge(!nudge);
+                    }}
                 />
             }
             initialLeftWidth={48}
