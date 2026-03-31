@@ -1,0 +1,28 @@
+# Build and distribution artifacts
+bin/
+build/
+dist/
+*.egg-info/
+*.egg
+.eggs/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environments
+.venv
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store

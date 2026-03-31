@@ -49,6 +49,64 @@ class ApiClient:
             return {"status": "success"}
         return response.json()
 
+    def list_rules(self, zone: str) -> list[dict[str, Any]]:
+        # Directly perform the request so we can treat 404 ("no rules") as an empty list
+        with httpx.Client(timeout=20.0, verify=False) as client:
+            response = client.get(
+                f"{self.api_url}/rules/{zone}",
+                headers=self._headers(),
+            )
+
+        if response.status_code == 404:
+            # The API returns 404 when a zone has no rules; treat this as an empty list
+            return []
+
+        self._raise_on_error(response)
+        result = response.json()
+        if isinstance(result, list):
+            return result
+        return []
+
+    def list_all_rules(self) -> list[dict[str, Any]]:
+        with httpx.Client(timeout=20.0, verify=False) as client:
+            response = client.get(
+                f"{self.api_url}/rules",
+                headers=self._headers(),
+            )
+
+        if response.status_code == 404:
+            return []
+
+        self._raise_on_error(response)
+        result = response.json()
+        if isinstance(result, list):
+            return result
+        return []
+
+    def create_rule(self, payload: dict[str, Any]) -> dict[str, Any]:
+        result = self.post("/rules", payload)
+        if isinstance(result, dict):
+            return result
+        raise RuntimeError("Unexpected response for create_rule")
+
+    def delete_rule(self, zone: str, rule_id: str) -> dict[str, Any]:
+        result = self.delete(f"/rules/{zone}/{rule_id}")
+        if isinstance(result, dict):
+            return result
+        return {"status": "success"}
+
+    def add_rule_component(self, zone: str, rule_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+        result = self.post(f"/rules/{zone}/{rule_id}/components", payload)
+        if isinstance(result, dict):
+            return result
+        raise RuntimeError("Unexpected response for add_rule_component")
+
+    def delete_rule_component(self, zone: str, rule_id: str, component_id: str) -> dict[str, Any]:
+        result = self.delete(f"/rules/{zone}/{rule_id}/components/{component_id}")
+        if isinstance(result, dict):
+            return result
+        return {"status": "success"}
+
     @staticmethod
     def _raise_on_error(response: httpx.Response) -> None:
         if response.status_code < 400:

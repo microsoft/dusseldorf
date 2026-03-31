@@ -1,4 +1,4 @@
-# Dusseldorf CLI Specification (MVP)
+# Dusseldorf CLI Specification
 
 This spec documents the functionality of a dusseldorf command line interface (cli) client tool
 to interact with a Dusseldorf API.
@@ -26,7 +26,7 @@ to interact with a Dusseldorf API.
 - Packaging: Python package with console entrypoint `dssldrf`
 - Optional binary packaging: PyInstaller or Nuitka (per-OS build)
 
-Rationale: Python + Typer is a small codebase, cross-platform, supports shell completion, and is easy to ship as both script and binary. Using `az` CLI avoids complexity of MSAL and works around policy restrictions on device code flow.
+Rationale: Python3 + Typer is a small codebase, cross-platform, supports shell completion, and is easy to ship as both script and binary. Using `az` CLI avoids complexity of MSAL and works around policy restrictions on device code flow.
 
 ## CLI Command Contract (MVP)
 
@@ -56,21 +56,23 @@ Fields:
 
 ### 3) Requests
 
-- `dssldrf req <label|fqdn> [--limit <n> / -n] [--skip <n> / -s] [--protocols <csv> / -p] [--human] [--details] [--id <request-id>]`
-  - Example: `dssldrf req test` or `dssldrf req test -n 50 -s 10 --details`
+- `dssldrf req <label|fqdn> [<request-ref>] [--limit <n> / -n] [--skip <n> / -s] [--protocols <csv> / -p] [--http] [--dns] [--human] [--details] [--id <request-id>]`
+  - Example: `dssldrf req test`, `dssldrf req test 1738034859`, or `dssldrf req test -n 50 -s 10 --details`
   - Resolves to `test.dssldrf.net` if default domain is set.
   - Calls `GET /requests/{zone}?limit=<n>&skip=<n>&protocols=<csv>`
   - `--limit` - Max requests to return (default 20, max 1000)
   - `--skip` - Skip first N requests (useful for pagination)
   - `--protocols` - CSV filter by protocol (e.g., `HTTP`, `DNS`, `HTTP,DNS`)
+  - `--http` - Convenience filter for HTTP only
+  - `--dns` - Convenience filter for DNS only
   - `--human` - Format timestamp as MM:DD hh:mm:ss instead of Unix timestamp
   - `--details` - Show summary view: includes method/path, first 3 headers, response status and body preview (truncated to 100 chars)
-  - `--id <request-id>` - Show full details of a specific request; accepts either Unix timestamp or MongoDB `_id`; displays complete REQUEST and RESPONSE sections with all headers and full body
+  - `<request-ref>` / `--id <request-id>` - Show full details for either an exact MongoDB `_id` or every request sharing the specified Unix timestamp; selector-based JSON output is always an array
 
 **View modes:**
 - *Compact* (default): Shows timestamp, protocol, client IP per row
 - *Summary* (`--details`): Each request includes method/path, sample headers, response status
-- *Full* (`--id <request-id>`): Complete REQUEST/RESPONSE details for one request
+- *Full selector* (`<request-ref>` or `--id <request-id>`): Complete REQUEST/RESPONSE details for one exact `_id` or all requests captured at the selected timestamp
 
 **Example workflows:**
 ```bash
@@ -80,8 +82,9 @@ dssldrf req test
 # See request details (headers, body preview)
 dssldrf req test --details
 
-# Inspect a specific request in detail
+# Inspect all requests captured at a specific timestamp
 dssldrf req test --id 1738034859
+dssldrf req test 1738034859
 
 # With human-readable timestamps
 dssldrf req test --details --human
@@ -92,9 +95,24 @@ dssldrf req test -n 20 -s 20  # Get requests 20-40
 
 # Filter by protocol
 dssldrf req test --protocols HTTP
+dssldrf req test --http
+dssldrf req test --dns
 ```
 
-### 4) Authentication
+### 4) Rules
+
+- `dssldrf rule` - Lists rules across all accessible zones, grouped by zone
+- `dssldrf rule <label|fqdn>` - Lists rules for one zone
+  - Example: `dssldrf rule`, `dssldrf rule test`, or `dssldrf rule --json test`
+  - Resolves `test` to `test.dssldrf.net` if default domain is set.
+  - Calls `GET /rules` for the all-zones view.
+  - Calls `GET /rules/{zone}` for the single-zone view.
+  - `--json` - Print raw rule objects instead of the grouped text view
+- `dssldrf rule list-actions` - Lists predicate and result action names supported by the CLI
+- `dssldrf rule create ...` - Creates a rule from CLI flags
+- `dssldrf rule apply -f <file>` - Applies one or more rules from YAML
+
+### 5) Authentication
 
 - `dssldrf login`
   - Shells out to `az account get-access-token --resource <client-id>`
@@ -102,7 +120,7 @@ dssldrf req test --protocols HTTP
   - Stores token in config after successful fetch
   - Requires `client_id` configured first via `dssldrf config set --client-id <id>`
 
-### 5) Output
+### 6) Output
 
 - Default: human-readable lines.
 - `--json` option for machine-readable output.
