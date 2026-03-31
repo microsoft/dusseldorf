@@ -53,6 +53,18 @@ const isSuspicious = (value: string) => {
   return value.includes("Bearer ") || value.includes("eyJ");
 };
 
+/**
+ * Return a color based on the HTTP status code range.
+ * 2xx = green, 3xx = orange, 4xx = red, 5xx = purple.
+ */
+const getStatusCodeColor = (code: number): string => {
+  if (code >= 200 && code < 300) return "#22c55e";
+  if (code >= 300 && code < 400) return "#f59e0b";
+  if (code >= 400 && code < 500) return "#ef4444";
+  if (code >= 500 && code < 600) return "#a855f7";
+  return "inherit";
+};
+
 const mapHeaders = (headers: Record<string, string>): HttpHeader[] => {
   return Object.keys(headers).map((item) => ({
     header: item,
@@ -196,7 +208,9 @@ export const HttpRequestDetails = ({ details }: IHttpRequestDetailsProps) => {
       renderCell: (header) => {
         return (
           <DataGridCell style={{ maxWidth: 300, wordWrap: "break-word" }}>
-            {header.header}
+            <span style={{ fontWeight: 600, color: tokens.colorBrandForeground1 }}>
+              {header.header}
+            </span>
           </DataGridCell>
         );
       },
@@ -409,6 +423,21 @@ export const HttpRequestDetails = ({ details }: IHttpRequestDetailsProps) => {
 
       <Subtitle1>Response Details</Subtitle1>
 
+      
+      <div
+        style={{
+          fontFamily: "Consolas, Courier New, monospace",
+          fontSize: 14,
+          padding: "6px 10px",
+          borderRadius: 4,
+          backgroundColor: tokens.colorNeutralBackground3,
+          color: getStatusCodeColor(resp.code),
+          fontWeight: 600,
+        }}
+      >
+        HTTP/1.0 {resp.code}
+      </div>
+      
       <div className="stack">
         <div
           className="stack hstack-spread"

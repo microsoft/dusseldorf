@@ -111,7 +111,17 @@ const allColumns: TableColumnDefinition<DssldrfRequest>[] = [
             return "Response";
         },
         renderCell: (request) => {
-            return request.respsummary;
+            const code = parseInt(request.respsummary, 10);
+            let color = "inherit";
+            if (code >= 200 && code < 300) color = "#22c55e";
+            else if (code >= 300 && code < 400) color = "#f59e0b";
+            else if (code >= 400 && code < 500) color = "#ef4444";
+            else if (code >= 500 && code < 600) color = "#a855f7";
+            return (
+                <span style={{ color, fontWeight: 600 }}>
+                    {request.respsummary}
+                </span>
+            );
         }
     })
 ];
