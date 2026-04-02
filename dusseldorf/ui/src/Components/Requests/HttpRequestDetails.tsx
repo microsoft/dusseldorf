@@ -19,8 +19,6 @@ import {
   Divider,
   Subtitle1,
   TableColumnDefinition,
-  Textarea,
-  tokens,
   Tooltip,
 } from "@fluentui/react-components";
 
@@ -33,9 +31,10 @@ import {
   StethoscopeRegular,
   TextFontRegular,
 } from "@fluentui/react-icons";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 
 import { Analyzer } from "./Analyzer";
+import { HttpRawCodeView } from "./HttpRawCodeView";
 import { CopyButton } from "../CopyButton";
 import { UiHelper } from "../../Helpers/UIHelper";
 import {
@@ -74,36 +73,36 @@ const mapHeaders = (headers: Record<string, string>): HttpHeader[] => {
 
 const buildRawReq = (req: HttpRequest): string => {
   let newRawReq: string =
-    `${req.method} ${req.path} ${req.version}\n` +
+    `${req.method} ${req.path} ${req.version}\r\n` +
     Object.keys(req.headers) // per header
       .map((item) => {
         return `${item}: ${req.headers[item]}`;
       }) // return a name: value
-      .join("\n");
+      .join("\r\n");
   if (req.body) {
-    newRawReq = newRawReq.concat("\n\n", req.body);
+    newRawReq = newRawReq.concat("\r\n\r\n", req.body);
   } else if (req.body_b64) {
-    newRawReq = newRawReq.concat("\n\n", "[binary content not shown]");
+    newRawReq = newRawReq.concat("\r\n\r\n", "[binary content not shown]");
   }
   return newRawReq;
 };
 
 const buildRawResp = (resp: HttpResponse): string => {
   let newRawResp: string =
-    `HTTP/1.0 ${resp.code}\n` +
+    `HTTP/1.0 ${resp.code}\r\n` +
     Object.keys(resp.headers) // per header
       .map((item) => {
         return `${item}: ${resp.headers[item]}`;
       }) // return a name: value
-      .join("\n");
-  newRawResp = newRawResp.concat("\n", "Server: dusseldorf v1");
+      .join("\r\n");
+  newRawResp = newRawResp.concat("\r\n", "Server: dusseldorf v1");
   newRawResp = newRawResp.concat(
-    "\n",
+    "\r\n",
     "Content-Length: ",
     resp.body.length.toString(),
   );
   if (resp.body) {
-    newRawResp = newRawResp.concat("\n\n", resp.body);
+    newRawResp = newRawResp.concat("\r\n\r\n", resp.body);
   }
   return newRawResp;
 };
@@ -165,29 +164,6 @@ export const HttpRequestDetails = ({ details }: IHttpRequestDetailsProps) => {
   );
   const [monospacedReqFont, setMonospacedReqFont] = useState<boolean>(false);
   const [monospacedRespFont, setMonospacedRespFont] = useState<boolean>(false);
-
-  // Refs for Textarea elements to apply font styling
-  const rawReqTextareaRef = useRef<HTMLTextAreaElement>(null);
-  const rawRespTextareaRef = useRef<HTMLTextAreaElement>(null);
-
-  // Apply font styling to textareas
-  useEffect(() => {
-    if (rawReqTextareaRef.current) {
-      rawReqTextareaRef.current.style.fontFamily = monospacedReqFont
-        ? "Consolas, Courier New, monospace"
-        : "Segoe UI, sans-serif";
-      rawReqTextareaRef.current.style.fontSize = "13px";
-    }
-  }, [monospacedReqFont]);
-
-  useEffect(() => {
-    if (rawRespTextareaRef.current) {
-      rawRespTextareaRef.current.style.fontFamily = monospacedRespFont
-        ? "Consolas, Courier New, monospace"
-        : "Segoe UI, sans-serif";
-      rawRespTextareaRef.current.style.fontSize = "13px";
-    }
-  }, [monospacedRespFont]);
 
   // Update variables when details changes
   useEffect(() => {
@@ -282,6 +258,16 @@ export const HttpRequestDetails = ({ details }: IHttpRequestDetailsProps) => {
           <Body1Strong>Raw Request</Body1Strong>
           <div style={{ display: "flex", gap: 4 }}>
             <Tooltip
+              content="Copy raw request"
+              relationship="description"
+            >
+              <Button
+                appearance="subtle"
+                icon={<CopyRegular />}
+                onClick={() => navigator.clipboard.writeText(rawReq)}
+              />
+            </Tooltip>
+            <Tooltip
               content="Toggle monospaced font"
               relationship="description"
             >
@@ -319,11 +305,10 @@ export const HttpRequestDetails = ({ details }: IHttpRequestDetailsProps) => {
           </div>
         </div>
 
-        <Textarea
-          ref={rawReqTextareaRef}
-          readOnly={true}
-          rows={showFullRawReq ? 10 : 3}
+        <HttpRawCodeView
           value={rawReq}
+          rows={showFullRawReq ? 10 : 3}
+          monospaced={monospacedReqFont}
         />
         {!req.body && req.body_b64 && showFullRawReq ? (
           <div className="stack">
@@ -446,6 +431,16 @@ export const HttpRequestDetails = ({ details }: IHttpRequestDetailsProps) => {
           <Body1Strong>Raw Response</Body1Strong>
           <div style={{ display: "flex", gap: 4 }}>
             <Tooltip
+              content="Copy raw response"
+              relationship="description"
+            >
+              <Button
+                appearance="subtle"
+                icon={<CopyRegular />}
+                onClick={() => navigator.clipboard.writeText(rawResp)}
+              />
+            </Tooltip>
+            <Tooltip
               content="Toggle monospaced font"
               relationship="description"
             >
@@ -483,11 +478,10 @@ export const HttpRequestDetails = ({ details }: IHttpRequestDetailsProps) => {
           </div>
         </div>
 
-        <Textarea
-          ref={rawRespTextareaRef}
-          readOnly={true}
-          rows={showFullRawResp ? 10 : 3}
+        <HttpRawCodeView
           value={rawResp}
+          rows={showFullRawResp ? 10 : 3}
+          monospaced={monospacedRespFont}
         />
       </div>
 

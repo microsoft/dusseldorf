@@ -1,11 +1,11 @@
-# EntraID App Registration Setup for Dusseldorf CLI
+# Entra ID App Registration Setup for Dusseldorf CLI
 
-This guide helps you set up the Azure AD (EntraID) app registration needed for `dssldrf login`.
+This guide helps you set up the Microsoft Entra ID app registration needed for `dssldrf login`.
 
 ## What You Need
 
 The Dusseldorf CLI uses **device code flow** for authentication, which requires:
-- An EntraID **public client application** (app registration)
+- A Microsoft Entra ID **public client application** (app registration)
 - API permissions to access your Dusseldorf API
 
 ## Step-by-Step Setup

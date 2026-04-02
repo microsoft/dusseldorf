@@ -41,7 +41,7 @@ Fields:
 - `api_url`: Dusseldorf API base URL (example `https://frontend/api`)
 - `domain`: default backend domain (example `dssldrf.net`)
 - `auth_token`: optional local token (env var preferred)
-- `client_id`: Azure AD application ID (for `dssldrf login` to fetch tokens via az CLI)
+- `client_id`: Microsoft Entra ID application ID (for `dssldrf login` to fetch tokens via az CLI)
 
 ### 2) Zone management
 

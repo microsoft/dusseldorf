@@ -4,11 +4,12 @@
 import { Tooltip, Body1Stronger, Text } from "@fluentui/react-components";
 import {
   HomeRegular,
+  StarFilled,
+  StarRegular,
   TargetEditRegular,
   TargetRegular,
   WindowBulletListRegular,
   WindowEditRegular,
-  PinRegular,
 } from "@fluentui/react-icons";
 import {
   Hamburger,
@@ -84,36 +85,55 @@ export const LeftNav = ({ refreshToken }: ILeftNavProps) => {
             return a.fqdn.localeCompare(b.fqdn);
           });
 
-        setZoneLinks(
-          visibleZones
-            .slice(0, 13)
-            .map((zone) => {
-              const isFavorite = UiHelper.IsFavoriteZone(zone.fqdn);
-              return (
-                <NavSubItem key={zone.fqdn} value={zone.fqdn}>
-                  <Text
-                    truncate
-                    wrap={false}
+        const items = visibleZones.slice(0, 13).map((zone) => {
+          const isFavorite = UiHelper.IsFavoriteZone(zone.fqdn);
+          return (
+            <NavSubItem key={zone.fqdn} value={zone.fqdn}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 8,
+                  width: 180,
+                }}
+              >
+                <Text
+                  truncate
+                  wrap={false}
+                  style={{
+                    overflow: "hidden",
+                    flex: 1,
+                    display: "block",
+                  }}
+                >
+                  {zone.fqdn}
+                </Text>
+                {isFavorite && (
+                  <span
+                    aria-label="Favorited zone"
                     style={{
-                      overflow: "hidden",
-                      width: 200,
-                      display: "block",
+                      display: "inline-flex",
+                      color: "#7a7a7a",
                     }}
                   >
-                    {isFavorite && (
-                      <PinRegular fontSize={12} style={{ marginRight: 4 }} />
-                    )}
-                    {zone.fqdn}
-                  </Text>
-                </NavSubItem>
-              );
-            })
-            .concat(
-              <NavSubItem key={" "} value=" ">
-                ...
-              </NavSubItem>,
-            ),
-        );
+                    <StarFilled fontSize={12} />
+                  </span>
+                )}
+              </div>
+            </NavSubItem>
+          );
+        });
+
+        if (visibleZones.length > 13) {
+          items.push(
+            <NavSubItem key={" "} value=" ">
+              ...
+            </NavSubItem>,
+          );
+        }
+
+        setZoneLinks(items);
       })
       .catch((err) => {
         Logger.Error(err);

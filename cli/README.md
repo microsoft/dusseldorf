@@ -15,6 +15,11 @@ Once installed, you'll have a `dssldrf` command you can run from anywhere.
 
 The full spec can be found here: [SPEC.md](SPEC.md)
 
+## Who This Is For
+
+- Security researchers and operators automating private OAST workflows.
+- Developers integrating Dusseldorf into scripts, CI checks, and custom tooling.
+
 ---
 
 ## Installation
@@ -46,21 +51,7 @@ python3 -m pipx ensurepath
 
 These commands can be copied and pasted in your terminal:
 
-```bash
-git clone https://github.com/microsoft/dusseldorf.git
-cd dusseldorf/cli
-python3 -m pipx install .
-dssldrf --help
-```
-
-
-If `dssldrf` is not found immediately after installation, close and reopen your terminal once and run:
-
-```bash
-dssldrf --help
-```
-
-`pipx` installs the CLI in an isolated environment and places the `dssldrf` command on your PATH.
+> **What just happened?** The `pipx install .` command created the `dssldrf` command and made it available on your PATH (usually `~/.local/bin` on Linux/macOS or `%APPDATA%\Python\Scripts` on Windows). That's why you can now type `dssldrf` from any folder.
 
 ---
 
@@ -68,7 +59,7 @@ dssldrf --help
 
 Before you can use `dssldrf`, you need to configure it and set up authentication.
 
-### 1. Configure the API endpoint and domain:
+### 1. Configure the API endpoint and domain
 
 ```bash
 dssldrf config set --api-url https://your-dusseldorf-server/api --domain yourdomain.net
@@ -130,7 +121,7 @@ dssldrf config set --token <your-bearer-token>
 
 **Warning:** This stores your token in plain text at `~/.dssldrf/config.json`. The environment variable approach (Option A) is more secure.
 
-### 3. Verify it works:
+### 3. Verify it works
 
 ```bash
 dssldrf zone
@@ -139,10 +130,6 @@ dssldrf zone
 You should see your zones listed (or "No zones found" if you haven't created any yet).
 
 ---
-
----
-
-
 
 ## Common Tasks
 
@@ -455,6 +442,6 @@ To publish new binaries:
 2. Create a GitHub Release for that tag
 3. The `cli-release.yml` workflow runs automatically and attaches binaries to the release
 
-This CLI talks to the API directly using your EntraID token
+This CLI talks to the API directly using your Entra ID token.
 
 

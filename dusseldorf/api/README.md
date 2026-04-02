@@ -42,6 +42,23 @@ uvicorn src.api.main:app --reload
 - Swagger UI: http://localhost:8000/api/docs
 - UI: http://localhost:8000/ui/
 
+## Rule Update Contract
+
+As of 2026-03-28 (API version `2026.03.28`), rule edits use a single endpoint:
+
+- `PUT /api/rules/{zone}/{rule_id}`
+
+The request body can include one or both fields:
+
+```json
+{
+	"priority": 10,
+	"name": "Updated Rule Name"
+}
+```
+
+At least one of `priority` or `name` must be provided.
+
 ## API Structure
 
 ```

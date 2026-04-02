@@ -68,6 +68,17 @@ class MongoDBService:
             # Requests indexes
             await self.db.dns_requests.create_index("status")
             await self.db.dns_requests.create_index("created_at")
+
+            # Network requests collection indexes
+            await self.db.requests.create_index([
+                ("zone", 1),
+                ("protocol", 1),
+                ("time", -1)
+            ])
+            await self.db.requests.create_index([
+                ("zone", 1),
+                ("time", -1)
+            ])
             
             # Payloads indexes
             await self.db.payloads.create_index("status")

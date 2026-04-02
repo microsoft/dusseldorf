@@ -31,6 +31,22 @@ const useStyles = makeStyles({
     divider: {
         paddingTop: "20px",
         paddingBottom: "20px"
+    },
+    editRow: {
+        display: "flex",
+        flexDirection: "row",
+        alignItems: "flex-start",
+        gap: "8px"
+    },
+    nameField: {
+        flexGrow: 1
+    },
+    priorityField: {
+        width: "220px"
+    },
+    saveButton: {
+        alignSelf: "flex-start",
+        marginTop: "26px"
     }
 });
 
@@ -42,9 +58,12 @@ interface IRuleDetailsProps {
 export const RuleDetails = ({ rule, updateSelectedRule }: IRuleDetailsProps) => {
     const styles = useStyles();
 
+    // Control name field
+    const [name, setName] = useState<string>(rule?.name || "");
+
     // Control priority field
     const [priority, setPriority] = useState<number | undefined>(rule?.priority);
-    const [showPriorityError, setShowPriorityError] = useState<boolean>(false);
+    const [showUpdateError, setShowUpdateError] = useState<boolean>(false);
 
     const isValidPriority = (newPriority: number) => {
         return newPriority >= 1 && newPriority <= 999;
@@ -56,14 +75,18 @@ export const RuleDetails = ({ rule, updateSelectedRule }: IRuleDetailsProps) => 
 
     // When rule changes, update priority
     useEffect(() => {
+        setName(rule?.name || "");
         setPriority(rule?.priority);
-        setShowPriorityError(false);
+        setShowUpdateError(false);
     }, [rule]);
 
     // If there is no rule yet, don't show anything
-    if (!rule || !priority) {
+    if (!rule || priority === undefined) {
         return <div />;
     }
+
+    const isDirty = name !== rule.name || priority !== rule.priority;
+    const canSave = isDirty && isValidPriority(priority);
 
     // If there is a rule, show the details
     return (
@@ -72,8 +95,24 @@ export const RuleDetails = ({ rule, updateSelectedRule }: IRuleDetailsProps) => 
             <div className="stack vstack-gap">
                 <Subtitle1>Rule Details</Subtitle1>
 
-                <div className="stack hstack">
+                <div className={styles.editRow}>
                     <Field
+                        className={styles.nameField}
+                        label="Name"
+                        validationMessage={"Must be unique"}
+                        validationState={showUpdateError ? "error" : "none"}
+                    >
+                        <Input
+                            value={name}
+                            onChange={(_, data) => {
+                                setName(data.value);
+                                setShowUpdateError(false);
+                            }}
+                        />
+                    </Field>
+
+                    <Field
+                        className={styles.priorityField}
                         label="Priority"
                         validationMessage={"Must be between 1 - 999"}
                         validationState={isValidPriority(priority) ? "none" : "error"}
@@ -88,41 +127,45 @@ export const RuleDetails = ({ rule, updateSelectedRule }: IRuleDetailsProps) => 
                                     // Priority can't have more than 3 digits
                                     setPriority(Number(newPriority.toString().slice(0, 3)));
                                 }
-                                setShowPriorityError(false);
+                                setShowUpdateError(false);
                             }}
                             onBlur={() => {
                                 // Reset invalid priorities back to the correct value
                                 if (!isValidPriority(priority)) {
                                     setPriority(rule.priority);
-                                    setShowPriorityError(false);
+                                    setShowUpdateError(false);
                                 }
                             }}
                         />
                     </Field>
 
                     <Tooltip
-                        content="Save rule priority"
+                        content="Save rule changes"
                         relationship="label"
                     >
                         <Button
+                            className={styles.saveButton}
                             appearance="subtle"
                             icon={<SaveRegular />}
-                            disabled={priority === rule.priority || !isValidPriority(priority) || showPriorityError}
+                            disabled={!canSave}
                             onClick={() => {
-                                DusseldorfAPI.UpdateRule(rule, priority)
+                                DusseldorfAPI.UpdateRuleDetails(rule, {
+                                    name: name,
+                                    priority: priority
+                                })
                                     .then((newRule) => {
                                         updateSelectedRule(newRule);
                                     })
                                     .catch((err) => {
                                         Logger.Error(err);
-                                        setShowPriorityError(true);
+                                        setShowUpdateError(true);
                                     });
                             }}
                         />
                     </Tooltip>
                 </div>
 
-                {showPriorityError && <MessageBar intent="error">Failed to update rule priority.</MessageBar>}
+                {showUpdateError && <MessageBar intent="error">Failed to update rule details.</MessageBar>}
             </div>
 
             <Divider className={styles.divider} />
