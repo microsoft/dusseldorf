@@ -155,6 +155,21 @@ export class DusseldorfAPI {
     };
 
     /**
+     * DELETE /requests/{zone} Delete all requests for this zone. Requires READWRITE permission.
+     */
+    static DeleteRequests = async (zone: string): Promise<boolean> => {
+        Logger.Info(`API.DeleteRequests(${zone})`);
+
+        if (!zone) {
+            throw Error(`API.DeleteRequests(${zone}) bad arguments`);
+        }
+
+        return this.delete(`requests/${zone}`).then((resp) => {
+            return resp.ok;
+        });
+    };
+
+    /**
      * Get all the rules for a zone if the user has access to it. Silently fails (returns an empty list) if the user doesn't have read access or the zone doesn't exist.
      */
     static GetRules = async (zone: string): Promise<Rule[]> => {
