@@ -168,14 +168,16 @@ async def delete_request(
 
 # DELETE /requests/{zone}
 # deletes all requests for a given zone (requires READWRITE permission)
+# optionally filtered by protocol(s) via query parameter
 @router.delete("/{zone}")
 async def delete_requests(
     zone: str,
+    protocols: Optional[str] = None,
     db: AsyncIOMotorClient = Depends(get_db),
     current_user: Dict[str, Any] = Depends(get_current_user),
     permission_service: PermissionService = Depends()
 ):
-    """Delete all requests for a zone. Requires READWRITE permission."""
+    """Delete requests for a zone. Optionally filter by protocol (comma-separated). Requires READWRITE permission."""
     correlation_id = current_user.get("correlation_id", "unknown")
     can_write: bool = await permission_service.has_at_least_permissions_on_zone(
         zone,
@@ -187,7 +189,12 @@ async def delete_requests(
     if not can_write:
         raise HTTPException(status_code=403, detail="Unauthorized")
 
-    result = await db.requests.delete_many({"zone": zone})
+    query = {"zone": zone}
+    if protocols:
+        conv_protocols = [protocol.upper() for protocol in protocols.split(",")]
+        query["protocol"] = {"$in": conv_protocols}
+
+    result = await db.requests.delete_many(query)
 
     logger.info(
         "requests_cleared",
@@ -195,6 +202,7 @@ async def delete_requests(
             current_user,
             zone=zone,
             operation="delete_requests",
+            protocols=protocols,
             count=result.deleted_count
         )
     )

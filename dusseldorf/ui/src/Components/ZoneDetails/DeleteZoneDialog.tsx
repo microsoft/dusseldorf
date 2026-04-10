@@ -42,6 +42,8 @@ export const DeleteZoneDialog = ({ zone }: DeleteZoneDialogProps) => {
 
     const [confirmDelete, setConfirmDelete] = useState<boolean>(false);
     const [showDeleted, setShowDeleted] = useState<boolean>(false);
+    const [deleteError, setDeleteError] = useState<string | null>(null);
+    const [isDeleting, setIsDeleting] = useState<boolean>(false);
 
     return (
         <Dialog
@@ -92,24 +94,39 @@ export const DeleteZoneDialog = ({ zone }: DeleteZoneDialogProps) => {
                                 Successfully deleted zone.
                             </MessageBar>
                         }
+                        {
+                            deleteError &&
+                            <MessageBar intent="error">
+                                {deleteError}
+                            </MessageBar>
+                        }
                     </DialogContent>
                     <DialogActions>
                         <Button
                             appearance="primary"
-                            disabled={showDeleted || !confirmDelete}
-                            onClick={() => {
-                                setShowDeleted(true);
+                            disabled={showDeleted || !confirmDelete || isDeleting}
+                            onClick={async () => {
+                                setDeleteError(null);
+                                setIsDeleting(true);
 
-                                DusseldorfAPI.DeleteZone(zone)
-                                    .catch(err => {
-                                        Logger.Error(err);
-                                    })
-
-                                setTimeout(() => {
-                                    setShowDeleted(false);
-                                    setOpen(false);
-                                    navigate("/zones");
-                                }, 1337);
+                                try {
+                                    await DusseldorfAPI.DeleteZone(zone);
+                                    setShowDeleted(true);
+                                    setTimeout(() => {
+                                        setShowDeleted(false);
+                                        setOpen(false);
+                                        navigate("/zones");
+                                    }, 1337);
+                                } catch (err) {
+                                    Logger.Error(err);
+                                    setDeleteError(
+                                        err instanceof Error
+                                            ? err.message
+                                            : "Failed to delete zone. It may have existing rules that need to be removed first."
+                                    );
+                                } finally {
+                                    setIsDeleting(false);
+                                }
                             }}
                         >
                             Permanently Delete Zone

@@ -3,6 +3,7 @@
 
 import {
     Button,
+    Checkbox,
     Dialog,
     DialogActions,
     DialogBody,
@@ -134,6 +135,7 @@ export const RequestsScreen = ({ zone }: IRequestsScreenProps) => {
     // Control clear-results confirmation dialog
     const [showClearDialog, setShowClearDialog] = useState<boolean>(false);
     const [clearError, setClearError] = useState<boolean>(false);
+    const [clearProtocols, setClearProtocols] = useState<string[]>([]);
 
     useEffect(() => {
         activeTabRef.current = activeTab;
@@ -334,7 +336,8 @@ export const RequestsScreen = ({ zone }: IRequestsScreenProps) => {
 
     const handleClearResults = () => {
         setClearError(false);
-        DusseldorfAPI.DeleteRequests(zone)
+        const protocolsToDelete = clearProtocols.length > 0 ? clearProtocols : undefined;
+        DusseldorfAPI.DeleteRequests(zone, protocolsToDelete)
             .then((success) => {
                 if (success) {
                     Logger.Info(`Cleared requests for zone ${zone}`);
@@ -369,7 +372,7 @@ export const RequestsScreen = ({ zone }: IRequestsScreenProps) => {
                             />
 
                             <Tooltip
-                                content="Clear all requests for this zone"
+                                content="Clear requests for this zone"
                                 relationship="label"
                             >
                                 <Button
@@ -377,6 +380,7 @@ export const RequestsScreen = ({ zone }: IRequestsScreenProps) => {
                                     icon={<DeleteRegular />}
                                     onClick={() => {
                                         setClearError(false);
+                                        setClearProtocols([]);
                                         setShowClearDialog(true);
                                     }}
                                 />
@@ -388,10 +392,34 @@ export const RequestsScreen = ({ zone }: IRequestsScreenProps) => {
                             >
                                 <DialogSurface>
                                     <DialogBody>
-                                        <DialogTitle>Clear all requests?</DialogTitle>
+                                        <DialogTitle>Clear requests?</DialogTitle>
                                         <DialogContent>
-                                            This will permanently delete all captured requests for <strong>{zone}</strong>.
-                                            This action cannot be undone.
+                                            {clearProtocols.length === 0
+                                                ? <>This will permanently delete <strong>all</strong> captured requests for <strong>{zone}</strong>.</>
+                                                : <>This will permanently delete <strong>{clearProtocols.join(", ").toUpperCase()}</strong> requests for <strong>{zone}</strong>.</>
+                                            }
+                                            {" "}This action cannot be undone.
+                                            <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 4 }}>
+                                                <strong>Filter by protocol (optional):</strong>
+                                                <Checkbox
+                                                    label="DNS"
+                                                    checked={clearProtocols.includes("dns")}
+                                                    onChange={(_, data) => {
+                                                        setClearProtocols(prev =>
+                                                            data.checked ? [...prev, "dns"] : prev.filter(p => p !== "dns")
+                                                        );
+                                                    }}
+                                                />
+                                                <Checkbox
+                                                    label="HTTP"
+                                                    checked={clearProtocols.includes("http")}
+                                                    onChange={(_, data) => {
+                                                        setClearProtocols(prev =>
+                                                            data.checked ? [...prev, "http"] : prev.filter(p => p !== "http")
+                                                        );
+                                                    }}
+                                                />
+                                            </div>
                                             {clearError && (
                                                 <MessageBar intent="error" style={{ marginTop: 8 }}>
                                                     Failed to clear requests. You may not have write access to this zone.
@@ -411,7 +439,7 @@ export const RequestsScreen = ({ zone }: IRequestsScreenProps) => {
                                                 onClick={handleClearResults}
                                                 style={{ backgroundColor: "#ef4444", borderColor: "#ef4444" }}
                                             >
-                                                Clear Results
+                                                {clearProtocols.length === 0 ? "Clear All" : `Clear ${clearProtocols.join(", ").toUpperCase()}`}
                                             </Button>
                                         </DialogActions>
                                     </DialogBody>
