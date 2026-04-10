@@ -106,25 +106,32 @@ export class DusseldorfAPI {
             throw Error(`API.DeleteZone(${fqdn}) bad arguments`);
         }
 
-        return this.delete(`zones/${fqdn}`).then((resp) => {
+        return this.delete(`zones/${fqdn}`).then(async (resp) => {
             if (!resp.ok) {
-                throw Error(`API.DeleteZone(${fqdn}) failed`);
+                let detail = `API.DeleteZone(${fqdn}) failed`;
+                try {
+                    const body = await resp.json();
+                    if (body.detail) {
+                        detail = body.detail;
+                    }
+                } catch {
+                    // ignore parse errors
+                }
+                throw Error(detail);
             }
         });
     };
 
     /**
      * GET /requests/{zone} Get the requests for this zone, if authorized.
-     * @param since Optional Unix timestamp — only return requests newer than this value.
      */
     static GetRequests = async (
         zone: string,
         num: number,
         skip: number,
-        protocols: string,
-        since?: number
+        protocols: string
     ): Promise<DssldrfRequest[]> => {
-        Logger.Info(`API.GetRequests(${zone}, ${num}, ${skip}, ${protocols}, since=${since})`);
+        Logger.Info(`API.GetRequests(${zone}, ${num}, ${skip}, ${protocols})`);
 
         if (!zone) {
             throw Error(`API.GetRequests(${zone}, ${num}, ${skip}, ${protocols}) bad arguments`);
@@ -136,12 +143,7 @@ export class DusseldorfAPI {
             num = MAX_REQS;
         }
 
-        let url = `requests/${zone}?limit=${num}&skip=${skip}&protocols=${protocols}`;
-        if (since !== undefined) {
-            url += `&since=${since}`;
-        }
-
-        return this.get(url)
+        return this.get(`requests/${zone}?limit=${num}&skip=${skip}&protocols=${protocols}`)
             .then((resp) => {
                 if (resp.ok) {
                     return resp.json();
@@ -155,16 +157,36 @@ export class DusseldorfAPI {
     };
 
     /**
-     * DELETE /requests/{zone} Delete all requests for this zone. Requires READWRITE permission.
+     * DELETE /requests/{zone} Delete requests for this zone. Optionally filter by protocols. Requires READWRITE permission.
      */
-    static DeleteRequests = async (zone: string): Promise<boolean> => {
-        Logger.Info(`API.DeleteRequests(${zone})`);
+    static DeleteRequests = async (zone: string, protocols?: string[]): Promise<boolean> => {
+        Logger.Info(`API.DeleteRequests(${zone}, ${protocols})`);
 
         if (!zone) {
             throw Error(`API.DeleteRequests(${zone}) bad arguments`);
         }
 
-        return this.delete(`requests/${zone}`).then((resp) => {
+        let url = `requests/${zone}`;
+        if (protocols && protocols.length > 0) {
+            url += `?protocols=${protocols.join(",")}`;
+        }
+
+        return this.delete(url).then((resp) => {
+            return resp.ok;
+        });
+    };
+
+    /**
+     * DELETE /requests/{zone}/{timestamp} Delete a specific request. Requires READWRITE permission.
+     */
+    static DeleteRequest = async (zone: string, timestamp: string): Promise<boolean> => {
+        Logger.Info(`API.DeleteRequest(${zone}, ${timestamp})`);
+
+        if (!zone || !timestamp) {
+            throw Error(`API.DeleteRequest(${zone}, ${timestamp}) bad arguments`);
+        }
+
+        return this.delete(`requests/${zone}/${timestamp}`).then((resp) => {
             return resp.ok;
         });
     };
@@ -256,57 +278,12 @@ export class DusseldorfAPI {
             throw Error(`API.UpdateRule(${rule.zone}, ${rule.ruleid}) bad arguments`);
         }
 
-        return this.put(`rules/${rule.zone}/${rule.ruleid}`, { priority: priority }).then((resp) => {
+        return this.put(`rules/${rule.zone}/${rule.ruleid}`, priority).then((resp) => {
             if (resp.ok) {
                 rule.priority = priority;
                 return rule;
             } else {
                 throw Error(`API.UpdateRule(${rule.zone}, ${rule.ruleid}) failed`);
-            }
-        });
-    };
-
-    /**
-     * Edit multiple mutable rule fields in one request.
-     */
-    static UpdateRuleDetails = async (rule: Rule, updates: { name?: string; priority?: number }): Promise<Rule> => {
-        Logger.Info(`API.UpdateRuleDetails(${rule.zone}, ${rule.ruleid})`);
-
-        if (!rule.zone || !rule.ruleid) {
-            throw Error(`API.UpdateRuleDetails(${rule.zone}, ${rule.ruleid}) bad arguments`);
-        }
-
-        return this.put(`rules/${rule.zone}/${rule.ruleid}`, updates).then((resp) => {
-            if (resp.ok) {
-                if (updates.name !== undefined) {
-                    rule.name = updates.name;
-                }
-                if (updates.priority !== undefined) {
-                    rule.priority = updates.priority;
-                }
-                return rule;
-            } else {
-                throw Error(`API.UpdateRuleDetails(${rule.zone}, ${rule.ruleid}) failed`);
-            }
-        });
-    };
-
-    /**
-     * Edit a rule's name.
-     */
-    static UpdateRuleName = async (rule: Rule, name: string): Promise<Rule> => {
-        Logger.Info(`API.UpdateRuleName(${rule.zone}, ${rule.ruleid})`);
-
-        if (!rule.zone || !rule.ruleid) {
-            throw Error(`API.UpdateRuleName(${rule.zone}, ${rule.ruleid}) bad arguments`);
-        }
-
-        return this.put(`rules/${rule.zone}/${rule.ruleid}`, { name: name }).then((resp) => {
-            if (resp.ok) {
-                rule.name = name;
-                return rule;
-            } else {
-                throw Error(`API.UpdateRuleName(${rule.zone}, ${rule.ruleid}) failed`);
             }
         });
     };
