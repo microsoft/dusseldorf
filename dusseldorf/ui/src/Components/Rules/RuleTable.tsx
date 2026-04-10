@@ -3,6 +3,7 @@
 
 import {
     Body1Strong,
+    Button,
     createTableColumn,
     DataGrid,
     DataGridBody,
@@ -20,8 +21,10 @@ import {
     TableCellLayout,
     TableColumnDefinition,
     TableRowId,
-    Text
+    Text,
+    Tooltip
 } from "@fluentui/react-components";
+import { DeleteRegular } from "@fluentui/react-icons";
 import { useEffect, useRef, useState } from "react";
 
 // Removed unused imports for ColumnManager and ColumnConfig
@@ -29,7 +32,7 @@ import { DusseldorfAPI } from "../../DusseldorfApi";
 import { Logger } from "../../Helpers/Logger";
 import { Rule } from "../../Types/Rule";
 
-const columns: TableColumnDefinition<Rule>[] = [
+const baseColumns: TableColumnDefinition<Rule>[] = [
     createTableColumn<Rule>({
         columnId: "priority",
         compare: (ruleA, ruleB) => {
@@ -97,6 +100,10 @@ const columnSizingOptions = {
     components: {
         minWidth: 30,
         defaultWidth: 60
+    },
+    actions: {
+        minWidth: 40,
+        defaultWidth: 40
     }
 };
 
@@ -107,12 +114,36 @@ interface RuleTableProps {
     rule: Rule | undefined;
     setRule: (rule: Rule | undefined) => void;
     nudge: boolean;
+    onDeleteRule?: (rule: Rule) => void;
 }
 
-export const RuleTable = ({ zone, ruleId, setRuleId, rule, setRule, nudge }: RuleTableProps) => {
+export const RuleTable = ({ zone, ruleId, setRuleId, rule, setRule, nudge, onDeleteRule }: RuleTableProps) => {
     // Control what is shown: nothing, helpful rule creation text, or rules
     const [loaded, setLoaded] = useState<boolean>(false);
     const [rules, setRules] = useState<Rule[]>([]);
+
+    const columns = onDeleteRule
+        ? [
+              ...baseColumns,
+              createTableColumn<Rule>({
+                  columnId: "actions",
+                  renderHeaderCell: () => "",
+                  renderCell: (rule) => (
+                      <Tooltip content="Delete rule" relationship="label">
+                          <Button
+                              icon={<DeleteRegular />}
+                              appearance="subtle"
+                              size="small"
+                              onClick={(e) => {
+                                  e.stopPropagation();
+                                  onDeleteRule(rule);
+                              }}
+                          />
+                      </Tooltip>
+                  )
+              })
+          ]
+        : baseColumns;
 
     // Control what is selected - should always match rule.ruleid
     const [selectedRows, setSelectedRows] = useState(new Set<TableRowId>(ruleId ? [ruleId] : []));
@@ -253,9 +284,13 @@ export const RuleTable = ({ zone, ruleId, setRuleId, rule, setRule, nudge }: Rul
                         key={rowId}
                         selectionCell={null}
                     >
-                        {({ renderCell }) => (
+                        {({ renderCell, columnId }) => (
                             <DataGridCell>
-                                <TableCellLayout truncate>{renderCell(item)}</TableCellLayout>
+                                {columnId === "actions" ? (
+                                    renderCell(item)
+                                ) : (
+                                    <TableCellLayout truncate>{renderCell(item)}</TableCellLayout>
+                                )}
                             </DataGridCell>
                         )}
                     </DataGridRow>
