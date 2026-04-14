@@ -288,6 +288,51 @@ export class DusseldorfAPI {
         });
     };
 
+        /**
+     * Edit multiple mutable rule fields in one request.
+     */
+    static UpdateRuleDetails = async (rule: Rule, updates: { name?: string; priority?: number }): Promise<Rule> => {
+        Logger.Info(`API.UpdateRuleDetails(${rule.zone}, ${rule.ruleid})`);
+
+        if (!rule.zone || !rule.ruleid) {
+            throw Error(`API.UpdateRuleDetails(${rule.zone}, ${rule.ruleid}) bad arguments`);
+        }
+
+        return this.put(`rules/${rule.zone}/${rule.ruleid}`, updates).then((resp) => {
+            if (resp.ok) {
+                if (updates.name !== undefined) {
+                    rule.name = updates.name;
+                }
+                if (updates.priority !== undefined) {
+                    rule.priority = updates.priority;
+                }
+                return rule;
+            } else {
+                throw Error(`API.UpdateRuleDetails(${rule.zone}, ${rule.ruleid}) failed`);
+            }
+        });
+    };
+
+    /**
+     * Edit a rule's name.
+     */
+    static UpdateRuleName = async (rule: Rule, name: string): Promise<Rule> => {
+        Logger.Info(`API.UpdateRuleName(${rule.zone}, ${rule.ruleid})`);
+
+        if (!rule.zone || !rule.ruleid) {
+            throw Error(`API.UpdateRuleName(${rule.zone}, ${rule.ruleid}) bad arguments`);
+        }
+
+        return this.put(`rules/${rule.zone}/${rule.ruleid}`, { name: name }).then((resp) => {
+            if (resp.ok) {
+                rule.name = name;
+                return rule;
+            } else {
+                throw Error(`API.UpdateRuleName(${rule.zone}, ${rule.ruleid}) failed`);
+            }
+        });
+    };
+
     /**
      * Delete a rule.
      */
