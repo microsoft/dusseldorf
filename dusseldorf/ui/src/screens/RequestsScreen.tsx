@@ -491,7 +491,7 @@ export const RequestsScreen = ({ zone }: IRequestsScreenProps) => {
                     request={request}
                     onDelete={() => {
                         setRequest(undefined);
-                        setNudge(!nudge);
+                        setRefreshKey((k) => k + 1);
                     }}
                 />
             }
