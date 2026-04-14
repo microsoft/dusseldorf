@@ -124,14 +124,16 @@ export class DusseldorfAPI {
 
     /**
      * GET /requests/{zone} Get the requests for this zone, if authorized.
+     * @param since Optional Unix timestamp — only return requests newer than this value.
      */
     static GetRequests = async (
         zone: string,
         num: number,
         skip: number,
-        protocols: string
+        protocols: string,
+        since?: number
     ): Promise<DssldrfRequest[]> => {
-        Logger.Info(`API.GetRequests(${zone}, ${num}, ${skip}, ${protocols})`);
+        Logger.Info(`API.GetRequests(${zone}, ${num}, ${skip}, ${protocols}, since=${since})`);
 
         if (!zone) {
             throw Error(`API.GetRequests(${zone}, ${num}, ${skip}, ${protocols}) bad arguments`);
@@ -143,7 +145,12 @@ export class DusseldorfAPI {
             num = MAX_REQS;
         }
 
-        return this.get(`requests/${zone}?limit=${num}&skip=${skip}&protocols=${protocols}`)
+        let url = `requests/${zone}?limit=${num}&skip=${skip}&protocols=${protocols}`;
+        if (since !== undefined) {
+            url += `&since=${since}`;
+        }
+
+        return this.get(url)
             .then((resp) => {
                 if (resp.ok) {
                     return resp.json();
@@ -278,7 +285,7 @@ export class DusseldorfAPI {
             throw Error(`API.UpdateRule(${rule.zone}, ${rule.ruleid}) bad arguments`);
         }
 
-        return this.put(`rules/${rule.zone}/${rule.ruleid}`, priority).then((resp) => {
+        return this.put(`rules/${rule.zone}/${rule.ruleid}`, { priority: priority }).then((resp) => {
             if (resp.ok) {
                 rule.priority = priority;
                 return rule;
@@ -288,7 +295,7 @@ export class DusseldorfAPI {
         });
     };
 
-        /**
+    /**
      * Edit multiple mutable rule fields in one request.
      */
     static UpdateRuleDetails = async (rule: Rule, updates: { name?: string; priority?: number }): Promise<Rule> => {
