@@ -29,6 +29,7 @@ async def get_requests(
     protocols: Optional[str] = None,
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
+    since: Optional[int] = None,
     db: AsyncIOMotorClient = Depends(get_db),
     current_user: Dict[str, Any] = Depends(get_current_user),
     permission_service: PermissionService = Depends()
