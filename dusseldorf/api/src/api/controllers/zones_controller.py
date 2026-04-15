@@ -223,9 +223,8 @@ async def delete_zone(
     if not is_owner:
         raise HTTPException(status_code=403, detail="Unauthorized")
 
-    # Check for existing rules
-    if await db.rules.find_one({"zone": fqdn}):
-        raise HTTPException(status_code=400, detail="Cannot delete zone with existing rules")
+    # Delete all rules associated with this zone
+    await db.rules.delete_many({"zone": fqdn})
 
     del_request = await db.requests.delete_many({"zone": fqdn})
     

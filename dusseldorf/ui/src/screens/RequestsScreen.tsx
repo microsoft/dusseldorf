@@ -1,8 +1,23 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { Button, makeStyles, Subtitle1, Tab, TabList, Tooltip } from "@fluentui/react-components";
-import { ArrowSyncRegular } from "@fluentui/react-icons";
+import {
+    Button,
+    Checkbox,
+    Dialog,
+    DialogActions,
+    DialogBody,
+    DialogContent,
+    DialogSurface,
+    DialogTitle,
+    makeStyles,
+    MessageBar,
+    Subtitle1,
+    Tab,
+    TabList,
+    Tooltip
+} from "@fluentui/react-components";
+import { ArrowSyncRegular, DeleteRegular } from "@fluentui/react-icons";
 import { useEffect, useRef, useState } from "react";
 
 import { ColumnManager, ColumnConfig } from "../Components/ColumnManager";
@@ -117,6 +132,11 @@ export const RequestsScreen = ({ zone }: IRequestsScreenProps) => {
     // Increment to trigger a forced full reload
     const [refreshKey, setRefreshKey] = useState<number>(0);
 
+    // Control clear-results confirmation dialog
+    const [showClearDialog, setShowClearDialog] = useState<boolean>(false);
+    const [clearError, setClearError] = useState<boolean>(false);
+    const [clearProtocols, setClearProtocols] = useState<string[]>([]);
+
     useEffect(() => {
         activeTabRef.current = activeTab;
         if (typeof window !== "undefined" && window.localStorage) {
@@ -132,6 +152,7 @@ export const RequestsScreen = ({ zone }: IRequestsScreenProps) => {
         httpRequestsRef.current = httpRequests;
     }, [httpRequests]);
 
+    // ── Reset on zone change ──────────────────────────────────────────────
     // ── Reset on zone change ──────────────────────────────────────────────
     useEffect(() => {
         setRequest(undefined);
@@ -313,6 +334,28 @@ export const RequestsScreen = ({ zone }: IRequestsScreenProps) => {
         setRequest(undefined);
     };
 
+    const handleClearResults = () => {
+        setClearError(false);
+        const protocolsToDelete = clearProtocols.length > 0 ? clearProtocols : undefined;
+        DusseldorfAPI.DeleteRequests(zone, protocolsToDelete)
+            .then((success) => {
+                if (success) {
+                    Logger.Info(`Cleared requests for zone ${zone}`);
+                    setRequest(undefined);
+                    setRefreshKey((k) => k + 1);
+                } else {
+                    setClearError(true);
+                }
+            })
+            .catch((err) => {
+                Logger.Error(err);
+                setClearError(true);
+            })
+            .finally(() => {
+                setShowClearDialog(false);
+            });
+    };
+
     return (
         <ResizableSplitPanel
             leftPanel={
@@ -327,6 +370,81 @@ export const RequestsScreen = ({ zone }: IRequestsScreenProps) => {
                                 columns={columnConfig}
                                 onColumnsChange={setColumnConfig}
                             />
+
+                            <Tooltip
+                                content="Clear requests for this zone"
+                                relationship="label"
+                            >
+                                <Button
+                                    appearance="subtle"
+                                    icon={<DeleteRegular />}
+                                    onClick={() => {
+                                        setClearError(false);
+                                        setClearProtocols([]);
+                                        setShowClearDialog(true);
+                                    }}
+                                />
+                            </Tooltip>
+
+                            <Dialog
+                                open={showClearDialog}
+                                onOpenChange={(_, data) => setShowClearDialog(data.open)}
+                            >
+                                <DialogSurface>
+                                    <DialogBody>
+                                        <DialogTitle>Clear requests?</DialogTitle>
+                                        <DialogContent>
+                                            {clearProtocols.length === 0
+                                                ? <>This will permanently delete <strong>all</strong> captured requests for <strong>{zone}</strong>.</>
+                                                : <>This will permanently delete <strong>{clearProtocols.join(", ").toUpperCase()}</strong> requests for <strong>{zone}</strong>.</>
+                                            }
+                                            {" "}This action cannot be undone.
+                                            <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 4 }}>
+                                                <strong>Filter by protocol (optional):</strong>
+                                                <Checkbox
+                                                    label="DNS"
+                                                    checked={clearProtocols.includes("dns")}
+                                                    onChange={(_, data) => {
+                                                        setClearProtocols(prev =>
+                                                            data.checked ? [...prev, "dns"] : prev.filter(p => p !== "dns")
+                                                        );
+                                                    }}
+                                                />
+                                                <Checkbox
+                                                    label="HTTP"
+                                                    checked={clearProtocols.includes("http")}
+                                                    onChange={(_, data) => {
+                                                        setClearProtocols(prev =>
+                                                            data.checked ? [...prev, "http"] : prev.filter(p => p !== "http")
+                                                        );
+                                                    }}
+                                                />
+                                            </div>
+                                            {clearError && (
+                                                <MessageBar intent="error" style={{ marginTop: 8 }}>
+                                                    Failed to clear requests. You may not have write access to this zone.
+                                                </MessageBar>
+                                            )}
+                                        </DialogContent>
+                                        <DialogActions>
+                                            <Button
+                                                appearance="secondary"
+                                                onClick={() => setShowClearDialog(false)}
+                                            >
+                                                Cancel
+                                            </Button>
+                                            <Button
+                                                appearance="primary"
+                                                icon={<DeleteRegular />}
+                                                onClick={handleClearResults}
+                                                style={{ backgroundColor: "#ef4444", borderColor: "#ef4444" }}
+                                            >
+                                                {clearProtocols.length === 0 ? "Clear All" : `Clear ${clearProtocols.join(", ").toUpperCase()}`}
+                                            </Button>
+                                        </DialogActions>
+                                    </DialogBody>
+                                </DialogSurface>
+                            </Dialog>
 
                             <Tooltip
                                 content="Refresh"
@@ -371,6 +489,10 @@ export const RequestsScreen = ({ zone }: IRequestsScreenProps) => {
                 <RequestDetails
                     zone={zone}
                     request={request}
+                    onDelete={() => {
+                        setRequest(undefined);
+                        setRefreshKey((k) => k + 1);
+                    }}
                 />
             }
             initialLeftWidth={48}

@@ -179,6 +179,17 @@ export const RulesScreen = ({ zone }: IRulesScreenProps) => {
                         rule={rule}
                         setRule={setRule}
                         nudge={nudge}
+                        onDeleteRule={(ruleToDelete) => {
+                            DusseldorfAPI.DeleteRule(ruleToDelete)
+                                .then(() => {
+                                    if (ruleId === ruleToDelete.ruleid) {
+                                        setRule(undefined);
+                                        setRuleId(undefined);
+                                    }
+                                    setNudge(!nudge);
+                                })
+                                .catch((err) => Logger.Error(err));
+                        }}
                     />
 
                     <AddRuleDialog

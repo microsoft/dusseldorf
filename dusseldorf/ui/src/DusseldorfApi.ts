@@ -106,9 +106,18 @@ export class DusseldorfAPI {
             throw Error(`API.DeleteZone(${fqdn}) bad arguments`);
         }
 
-        return this.delete(`zones/${fqdn}`).then((resp) => {
+        return this.delete(`zones/${fqdn}`).then(async (resp) => {
             if (!resp.ok) {
-                throw Error(`API.DeleteZone(${fqdn}) failed`);
+                let detail = `API.DeleteZone(${fqdn}) failed`;
+                try {
+                    const body = await resp.json();
+                    if (body.detail) {
+                        detail = body.detail;
+                    }
+                } catch {
+                    // ignore parse errors
+                }
+                throw Error(detail);
             }
         });
     };
@@ -155,16 +164,36 @@ export class DusseldorfAPI {
     };
 
     /**
-     * DELETE /requests/{zone} Delete all requests for this zone. Requires READWRITE permission.
+     * DELETE /requests/{zone} Delete requests for this zone. Optionally filter by protocols. Requires READWRITE permission.
      */
-    static DeleteRequests = async (zone: string): Promise<boolean> => {
-        Logger.Info(`API.DeleteRequests(${zone})`);
+    static DeleteRequests = async (zone: string, protocols?: string[]): Promise<boolean> => {
+        Logger.Info(`API.DeleteRequests(${zone}, ${protocols})`);
 
         if (!zone) {
             throw Error(`API.DeleteRequests(${zone}) bad arguments`);
         }
 
-        return this.delete(`requests/${zone}`).then((resp) => {
+        let url = `requests/${zone}`;
+        if (protocols && protocols.length > 0) {
+            url += `?protocols=${protocols.join(",")}`;
+        }
+
+        return this.delete(url).then((resp) => {
+            return resp.ok;
+        });
+    };
+
+    /**
+     * DELETE /requests/{zone}/{timestamp} Delete a specific request. Requires READWRITE permission.
+     */
+    static DeleteRequest = async (zone: string, timestamp: string): Promise<boolean> => {
+        Logger.Info(`API.DeleteRequest(${zone}, ${timestamp})`);
+
+        if (!zone || !timestamp) {
+            throw Error(`API.DeleteRequest(${zone}, ${timestamp}) bad arguments`);
+        }
+
+        return this.delete(`requests/${zone}/${timestamp}`).then((resp) => {
             return resp.ok;
         });
     };
