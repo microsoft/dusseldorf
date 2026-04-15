@@ -56,6 +56,7 @@ async def get_requests(
         query["time"] = {"$gt": since}
 
     requests = await db.requests.find(query).sort([("time", -1)]).skip(skip).limit(limit).to_list(None)
+    
     if not requests:
         logger.info(
             "requests_not_found",
