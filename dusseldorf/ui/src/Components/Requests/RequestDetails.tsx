@@ -1,11 +1,27 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { Body1Strong, MessageBar, Subtitle1, Text } from "@fluentui/react-components";
+import {
+    Body1Strong,
+    Button,
+    Dialog,
+    DialogActions,
+    DialogBody,
+    DialogContent,
+    DialogSurface,
+    DialogTitle,
+    MessageBar,
+    Subtitle1,
+    Text,
+    Tooltip
+} from "@fluentui/react-components";
+import { DeleteRegular } from "@fluentui/react-icons";
 import { useEffect, useState } from "react";
 
 import { DnsRequestDetails } from "./DnsRequestDetails";
 import { HttpRequestDetails } from "./HttpRequestDetails";
+import { DusseldorfAPI } from "../../DusseldorfApi";
+import { Logger } from "../../Helpers/Logger";
 import { DssldrfRequest } from "../../Types/DssldrfRequest";
 
 /**
@@ -34,11 +50,16 @@ const formatTimestamp = (ts: string | number) => {
 interface IRequestDetailsProps {
     zone: string;
     request: DssldrfRequest | undefined;
+    onDelete?: () => void;
 }
 
-export function RequestDetails({ request }: IRequestDetailsProps) {
+export function RequestDetails({ zone, request, onDelete }: IRequestDetailsProps) {
     // Control what details are shown
     const [component, setComponent] = useState<React.JSX.Element>();
+
+    // Control delete confirmation dialog
+    const [showDeleteDialog, setShowDeleteDialog] = useState<boolean>(false);
+    const [deleteError, setDeleteError] = useState<boolean>(false);
 
     // When the request changes, update the details
     useEffect(() => {
@@ -63,10 +84,76 @@ export function RequestDetails({ request }: IRequestDetailsProps) {
         return <div />;
     }
 
+    const handleDeleteRequest = () => {
+        setDeleteError(false);
+        DusseldorfAPI.DeleteRequest(zone, String(request.time))
+            .then((success) => {
+                if (success) {
+                    Logger.Info(`Deleted request ${request.time} for zone ${zone}`);
+                    setShowDeleteDialog(false);
+                    onDelete?.();
+                } else {
+                    setDeleteError(true);
+                }
+            })
+            .catch((err) => {
+                Logger.Error(err);
+                setDeleteError(true);
+            });
+    };
+
     // If there is a request, show the details
     return (
         <div className="stack vstack-gap">
-            <Subtitle1>Request Details</Subtitle1>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <Subtitle1>Request Details</Subtitle1>
+                <Tooltip content="Delete this request" relationship="label">
+                    <Button
+                        appearance="subtle"
+                        icon={<DeleteRegular />}
+                        onClick={() => {
+                            setDeleteError(false);
+                            setShowDeleteDialog(true);
+                        }}
+                    />
+                </Tooltip>
+            </div>
+
+            <Dialog
+                open={showDeleteDialog}
+                onOpenChange={(_, data) => setShowDeleteDialog(data.open)}
+            >
+                <DialogSurface>
+                    <DialogBody>
+                        <DialogTitle>Delete this request?</DialogTitle>
+                        <DialogContent>
+                            This will permanently delete the selected request from <strong>{zone}</strong>.
+                            This action cannot be undone.
+                            {deleteError && (
+                                <MessageBar intent="error" style={{ marginTop: 8 }}>
+                                    Failed to delete request. You may not have write access to this zone.
+                                </MessageBar>
+                            )}
+                        </DialogContent>
+                        <DialogActions>
+                            <Button
+                                appearance="secondary"
+                                onClick={() => setShowDeleteDialog(false)}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                appearance="primary"
+                                icon={<DeleteRegular />}
+                                onClick={handleDeleteRequest}
+                                style={{ backgroundColor: "#ef4444", borderColor: "#ef4444" }}
+                            >
+                                Delete
+                            </Button>
+                        </DialogActions>
+                    </DialogBody>
+                </DialogSurface>
+            </Dialog>
 
             {(!request.request || !request.response) && (
                 <MessageBar intent="error">We could not load additional details for this request.</MessageBar>

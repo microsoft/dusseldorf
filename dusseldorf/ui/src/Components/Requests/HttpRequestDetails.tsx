@@ -409,7 +409,6 @@ export const HttpRequestDetails = ({ details }: IHttpRequestDetailsProps) => {
 
       <Subtitle1>Response Details</Subtitle1>
 
-      
       <div
         style={{
           fontFamily: "Consolas, Courier New, monospace",
@@ -423,7 +422,7 @@ export const HttpRequestDetails = ({ details }: IHttpRequestDetailsProps) => {
       >
         HTTP/1.0 {resp.code}
       </div>
-      
+
       <div className="stack">
         <div
           className="stack hstack-spread"
