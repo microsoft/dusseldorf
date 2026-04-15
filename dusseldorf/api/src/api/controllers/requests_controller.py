@@ -52,7 +52,11 @@ async def get_requests(
         conv_protocols = [protocol.upper() for protocol in protocols.split(",")]
         query["protocol"] = {"$in": conv_protocols}
 
-    requests = await db.requests.find(query).sort({"time": -1}).skip(skip).limit(limit).to_list(None)
+    if since is not None:
+        query["time"] = {"$gt": since}
+
+    requests = await db.requests.find(query).sort([("time", -1)]).skip(skip).limit(limit).to_list(None)
+    
     if not requests:
         logger.info(
             "requests_not_found",
