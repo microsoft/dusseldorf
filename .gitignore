@@ -26,7 +26,10 @@ venv.bak/
 
 # PyPI configuration file
 .pypirc
-.vscode/
+
+# VS Code (except MCP config)
+.vscode/*
+!.vscode/mcp.json
 
 # prevent static files
 dusseldorf/api/src/api/ui/

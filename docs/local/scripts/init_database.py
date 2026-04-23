@@ -19,7 +19,11 @@ async def create_indexes(db):
     logger.info("Creating indexes")
     await db.domains.create_index("domain", unique=True)
     await db.zones.create_index("fqdn", unique=True)
+    await db.zones.create_index([("fqdn", 1), ("alias", 1)])
     await db.requests.create_index([("zone", 1), ("time", 1)])
+    await db.requests.create_index("time")  # Required for CosmosDB order-by
+    await db.rules.create_index([("zone", 1), ("priority", 1), ("networkprotocol", 1)], unique=True)
+    await db.rules.create_index("name")
 
 async def init_database(mongodb_url: str, db_name: str, domain: str, ips: list):
     if not domain:
