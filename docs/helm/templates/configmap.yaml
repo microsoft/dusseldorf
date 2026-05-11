@@ -39,3 +39,7 @@ data:
   DSSLDRF_TLS_CRT_FILE: "{{ .Values.listeners.listenerHTTPS.certPath }}/{{ .Values.listeners.listenerHTTPS.keyVaultCertSecretName }}.crt"
   API_TLS_CRT_FILE: "{{ .Values.listeners.listenerHTTPS.certPath }}/{{ .Values.secrets.apiCertName }}.crt"
   API_TLS_KEY_FILE: "{{ .Values.listeners.listenerHTTPS.certPath }}/{{ .Values.secrets.apiCertName }}.key"
+
+  # MCP Server Settings
+  MCP_TLS_CRT_FILE: "{{ .Values.mcpServer.certPath }}/{{ .Values.secrets.apiCertName }}.crt"
+  MCP_TLS_KEY_FILE: "{{ .Values.mcpServer.certPath }}/{{ .Values.secrets.apiCertName }}.key"

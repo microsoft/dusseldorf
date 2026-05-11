@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dusseldorf-mcp-server"
+version = "1.0.0"
+description = "MCP Server for Dusseldorf OAST Platform"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "Microsoft Corporation"}
+]
+keywords = ["mcp", "dusseldorf", "oast", "security", "ssrf"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+dependencies = [
+    "mcp>=1.0.0",
+    "httpx>=0.25.0",
+    "pydantic>=2.0.0",
+    "azure-identity>=1.15.0",
+    "starlette>=0.27.0",
+    "uvicorn>=0.23.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+]
+
+[project.scripts]
+dusseldorf-mcp = "dusseldorf_mcp.server:main"
+dusseldorf-mcp-sse = "dusseldorf_mcp.server:main_sse"
+
+[tool.setuptools.packages.find]
+where = ["src"]
