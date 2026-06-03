@@ -76,7 +76,6 @@ class AzureADService:
         try:
             # First decode without verification to get the key ID
             unverified_headers = jwt.get_unverified_header(token)
-            alg = unverified_headers.get("alg")
             kid = unverified_headers.get("kid")
             if not kid:
                 raise ValueError("No key ID in token header")
@@ -86,11 +85,14 @@ class AzureADService:
             if kid not in signing_keys:
                 raise ValueError("Unknown key ID")
 
-            # Decode and validate token
+            # Decode and validate token — only allow RSA algorithms to prevent
+            # algorithm confusion attacks (CWE-347). Never trust the token's
+            # own "alg" header as it is attacker-controlled. Azure AD uses RS256
+            # but we accept RS384/RS512 as well for forward compatibility.
             claims = jwt.decode(
                 token,
                 key=signing_keys[kid],
-                algorithms=[alg],
+                algorithms=["RS256", "RS384", "RS512"],
                 audience=self.settings.AZURE_CLIENT_ID
             )
             
