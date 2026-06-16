@@ -55,7 +55,7 @@ pyasn1==0.6.3
 pyasn1_modules==0.4.2
 pycparser==3.0
 Pygments==2.20.0
-PyJWT==2.12.1
+PyJWT==2.13.0
 pymongo==4.17.0
 pytest==9.0.3
 python-dateutil==2.9.0.post0
