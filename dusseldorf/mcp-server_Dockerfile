@@ -1,0 +1,54 @@
+# Dusseldorf MCP Server - SSE Mode Dockerfile
+# 
+# This container runs the MCP server in SSE mode for remote deployment.
+# Clients connect via SSE and authenticate using Azure AD Bearer tokens.
+#
+# Build:
+#   docker build -f mcp-server_Dockerfile -t dusseldorf-mcp-server .
+#
+# Run (development):
+#   docker run -p 8080:8080 \
+#     -e DUSSELDORF_API_URL=https://dusseldorf.example.com \
+#     -e ENVIRONMENT=development \
+#     dusseldorf-mcp-server
+#
+# Run (production):
+#   docker run -p 8080:8080 \
+#     -e DUSSELDORF_API_URL=https://dusseldorf.example.com \
+#     -e API_TLS_CRT_FILE=/certs/cert.pem \
+#     -e API_TLS_KEY_FILE=/certs/key.pem \
+#     -v /path/to/certs:/certs:ro \
+#     dusseldorf-mcp-server
+
+FROM mcr.microsoft.com/azurelinux/base/python:3
+
+# Set working directory
+WORKDIR /app
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    ENVIRONMENT=production \
+    MCP_SSE_PORT=8080
+
+# Install system dependencies and create python symlink
+RUN tdnf -y update && tdnf -y install build-essential curl ca-certificates python3-devel && \
+    ln -sf /usr/bin/python3 /usr/bin/python
+
+# Copy and install Python dependencies
+COPY mcp-server/pyproject.toml .
+COPY mcp-server/README.md .
+COPY mcp-server/src ./src
+
+# Install the package
+RUN pip install --no-cache-dir -e .
+
+# Expose the SSE port
+EXPOSE 8080
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:${MCP_SSE_PORT}/health || exit 1
+
+# Run in SSE mode
+CMD ["python", "-m", "dusseldorf_mcp.server", "--sse"]
