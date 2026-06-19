@@ -50,7 +50,8 @@
   },
   "resolutions": {},
   "overrides": {
-    "react-error-overlay": "6.0.9"
+    "react-error-overlay": "6.0.9",
+    "postcss": "8.5.10"
   },
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "",
