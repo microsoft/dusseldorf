@@ -16,6 +16,10 @@ class Settings(BaseSettings):
     # Azure
     AZURE_TENANT_ID: str
     AZURE_CLIENT_ID: str
+    # Audience for inbound token validation; defaults to AZURE_CLIENT_ID.
+    # Set when callers authenticate with a managed identity / service
+    # principal whose token audience differs from the app id.
+    DSSLDRF_API_AUDIENCE: str = ""
 #    AZURE_CLIENT_SECRET: str
 #    KEY_VAULT_URL: str
     

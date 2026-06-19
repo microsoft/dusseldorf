@@ -91,7 +91,7 @@ class AzureADService:
                 token,
                 key=signing_keys[kid],
                 algorithms=[alg],
-                audience=self.settings.AZURE_CLIENT_ID
+                audience=self.settings.DSSLDRF_API_AUDIENCE or self.settings.AZURE_CLIENT_ID
             )
             
             # Verify tenant ID
@@ -104,17 +104,26 @@ class AzureADService:
             if not oid:
                 raise ValueError("No object ID in token")
 
+            # Accept the v2.0 issuer (user tokens) and the v1.0 sts.windows.net
+            # issuer that managed-identity / service-principal tokens use.
             iss = claims.get("iss")
-            if iss != f"https://login.microsoftonline.com/{self.settings.AZURE_TENANT_ID}/v2.0":
+            valid_issuers = (
+                f"https://login.microsoftonline.com/{self.settings.AZURE_TENANT_ID}/v2.0",
+                f"https://sts.windows.net/{self.settings.AZURE_TENANT_ID}/",
+            )
+            if iss not in valid_issuers:
                 raise ValueError("Invalid issuer")
                 
-            # Return normalized user info (only what's needed)
+            # Return normalized user info (only what's needed). Managed-identity /
+            # service-principal tokens carry no preferred_username/email, so fall
+            # back to the object id (their stable identifier).
+            username = claims.get("preferred_username") or oid
             return {
                 "id": oid,  # Object ID (unique user identifier)
                 "tid": tid,  # Tenant ID
-                "preferred_username": claims.get("preferred_username"),  # User Principal Name
+                "preferred_username": username,  # UPN, or OID for service identities
                 "name": claims.get("name"),
-                "email": claims.get("email") or claims.get("preferred_username"),
+                "email": claims.get("email") or username,
                 "roles": claims.get("roles", [])
             }
             
