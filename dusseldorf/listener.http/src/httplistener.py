@@ -196,6 +196,21 @@ class HttpRequestHandler(http.server.SimpleHTTPRequestHandler):
         return 
 
 
+    # Regex for valid HTTP header names (RFC 7230 token characters)
+    _VALID_HEADER_NAME = re.compile(r"^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$")
+
+    @classmethod
+    def _is_safe_header(cls, name: str, value: str) -> bool:
+        """Validate header name/value to prevent response header injection (CWE-113)."""
+        if not cls._VALID_HEADER_NAME.match(name):
+            logger.warning("Invalid header name rejected: %r", name[:100])
+            return False
+        str_value = str(value)
+        if '\r' in str_value or '\n' in str_value:
+            logger.warning("CRLF in header value rejected: %r", name[:100])
+            return False
+        return True
+
     def sendHttpResponse(self, http_response:HttpResponse=None):
         """
         Sends an HTTPResponse onto "the wire"
@@ -212,14 +227,16 @@ class HttpRequestHandler(http.server.SimpleHTTPRequestHandler):
             logger.warning("Invalid status code %d, setting to default", http_response.status_code)
             self.send_response(HttpResponse.Empty().status_code)
 
-        # skip sending this header
+        # skip sending this header — always compute content-length from actual body
         skip = [ "content-length" ]
         for hdr in http_response.headers.keys():
-            if hdr.lower() not in skip:  # Convert current header to lowercase for comparison
-                self.send_header(hdr, http_response.headers.get(hdr))
+            if hdr.lower() not in skip:
+                value = http_response.headers.get(hdr)
+                if self._is_safe_header(hdr, value):
+                    self.send_header(hdr, value)
 
-        # always send content-length
-        content_len = int(http_response.headers.get("content-length", len(http_response.body)))
+        # always compute content-length from the actual body to prevent framing attacks
+        content_len = len(http_response.body.encode('utf-8', 'ignore'))
         self.send_header("content-length", content_len)
         self.end_headers()
 
