@@ -146,7 +146,7 @@ export function RequestDetails({ zone, request, onDelete }: IRequestDetailsProps
                                 appearance="primary"
                                 icon={<DeleteRegular />}
                                 onClick={handleDeleteRequest}
-                                style={{ backgroundColor: "#ef4444", borderColor: "#ef4444" }}
+                                style={{ backgroundColor: "#c50f1f", borderColor: "#c50f1f" }}
                             >
                                 Delete
                             </Button>
