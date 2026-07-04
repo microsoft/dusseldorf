@@ -108,6 +108,7 @@ export const AllZonesScreen = () => {
       <div className="stack vstack">
         <Body1Strong>Filter by FQDN</Body1Strong>
         <Input
+          aria-label="Filter by FQDN"
           value={filter}
           onChange={(_, data) => {
             setFilter(data.value);
