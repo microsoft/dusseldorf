@@ -112,6 +112,7 @@ export const GenericRuleComponent = ({
                     actionName={actionName}
                     value={value}
                     setValue={setValue}
+                    ariaLabel={fieldLabelDictionary[isPredicate ? 1 : 0][actionName] ?? ""}
                 />
             );
         } else if (actionName === "http.method") {
