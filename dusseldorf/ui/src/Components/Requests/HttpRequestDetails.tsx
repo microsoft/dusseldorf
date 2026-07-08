@@ -54,14 +54,16 @@ const isSuspicious = (value: string) => {
 };
 
 /**
- * Return a color based on the HTTP status code range.
+ * Return a theme-aware color for an HTTP status code range.
  * 2xx = green, 3xx = orange, 4xx = red, 5xx = purple.
+ * Fluent palette foreground tokens are used so the text keeps sufficient
+ * contrast on the neutral background in both light and dark themes (WCAG 1.4.3).
  */
 const getStatusCodeColor = (code: number): string => {
-  if (code >= 200 && code < 300) return "#22c55e";
-  if (code >= 300 && code < 400) return "#f59e0b";
-  if (code >= 400 && code < 500) return "#ef4444";
-  if (code >= 500 && code < 600) return "#a855f7";
+  if (code >= 200 && code < 300) return tokens.colorPaletteGreenForeground1;
+  if (code >= 300 && code < 400) return tokens.colorPaletteDarkOrangeForeground1;
+  if (code >= 400 && code < 500) return tokens.colorPaletteRedForeground1;
+  if (code >= 500 && code < 600) return tokens.colorPalettePurpleForeground2;
   return "inherit";
 };
 
