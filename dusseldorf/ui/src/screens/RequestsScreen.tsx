@@ -437,7 +437,7 @@ export const RequestsScreen = ({ zone }: IRequestsScreenProps) => {
                                                 appearance="primary"
                                                 icon={<DeleteRegular />}
                                                 onClick={handleClearResults}
-                                                style={{ backgroundColor: "#ef4444", borderColor: "#ef4444" }}
+                                                style={{ backgroundColor: "#c50f1f", borderColor: "#c50f1f" }}
                                             >
                                                 {clearProtocols.length === 0 ? "Clear All" : `Clear ${clearProtocols.join(", ").toUpperCase()}`}
                                             </Button>
