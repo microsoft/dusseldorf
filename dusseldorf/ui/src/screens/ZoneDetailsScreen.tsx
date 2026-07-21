@@ -20,7 +20,21 @@ const useStyles = makeStyles({
         padding: "20px",
         width: "100%",
         minWidth: "500px",
-        overflowX: "hidden"
+        // Fill the parent content row and become a vertical flex container so the
+        // requests/rules area can own its own scrolling instead of the whole
+        // screen scrolling as one block.
+        height: "100%",
+        boxSizing: "border-box",
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden"
+    },
+    content: {
+        // Take the remaining height below the header/divider. minHeight: 0 lets
+        // this flex child shrink so its scrollable descendants activate their
+        // own overflow instead of stretching the whole screen.
+        flexGrow: 1,
+        minHeight: 0
     },
     header: {
         display: "flex",
@@ -114,7 +128,7 @@ export const ZoneDetailsScreen = ({ showRules = false }: ZoneDetailsScreenProps)
 
             <Divider className={styles.divider} />
 
-            <div>
+            <div className={styles.content}>
                 {
                     showRules ? (
                         <RulesScreen zone={zone} />
