@@ -60,7 +60,7 @@ opentelemetry-util-http==0.61b0
 packaging==26.1
 pluggy==1.6.0
 psutil==7.2.2
-pyasn1==0.6.3
+pyasn1==0.6.4
 pycparser==3.0
 pydantic==2.13.3
 pydantic-extra-types==2.11.1
