@@ -4,6 +4,6 @@ colorama==0.4.6
 dnslib==0.9.25
 dnspython==2.7.0
 idna==3.15
-pymongo==4.11.1
+pymongo==4.18.3
 python-dateutil==2.9.0.post0
 six==1.17.0
