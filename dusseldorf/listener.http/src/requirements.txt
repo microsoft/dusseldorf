@@ -64,7 +64,7 @@ PyYAML==6.0.3
 requests==2.33.1
 requests-oauthlib==2.0.0
 rsa==4.9.1
-setuptools==83.0.0
+setuptools==84.1.0
 six==1.17.0
 tomli==2.4.1
 typing_extensions==4.15.0
