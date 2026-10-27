@@ -6,7 +6,7 @@ azure-identity==1.25.3
 azure-monitor-opentelemetry==1.8.7
 azure-monitor-opentelemetry-exporter==1.0.0b51
 cachetools==7.0.6
-certifi==2026.2.25
+certifi==2026.10.19
 cffi==2.0.0
 charset-normalizer==3.4.7
 colorama==0.4.6
